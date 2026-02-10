@@ -1,0 +1,100 @@
+medplum:
+  global:
+    cloudProvider: ""
+
+  namespace: medplum
+
+  deployment:
+    replicaCount: 1
+    image:
+      repository: medplum/medplum-server
+      tag: "5.0.14"
+
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+
+    autoscaling:
+      enabled: false
+
+    env:
+      - name: MEDPLUM_BASE_URL
+        value: "https://api.phylcero.fr"
+      - name: MEDPLUM_PORT
+        value: "8103"
+      - name: MEDPLUM_APP_BASE_URL
+        value: "https://app.phylcero.fr"
+      - name: MEDPLUM_ALLOWED_ORIGINS
+        value: "https://app.phylcero.fr"
+      - name: MEDPLUM_DATABASE_HOST
+        value: "medplum-postgresql"
+      - name: MEDPLUM_DATABASE_PORT
+        value: "5432"
+      - name: MEDPLUM_DATABASE_DBNAME
+        value: "medplum"
+      - name: MEDPLUM_DATABASE_USERNAME
+        value: "medplum"
+      - name: MEDPLUM_DATABASE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pompetrack-postgres-auth
+            key: password
+
+      - name: MEDPLUM_REDIS_HOST
+        value: "medplum-redis-master"
+      - name: MEDPLUM_REDIS_PORT
+        value: "6379"
+
+      - name: MEDPLUM_RECAPTCHA_SITE_KEY
+        valueFrom:
+          secretKeyRef:
+            name: recaptcha-site-key
+            key: siteKey
+      - name: MEDPLUM_RECAPTCHA_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: recaptcha-secret-key
+            key: secretKey
+
+      - name: MEDPLUM_DEFAULT_SUPER_ADMIN_EMAIL
+        value: "root@phylcero.fr"
+      - name: MEDPLUM_DEFAULT_SUPER_ADMIN_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: medplum-superadmin
+            key: password
+
+    revisionHistoryLimit: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    deploy: false
+
+  podDisruptionBudget:
+    enabled: false
+
+postgresql:
+  auth:
+    username: medplum
+    database: medplum
+    existingSecret: pompetrack-postgres-auth
+  primary:
+    persistence:
+      enabled: true
+  resources:
+    requests:
+      memory: "1Gi"
+    limits:
+      memory: "2Gi"
+
+redis:
+  auth:
+    enabled: false
+  architecture: standalone

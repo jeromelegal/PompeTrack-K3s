@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medplum-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medplum-app
+  template:
+    metadata:
+      labels:
+        app: medplum-app
+      annotations:
+        checksum/recaptcha-site-key: {{ include "pompetrack.secretChecksum" (list "recaptcha-site-key" .) | quote }}
+    spec:
+      containers:
+        - name: medplum-app
+          image: medplum/medplum-app:5.0.14
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MEDPLUM_BASE_URL
+              value: "https://api.phylcero.fr"
+            - name: RECAPTCHA_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: recaptcha-site-key
+                  key: siteKey
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medplum-app
+spec:
+  selector:
+    app: medplum-app
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP

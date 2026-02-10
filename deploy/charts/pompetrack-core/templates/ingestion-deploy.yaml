@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestion
+  namespace: pompetrack-core
+  labels:
+    app: ingestion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingestion
+  template:
+    metadata:
+      labels:
+        app: ingestion
+    spec:
+      serviceAccountName: ingestion
+      containers:
+        - name: ingestion
+          image: pompetrack/ingestion:0.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            # Secrets via fichiers (compatibles avec ton entrypoint)
+            - name: MINIO_ACCESS_KEY_ID_FILE
+              value: /var/run/secrets/minio/apiAccessKey
+            - name: MINIO_SECRET_ACCESS_KEY_FILE
+              value: /var/run/secrets/minio/apiSecretKey
+
+            # config MinIO
+            - name: MINIO_ENDPOINT
+              value: "http://pompetrack-core-minio:9000"
+
+          volumeMounts:
+            - name: minio-creds
+              mountPath: /var/run/secrets/minio
+              readOnly: true
+      volumes:
+        - name: minio-creds
+          secret:
+            secretName: minio-app-creds
+            items:
+              - key: apiAccessKey
+                path: apiAccessKey
+              - key: apiSecretKey
+                path: apiSecretKey

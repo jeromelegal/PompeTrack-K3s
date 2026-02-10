@@ -1,0 +1,219 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: pompetrack-core
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2025-08-13T08-35-41Z-cpuv1
+          env:
+            - name: MINIO_ENDPOINT
+              value: "http://pompetrack-core-minio:9000"
+
+            # Root (admin)
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-root
+                  key: rootUser
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-root
+                  key: rootPassword
+
+            # Identité S3 dédiée aux backups Postgres
+            - name: PG_BACKUP_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-pg-creds
+                  key: pgBackupAccessKey
+            - name: PG_BACKUP_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-pg-creds
+                  key: pgBackupSecretKey
+
+            # Identité S3 dédiée à ton futur pod API
+            - name: API_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-app-creds
+                  key: apiAccessKey
+            - name: API_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-app-creds
+                  key: apiSecretKey
+            - name: CONSOLE_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-console-creds
+                  key: consoleAccessKey
+            - name: CONSOLE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-console-creds
+                  key: consoleSecretKey
+
+          command: ["/bin/sh", "-lc"]
+          args:
+            - |
+              set -euo pipefail
+
+              echo "==> Configure alias"
+              echo "==> Waiting for MinIO to be ready at $MINIO_ENDPOINT"
+              for i in $(seq 1 60); do
+                if mc alias set local "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; then
+                  echo "MinIO is ready."
+                  break
+                fi
+                echo "Waiting... ($i/60)"
+                sleep 2
+              done
+
+              # Dernier essai en mode verbeux (si ça échoue on veut l'erreur)
+              mc alias set local "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+
+              echo "==> Create buckets (ignore if already exists)"
+              # Buckets
+              mc mb --ignore-existing local/pg-backups
+              mc mb --ignore-existing local/raw-iphone
+              mc mb --ignore-existing local/raw-manual
+              mc mb --ignore-existing local/raw-spirometer
+              mc mb --ignore-existing local/raw-db-spirometer
+              mc mb --ignore-existing local/processed-fhir
+              mc mb --ignore-existing local/processed-db
+              mc mb --ignore-existing local/blood-test
+              mc mb --ignore-existing local/reports
+
+              echo "==> Enable versioning on selected buckets (ignore errors if already enabled)"
+              mc version enable local/pg-backups || true
+              mc version enable local/processed-fhir || true
+              mc version enable local/processed-db || true
+              mc version enable local/reports || true
+
+              echo "==> Ensure users exist (users are S3 access key / secret key)"
+              # pgbackup identity
+              if mc admin user info local "$PG_BACKUP_ACCESS_KEY" >/dev/null 2>&1; then
+                echo "User $PG_BACKUP_ACCESS_KEY already exists"
+              else
+                mc admin user add local "$PG_BACKUP_ACCESS_KEY" "$PG_BACKUP_SECRET_KEY"
+              fi
+
+              # api identity
+              if mc admin user info local "$API_ACCESS_KEY" >/dev/null 2>&1; then
+                echo "User $API_ACCESS_KEY already exists"
+              else
+                mc admin user add local "$API_ACCESS_KEY" "$API_SECRET_KEY"
+              fi
+              if mc admin user info local "$CONSOLE_ACCESS_KEY" >/dev/null 2>&1; then
+                echo "User $CONSOLE_ACCESS_KEY already exists"
+              else
+                mc admin user add local "$CONSOLE_ACCESS_KEY" "$CONSOLE_SECRET_KEY"
+              fi
+
+              echo "==> (Re)create policies"
+              # Policy: pgbackup => ONLY pg-backups bucket
+              cat >/tmp/pgbackup-policy.json <<'EOF'
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetBucketLocation",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::pg-backups"
+                    ]
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:PutObject",
+                      "s3:DeleteObject"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::pg-backups/*"
+                    ]
+                  }
+                ]
+              }
+              EOF
+
+              # Policy: api => RW on all non-backup buckets
+              cat >/tmp/api-policy.json <<'EOF'
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetBucketLocation",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::raw-iphone",
+                      "arn:aws:s3:::raw-manual",
+                      "arn:aws:s3:::raw-spirometer",
+                      "arn:aws:s3:::raw-db-spirometer",
+                      "arn:aws:s3:::processed-fhir",
+                      "arn:aws:s3:::processed-db",
+                      "arn:aws:s3:::blood-test",
+                      "arn:aws:s3:::reports"
+                    ]
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:PutObject",
+                      "s3:DeleteObject"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::raw-iphone/*",
+                      "arn:aws:s3:::raw-manual/*",
+                      "arn:aws:s3:::raw-spirometer/*",
+                      "arn:aws:s3:::raw-db-spirometer/*",
+                      "arn:aws:s3:::processed-fhir/*",
+                      "arn:aws:s3:::processed-db/*",
+                      "arn:aws:s3:::blood-test/*",
+                      "arn:aws:s3:::reports/*"
+                    ]
+                  }
+                ]
+              }
+              EOF
+
+              # Recreate policy names deterministically
+              # if mc admin policy info local pg-backup-policy >/dev/null 2>&1; then
+              #   mc admin policy rm local pg-backup-policy || true
+              # fi
+              mc admin policy create local pg-backup-policy /tmp/pgbackup-policy.json
+
+              # if mc admin policy info local api-policy >/dev/null 2>&1; then
+              #   mc admin policy rm local api-policy || true
+              # fi
+              mc admin policy create local api-policy /tmp/api-policy.json
+              mc admin policy create local consoleAdmin /tmp/consoleAdmin.json
+
+              echo "==> Attach policies to users"
+              # mc admin policy attach requires exactly one --user or --group :contentReference[oaicite:2]{index=2}
+              mc admin policy attach local pg-backup-policy --user "$PG_BACKUP_ACCESS_KEY" || true
+              mc admin policy attach local api-policy --user "$API_ACCESS_KEY" || true
+              mc admin policy attach local consoleAdmin --user "$CONSOLE_ACCESS_KEY"
+
+              echo "==> Sanity checks"
+              mc admin policy entities local --policy pg-backup-policy || true
+              mc admin policy entities local --policy api-policy || true
+              mc admin policy entities local --policy consoleAdmin || true
+
+              echo "✅ MinIO init done"

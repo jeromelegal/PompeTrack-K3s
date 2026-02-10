@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: minio-console
+  namespace: pompetrack-core
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`minio.lan`)
+      kind: Rule
+      middlewares:
+        - name: lan-only
+          namespace: pompetrack-core 
+      services:
+        - name: pompetrack-core-minio-console
+          port: 9001

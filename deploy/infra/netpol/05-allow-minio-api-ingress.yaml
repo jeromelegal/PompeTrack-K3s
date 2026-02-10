@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-minio-api-ingress
+  namespace: pompetrack-core
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes: ["Ingress"]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: medplum
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: pompetrack-core
+    ports:
+    - {protocol: TCP, port: 9000}

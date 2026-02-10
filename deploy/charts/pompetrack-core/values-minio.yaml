@@ -1,0 +1,24 @@
+minio:
+  mode: standalone
+
+  existingSecret: minio-root
+
+  replicas: 1
+
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 2Gi
+
+  service:
+    type: ClusterIP
+
+  consoleService:
+    type: ClusterIP
