@@ -45,12 +45,9 @@ def _make_object_name(bucket: str, filename: str | None):
     Si `filename` est None ou vide, génère une clé aléatoire
     sous forme `bucket/<hex>.json` (ou selon votre convention).
     """
-    # Le choix entre aléatoire ou "bucket/" doit être clair
     if not filename:
-        # On conserve le préfixe bucket/
         return f"{bucket}/{uuid.uuid4().hex}"
     else:
-        # S’il y a déjà un préfixe de dossier, on le laisse
         if str(filename).startswith(f"{bucket}/"):
             return filename
         return f"{filename}"
