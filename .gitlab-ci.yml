@@ -17,6 +17,12 @@ default:
   stage: build
   script:
     - docker build -t "$CI_REGISTRY_IMAGE/$APP_NAME:$CI_COMMIT_SHORT_SHA" -t "$CI_REGISTRY_IMAGE/$APP_NAME:latest" "$APP_PATH"
+    - echo "CI_REGISTRY=$CI_REGISTRY"
+    - echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
+    - nslookup "$CI_REGISTRY" || true
+    - apk add --no-cache curl || true
+    - curl -vk "https://$CI_REGISTRY/v2/" || true
+    - docker info
     - docker push "$CI_REGISTRY_IMAGE/$APP_NAME:$CI_COMMIT_SHORT_SHA"
     - docker push "$CI_REGISTRY_IMAGE/$APP_NAME:latest"
 
@@ -26,8 +32,8 @@ build_ingestion:
     APP_NAME: ingestion
     APP_PATH: apps/ingestion
   rules:
-    # - changes:
-    #     - apps/ingestion/**
+    - changes:
+        - apps/ingestion/**
     - when: always
 
 build_streamlit:
