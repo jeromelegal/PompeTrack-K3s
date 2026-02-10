@@ -26,9 +26,9 @@ build_ingestion:
     APP_NAME: ingestion
     APP_PATH: apps/ingestion
   rules:
-    - changes:
-        - apps/ingestion/**
-    - when: never
+    # - changes:
+    #     - apps/ingestion/**
+    - when: always
 
 build_streamlit:
   extends: .build_template
