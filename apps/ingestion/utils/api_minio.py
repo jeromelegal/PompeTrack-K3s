@@ -7,7 +7,7 @@ import json
 import tempfile
 from fastapi.responses import StreamingResponse
 import mimetypes
-
+import pathlib
 import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
@@ -36,10 +36,24 @@ s3_client = boto3.client(
     config=_botocore_config,
 )
 
-def _make_object_name(bucket: str, object_name: Optional[str]) -> str:
-    if object_name:
-        return object_name
-    return uuid.uuid4().hex
+# def _make_object_name(bucket: str, object_name: Optional[str]) -> str:
+#     if object_name:
+#         return object_name
+#     return uuid.uuid4().hex
+def _make_object_name(bucket: str, filename: str | None):
+    """
+    Si `filename` est None ou vide, génère une clé aléatoire
+    sous forme `bucket/<hex>.json` (ou selon votre convention).
+    """
+    # Le choix entre aléatoire ou "bucket/" doit être clair
+    if not filename:
+        # On conserve le préfixe bucket/
+        return f"{bucket}/{uuid.uuid4().hex}"
+    else:
+        # S’il y a déjà un préfixe de dossier, on le laisse
+        if str(filename).startswith(f"{bucket}/"):
+            return filename
+        return f"{filename}"
 
 def upload_file(
     filedata: Union[str, bytes, bytearray, BytesIO],

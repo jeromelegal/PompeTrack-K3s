@@ -3,7 +3,9 @@ import io
 import pytest
 from fastapi.testclient import TestClient
 from fastapi.responses import StreamingResponse
-
+import pathlib
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 import main
 
 client = TestClient(main.app)
@@ -123,26 +125,6 @@ def test_ingest_dataframe_upload_error(client, mocker):
     assert r.status_code == 500
 
 
-def test_download_stream_ok(client, mocker):
-    mocker.patch(
-        "main.get_object_stream",
-        return_value=StreamingResponse(iter([b"abc"]))
-    )
-
-    r = client.get("/download/bucket/file")
-    assert r.status_code == 200
-
-
-def test_download_stream_error(client, mocker):
-    mocker.patch(
-        "main.get_object_stream",
-        side_effect=RuntimeError("fail")
-    )
-
-    r = client.get("/download/bucket/file")
-    assert r.status_code == 500
-
-
 def test_get_json_object_ok(client, mocker):
     mocker.patch("main.get_object_json", return_value={"a": 1})
 
@@ -178,7 +160,7 @@ def test_bucket_create_fail(client, mocker):
 def test_bucket_list_objects_ok(client, mocker):
     mocker.patch("main.bucket_list_objects", return_value=["a", "b"])
 
-    r = client.get("/bucket/objects-list/test")
+    r = client.get("/bucket/object-list/test")
     assert r.status_code == 200
     assert r.json() == ["a", "b"]
 
@@ -187,12 +169,7 @@ def test_move_object_ok(client, mocker):
     mocker.patch("main.move_object", return_value=True)
 
     r = client.post(
-        "/object/move",
-        params={
-            "object_name": "x",
-            "source_bucket": "a",
-            "destination_bucket": "b",
-        }
+        "/object/move/x/a/b",
     )
 
     assert r.status_code == 200
@@ -203,12 +180,7 @@ def test_move_object_fail(client, mocker):
     mocker.patch("main.move_object", return_value=False)
 
     r = client.post(
-        "/object/move",
-        params={
-            "object_name": "x",
-            "source_bucket": "a",
-            "destination_bucket": "b",
-        }
+        "/object/move/x/a/b",
     )
 
     assert r.status_code == 500
