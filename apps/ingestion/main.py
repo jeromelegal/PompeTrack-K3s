@@ -198,8 +198,13 @@ async def get_json_object(
     # device=Depends(api_key_dep(scopes=["download:json"])),
 ):
     device = {"device": "worker"}
-    return get_object_json(bucket, object_name)
-
+    try:
+        return get_object_json(bucket, object_name)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        )
 
 # Bucket creation endpoint
 @app.post("/bucket/create/{bucket}")
@@ -226,9 +231,9 @@ async def bucket_object_list(
 # Move object from bucket1 to bucket2
 @app.post("/object/move/{object_name}/{source_bucket}/{destination_bucket}")
 async def move_object_endpoint(
-    object_name: str,
-    source_bucket: str,
-    destination_bucket: str,
+    object_name: str = None,
+    source_bucket: str = None,
+    destination_bucket: str = None,
     # device=Depends(api_key_dep(scopes=["object:move"])),
 ):
     device = {"device": "worker"}
