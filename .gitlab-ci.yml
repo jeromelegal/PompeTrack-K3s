@@ -28,6 +28,7 @@ build_ingestion:
   rules:
     - changes:
         - apps/ingestion/**
+    - when: never
 
 build_streamlit:
   extends: .build_template
