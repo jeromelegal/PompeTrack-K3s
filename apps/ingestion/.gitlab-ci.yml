@@ -14,7 +14,8 @@ test:
     - pytest
 
 default:
-  tags: [ubuntu_anaconda_1]
+  tags:
+    - ubuntu-anaconda_1
 
 build:
   stage: build
