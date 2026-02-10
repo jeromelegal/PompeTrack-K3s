@@ -4,14 +4,17 @@ stages:
   - test
   - build
 
-test:
+pytest:
   stage: test
   cache:
     paths:
       - ~/.cache/pip
+  image: python:3.12
   script:
+    - python -V
     - pip install -r requirements.txt
-    - pytest
+    - pip install pytest
+    - pytest -q
 
 default:
   tags:
