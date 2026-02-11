@@ -119,6 +119,7 @@ spec:
               fi
 
               echo "==> (Re)create policies"
+
               # Policy: pgbackup => ONLY pg-backups bucket
               cat >/tmp/pgbackup-policy.json <<'EOF'
               {
@@ -149,7 +150,7 @@ spec:
               }
               EOF
 
-              # Policy: api => RW on all non-backup buckets
+              # Policy: api => RW sur les buckets applicatifs (pas pg-backups)
               cat >/tmp/api-policy.json <<'EOF'
               {
                 "Version": "2012-10-17",
@@ -192,7 +193,7 @@ spec:
                 ]
               }
               EOF
-
+              
               # Recreate policy names deterministically
               # if mc admin policy info local pg-backup-policy >/dev/null 2>&1; then
               #   mc admin policy rm local pg-backup-policy || true
@@ -203,12 +204,18 @@ spec:
               #   mc admin policy rm local api-policy || true
               # fi
               mc admin policy create local api-policy /tmp/api-policy.json
-              mc admin policy create local consoleAdmin /tmp/consoleAdmin.json
 
               echo "==> Attach policies to users"
               # mc admin policy attach requires exactly one --user or --group :contentReference[oaicite:2]{index=2}
               mc admin policy attach local pg-backup-policy --user "$PG_BACKUP_ACCESS_KEY" || true
               mc admin policy attach local api-policy --user "$API_ACCESS_KEY" || true
+
+              echo "==> Attach policies to user : admin"
+              mc admin policy info local consoleAdmin >/dev/null 2>&1 || {
+                echo "ERREUR: policy builtin 'consoleAdmin' introuvable sur ce MinIO"
+                mc admin policy list local || true
+                exit 1
+              }
               mc admin policy attach local consoleAdmin --user "$CONSOLE_ACCESS_KEY"
 
               echo "==> Sanity checks"
