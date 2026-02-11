@@ -18,7 +18,7 @@ spec:
       serviceAccountName: ingestion
       containers:
         - name: ingestion
-          image: pompetrack/ingestion:0.1.1
+          image: registry.phylcero.fr/garth/pompetrack/ingestion:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
