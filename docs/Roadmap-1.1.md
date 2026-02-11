@@ -1,6 +1,6 @@
 # PompeTrack K3s — Roadmap Checklist
 
-Date checkpoint : 2026-02-08  
+Date checkpoint : 2026-02-11  
 Cluster : K3s (VM "medplum" : 192.168.2.88)  
 TLS : géré par Yunohost (reverse proxy vers la VM)  
 Namespaces présents : `medplum`, `pompetrack-core`, `calico-system`, `istio-system`, `tigera-operator`  
@@ -10,8 +10,13 @@ Namespaces présents : `medplum`, `pompetrack-core`, `calico-system`, `istio-sys
 - meplum-server opérationnel sous api.phylcero.fr
 - medplum-app opérationnel sous app.phylcero.fr
 - reCAPTCHA google opérationnel
-- Minio déployé et fonctionnel
-- minio-init-job qui créé les buckets au boot
+- Gitlab perso pour build images docker => OK
+- Gitlab Registry perso pour mise à dispo images vers K3s => OK
+- umbrella helm pour installation namespace `pompetrack-core`:
+  * minio => OK
+  * job init-minio (création : users, buckets,...) => OK
+  * container `ingestion`, mis à jour, build, CI => OK
+  * les autres containers à faire
 - NetworkPolicy appliquée : deny-all sauf DNS, accès medplum sur Yunohost, accès minio console sur LAN
 - istio installé mais non présent sur namespace
 
@@ -66,7 +71,7 @@ kubectl -n pompetrack-core get netpol
 
 Objectif : produire une liste simple des flux autorisés.
 
-* [ ] Flux “déjà OK” (checkpoint)
+* [X] Flux “déjà OK” (checkpoint)
 
   * Yunohost → (Traefik/Ingress) → `medplum-server` (`api.phylcero.fr`)
   * Yunohost → (Traefik/Ingress) → `medplum-app` (`app.phylcero.fr`)
@@ -84,7 +89,7 @@ Critère de validation :
 
 Objectif : tous les secrets nécessaires existent, nommés proprement, et utilisés via envFrom/secretKeyRef.
 
-* [ ] Lister les secrets (inventaire)
+* [X] Lister les secrets (inventaire)
 
 ```bash
 kubectl -n medplum get secret
