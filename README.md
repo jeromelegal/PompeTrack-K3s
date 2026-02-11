@@ -189,7 +189,18 @@ kubectl patch felixconfiguration default --type merge -p '{"spec":{"bpfConnectTi
 ```
 
 ---
-### 3. Mesher un namespace :
+### 3. Mesher un namespace : `pompetrack-core`
+
+```bash
+# création namespace avec istio
+kubectl apply -f deploy/infra/istio_rules/namespaces/
+
+# NetworkPolicy vers istiod
+kubectl apply -f deploy/infra/istio_rules/networkpolicies/
+
+# mTLS STRICT
+kubectl apply -f deploy/infra/istio_rules/istio/
+```
 
 
 
