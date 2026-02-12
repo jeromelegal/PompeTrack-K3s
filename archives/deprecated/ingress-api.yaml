@@ -2,16 +2,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: medplum-api
+  namespace: medplum
 spec:
   ingressClassName: traefik
   rules:
-    - host: api.phylcero.fr
+    - host: app.phylcero.fr
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: pompetrack-medplum-service
+                name: medplum-service
                 port:
                   number: 80

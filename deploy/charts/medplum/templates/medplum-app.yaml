@@ -21,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: MEDPLUM_BASE_URL
-              value: "https://api.phylcero.fr"
+              value: "https://app.phylcero.fr/api"
             - name: RECAPTCHA_SITE_KEY
               valueFrom:
                 secretKeyRef:
