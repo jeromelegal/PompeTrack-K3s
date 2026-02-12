@@ -137,31 +137,59 @@ kubectl get ingress -A
 
 ---
 ---
+## B. Network :
+
+```bash
+
+```
+
 ## B. Sécurités :
 
 ### 1. Configuration Calico :
 
-```
+* Namespace : medplum
+
+```bash
 # DNS d’abord
-kubectl apply -f deploy/infra/netpol/02-allow-dns-egress-medplum.yaml
-kubectl apply -f deploy/infra/netpol/02-allow-dns-egress-minio.yaml
+kubectl apply -f deploy/namespaces/medplum/netpol/01-medplum-allow-dns-egress.yaml
 
 # DENY ALL
-kubectl apply -f deploy/infra/netpol/01-medplum-deny-all.yaml
-kubectl apply -f deploy/infra/netpol/01-minio-deny-all.yaml
+kubectl apply -f deploy/namespaces/medplum/netpol/02-medplum-deny-all.yaml
+
+# Istio
+
+# Ingress 
+kubectl appy -f deploy/namespaces/medplum/netpol/03-medplum-allow-postgres-redis-ingress-from-medplum.yaml
 
 # Traefik -> apps
-kubectl apply -f deploy/infra/netpol/03-allow-traefik-to-medplum-app.yaml
-kubectl apply -f deploy/infra/netpol/03-allow-traefik-to-medplum-server.yaml
-kubectl apply -f deploy/infra/netpol/06-allow-traefik-to-minio-console.yaml
+kubectl apply -f deploy/namespaces/medplum/netpol/04-medplum-allow-traefik-to-medplum-app.yaml
+kubectl apply -f deploy/namespaces/medplum/netpol/05-medplum-allow-traefik-to-medplum-server.yaml
 
 # DB/Redis
-kubectl apply -f deploy/infra/netpol/04-allow-medplum-egress-to-postgres-redis.yaml
-kubectl apply -f deploy/infra/netpol/04-allow-postgres-redis-ingress-from-medplum.yaml
+kubectl apply -f deploy/namespaces/medplum/netpol/06-medplum-allow-medplum-egress-to-postgres-redis.yaml
+```
+
+* Namespace : pompetrack-core
+
+```bash
+# DNS d’abord
+kubectl apply -f deploy/namespaces/pompetrack-core/netpol/01-pompetrack-core-allow-dns.yaml
+
+# DENY ALL
+kubectl apply -f deploy/namespaces/pompetrack-core/netpol/02-pompetrack-core-deny-all.yaml
+
+# Istio
+kubectl apply -f deploy/namespaces/pompetrack-core/netpol/03-pompetrack-core-allow-egress-istiod.yaml
+
+# Ingress 
+kubectl apply -f deploy/namespaces/pompetrack-core/ingress/01-pompetrack-core-minio-console-ingressroute.yaml
+kubectl apply -f deploy/namespaces/pompetrack-core/ingress/02-pompetrack-core-lan-only-minio.yaml
+
+# Traefik -> apps
+kubectl apply -f deploy/namespaces/pompetrack-core/netpol/04-pompetrack-core-allow-traefik-to-minio-console.yaml
 
 # Minio API
-kubectl apply -f deploy/infra/netpol/05-allow-medplum-egress-to-minio-api.yaml
-kubectl apply -f deploy/infra/netpol/05-allow-minio-api-ingress.yaml
+kubectl apply -f deploy/namespaces/pompetrack-core/netpol/05-pompetrack-core-allow-minio-api-ingress.yaml
 
 ```
 
@@ -192,14 +220,7 @@ kubectl patch felixconfiguration default --type merge -p '{"spec":{"bpfConnectTi
 ### 3. Mesher un namespace : `pompetrack-core`
 
 ```bash
-# création namespace avec istio
-kubectl apply -f deploy/infra/istio_rules/namespaces/
-
-# NetworkPolicy vers istiod
-kubectl apply -f deploy/infra/istio_rules/networkpolicies/
-
-# mTLS STRICT
-kubectl apply -f deploy/infra/istio_rules/istio/
+kubectl apply -f deploy/namespaces/pompetrack-core/istio/
 ```
 
 
@@ -256,3 +277,13 @@ Lier au ServiceAccount `ingestion`:
 kubectl -n pompetrack-core patch serviceaccount ingestion \
   -p '{"imagePullSecrets":[{"name":"gitlab-registry-creds"}]}'
 ```
+
+
+
+
+---
+Tools informations :
+
+* Istio :
+“Istio version: 1.28.3”
+“istioctl installé dans /usr/local/bin (symlink vers ~/tools/istio/istio-1.28.3/bin/istioctl)
