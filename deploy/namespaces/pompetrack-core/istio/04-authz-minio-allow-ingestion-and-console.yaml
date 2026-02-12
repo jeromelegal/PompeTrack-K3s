@@ -14,6 +14,7 @@ spec:
     - source:
         principals:
         - cluster.local/ns/pompetrack-core/sa/ingestion
+        - cluster.local/ns/pompetrack-core/sa/minio-sa
     to:
     - operation:
         ports: ["9000"]
