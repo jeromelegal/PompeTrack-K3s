@@ -2,7 +2,6 @@ requests
 python-multipart
 boto3
 botocore
-redis
 streamlit
 plotly
 statsmodels
@@ -10,8 +9,6 @@ pandas
 numpy
 streamlit-image-coordinates
 pillow
-ndjson
-pyarrow
 pytest
 pytest-mock
 pytest-asyncio
