@@ -1,25 +1,43 @@
 # PompeTrack K3s — Roadmap Checklist
 
-Date checkpoint : 2026-02-11  
-Cluster : K3s (VM "medplum" : 192.168.2.88)  
+## Contexte :
+
+* Cluster **K3s** (Ubuntu 24.04) sur (VM "medplum" : 192.168.2.88) 
+* **Traefik** fourni par K3s
+* **Istio 1.28.3** avec sidecar injection activée
+* **Calico** avec NetworkPolicies restrictives (deny-all + allow ciblés)
+* Déploiement via scripts `deploy/` (`./deploy/apply.sh`)
+* **Yunohost** en frontal : termine le TLS + SSO via nginx, reverse proxy vers le node K3s
+* medplum-app opérationnel sous app.phylcero.fr
+* medplum-server accessible sur app.phylcero.fr/api
+* reCAPTCHA google opérationnel
+* Gitlab perso pour build images docker
+* Gitlab Registry perso pour mise à dispo images vers K3s (`registry.phylcero.fr)`)
+---
+
+## Date checkpoint : 2026-02-13  
 TLS : géré par Yunohost (reverse proxy vers la VM)  
 Namespaces présents : `medplum`, `pompetrack-core`, `calico-system`, `istio-system`, `tigera-operator`  
 État : 
 - les TLS sont gérés par Yunohost qui redirige vers la VM 'medplum' : 192.168.2.88
 - umbrella helm pour installation de medplum-server, medplum-app, postgres, redis
-- meplum-server opérationnel sous api.phylcero.fr
-- medplum-app opérationnel sous app.phylcero.fr
-- reCAPTCHA google opérationnel
-- Gitlab perso pour build images docker => OK
-- Gitlab Registry perso pour mise à dispo images vers K3s => OK
 - umbrella helm pour installation namespace `pompetrack-core`:
   * minio => OK
   * job init-minio (création : users, buckets,...) => OK
   * container `ingestion`, mis à jour, build, CI => OK
   * les autres containers à faire
-- NetworkPolicy appliquée : deny-all sauf DNS, accès medplum sur Yunohost, accès minio console sur LAN
-- istio installé mais non présent sur namespace
 
+---
+## Objectifs d'étape donné le : 2026-02-26
+[] Refacto façon K3s de `streamlit`
+[] Implement dans Gitlab
+[] Implement CI pour registry
+[] Implement dans K3s 
+[] NetworkPolicies
+[] Istio rules
+[] Ingress rules
+[] Branchement sur Ingestion
+[] Tests d'intégration
 ---
 
 ## 0) Pre-flight (à refaire avant chaque grosse étape)
@@ -139,7 +157,7 @@ Critère de validation :
 
 Objectif : ranger proprement.
 
-* [ ] Confirmer que tout ce qui n’est pas Medplum va dans `pompetrack-core` au début.
+* [X] Confirmer que tout ce qui n’est pas Medplum va dans `pompetrack-core` au début.
 
 ```bash
 kubectl get ns pompetrack-core
@@ -147,7 +165,7 @@ kubectl get ns pompetrack-core
 
 Critère de validation :
 
-* [ ] Pas de nouveaux services “produit” dans `medplum` (sauf dépendances Medplum).
+* [X] Pas de nouveaux services “produit” dans `medplum` (sauf dépendances Medplum).
 
 ---
 
@@ -155,8 +173,8 @@ Critère de validation :
 
 Objectif : un service interne qui parle à MinIO et orchestre l’entrée des fichiers.
 
-* [ ] Déployer `ingestion` (Deployment + Service ClusterIP)
-* [ ] Ajouter une route Ingress (si besoin exposée)
+* [X] Déployer `ingestion` (Deployment + Service ClusterIP)
+* [X] Ajouter une route Ingress (si besoin exposée)
 * [ ] Ajouter NetPol minimale (ingress depuis streamlit / egress vers MinIO + DNS)
 
 Commandes de validation :
