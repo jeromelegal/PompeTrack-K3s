@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pompetrack-core-minio
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 60

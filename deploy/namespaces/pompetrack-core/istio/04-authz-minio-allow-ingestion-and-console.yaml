@@ -1,0 +1,26 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: minio-allow-only-ingestion-and-console
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  action: ALLOW
+  rules:
+  # ingestion -> MinIO API (9000) uniquement
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/pompetrack-core/sa/ingestion
+        - cluster.local/ns/pompetrack-core/sa/minio-sa
+        - cluster.local/ns/pompetrack-core/sa/minio-init
+    to:
+    - operation:
+        ports: ["9000"]
+
+  # Console MinIO (9001) autorisée (sécurité faite par Traefik + NetworkPolicy/LAN)
+  - to:
+    - operation:
+        ports: ["9001"]
