@@ -16,6 +16,8 @@ spec:
         app: ingestion
     spec:
       serviceAccountName: ingestion
+      imagePullSecrets:
+        - name: gitlab-regcred
       containers:
         - name: ingestion
           image: registry.phylcero.fr/garth/pompetrack/ingestion:latest

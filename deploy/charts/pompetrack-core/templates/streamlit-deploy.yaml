@@ -16,6 +16,8 @@ spec:
         app: streamlit
     spec:
       serviceAccountName: streamlit
+      imagePullSecrets:
+        - name: gitlab-regcred
       containers:
         - name: streamlit
           image: registry.phylcero.fr/garth/pompetrack/streamlit:latest
