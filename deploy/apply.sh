@@ -43,6 +43,7 @@ apply_dir_ordered deploy/namespaces/pompetrack-core/istio
 echo "==> Secrets"
 ./deploy/secrets/medplum/init-secrets.sh
 ./deploy/secrets/pompetrack-core/init-secrets.sh
+./deploy/secrets/registry/init-secrets.sh
 
 echo "==> Helm deps"
 helm dependency update deploy/charts/medplum || true
