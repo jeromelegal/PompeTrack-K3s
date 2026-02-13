@@ -25,12 +25,12 @@ sudo reboot
 
  # repartir à 0 :
 
- helm -n pompetrack-core uninstall pompetrack-core || true
- helm -n medplum uninstall medplum || true
- kubectl delete namespace pompetrack-core
- kubectl delete namespace medplum
+helm -n pompetrack-core uninstall pompetrack-core || true
+helm -n medplum uninstall medplum || true
+kubectl delete namespace pompetrack-core
+kubectl delete namespace medplum
 
- ./deploy/apply.sh
+./deploy/apply.sh
 
- kubectl get all -n medplum
- kubectl get all -n pompetrack-core
+kubectl get all -n medplum
+kubectl get all -n pompetrack-core
