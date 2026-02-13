@@ -1,0 +1,1322 @@
+{
+    "resourceType": "Bundle",
+    "type": "searchset",
+    "entry": [
+        {
+            "fullUrl": "http://medplum.lan:8103/fhir/R4/Observation/c4575fa1-c4be-42f3-9538-9ef697ba2104",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "status": "final",
+                "identifier": [
+                    {
+                        "system": "Temps de Pleine Conscience"
+                    }
+                ],
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "https://medplum.phylcero.fr/run",
+                            "code": "mindful_minutes",
+                            "display": "Mindful Minutes"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-09T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 11.01720008055369,
+                    "unit": "min"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "c4575fa1-c4be-42f3-9538-9ef697ba2104",
+                "meta": {
+                    "versionId": "4887f1e0-9fc0-4a6c-aeae-f6188964e021",
+                    "lastUpdated": "2025-10-30T14:50:43.193Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/160ad311-fd66-4002-812d-a4b4d1dc1973",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "status": "final",
+                "identifier": [
+                    {
+                        "system": "Temps de Pleine Conscience"
+                    }
+                ],
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "https://medplum.phylcero.fr/run",
+                            "code": "mindful_minutes",
+                            "display": "Mindful Minutes"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-22T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 12.55024724205335,
+                    "unit": "min"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "160ad311-fd66-4002-812d-a4b4d1dc1973",
+                "meta": {
+                    "versionId": "355e8822-a388-4e94-9a65-61842c933d23",
+                    "lastUpdated": "2025-10-30T14:50:43.207Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/14ba1890-51a7-424c-8979-682319f5177c",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "status": "final",
+                "identifier": [
+                    {
+                        "system": "Temps de Pleine Conscience"
+                    }
+                ],
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "https://medplum.phylcero.fr/run",
+                            "code": "mindful_minutes",
+                            "display": "Mindful Minutes"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-27T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 12.650216515858968,
+                    "unit": "min"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "14ba1890-51a7-424c-8979-682319f5177c",
+                "meta": {
+                    "versionId": "f4916687-6def-4fa4-985a-bc3691692ad9",
+                    "lastUpdated": "2025-10-30T14:50:43.216Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/216f4851-923c-49ee-bb65-33074a65424e",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-09T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 1449,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "216f4851-923c-49ee-bb65-33074a65424e",
+                "meta": {
+                    "versionId": "1baa31ba-a21e-456f-8116-f3dc65b5f45d",
+                    "lastUpdated": "2025-10-30T14:50:43.227Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/c019555d-dd87-4f03-a5ee-4f92c46baf0d",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-10T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 610,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "c019555d-dd87-4f03-a5ee-4f92c46baf0d",
+                "meta": {
+                    "versionId": "6e77c90a-dcba-488a-82de-d7f1702b2cfe",
+                    "lastUpdated": "2025-10-30T14:50:43.236Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/852d46f9-d3fe-4ba9-821c-c9d5458459f9",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Taux saturation oxygène"
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "code": "59408-5",
+                            "display": "Oxygen saturation in Arterial blood by Pulse oximetry"
+                        }
+                    ]
+                },
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "status": "final",
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T07:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 95,
+                    "unit": "%"
+                },
+                "bodySite": {
+                    "coding": [
+                        {
+                            "code": "Pouce droit",
+                            "display": "Pouce droit"
+                        }
+                    ]
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "852d46f9-d3fe-4ba9-821c-c9d5458459f9",
+                "meta": {
+                    "versionId": "b6a65de2-e91f-4e51-ba97-45abb893d0b8",
+                    "lastUpdated": "2025-10-24T07:14:05.791Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/45844ad9-8a69-4133-95d0-446e35b0111e",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-11T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 536,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "45844ad9-8a69-4133-95d0-446e35b0111e",
+                "meta": {
+                    "versionId": "1a4a33fe-2d8d-4f67-9045-b8298fc7f5a6",
+                    "lastUpdated": "2025-10-30T14:50:43.244Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/6c378f39-f3b8-4159-bcb6-9b40084d3965",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Fréquence cardiaque moyenne"
+                    }
+                ],
+                "status": "final",
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "8867-4",
+                            "display": "Heart rate"
+                        }
+                    ]
+                },
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2015-10-24T06:30:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 80,
+                    "unit": "bpm"
+                },
+                "bodySite": {
+                    "coding": [
+                        {
+                            "code": "Bras droit",
+                            "display": "Bras droit"
+                        }
+                    ]
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "6c378f39-f3b8-4159-bcb6-9b40084d3965",
+                "meta": {
+                    "versionId": "a7aa8330-1b81-4f3b-b61f-c77893dc5231",
+                    "lastUpdated": "2025-10-26T14:46:12.907Z"
+                },
+                "component": [
+                    {
+                        "code": {
+                            "coding": [
+                                {
+                                    "system": "http://loinc.org",
+                                    "code": "8867-4",
+                                    "display": "Heart rate"
+                                }
+                            ]
+                        },
+                        "interpretation": [
+                            {
+                                "coding": [
+                                    {
+                                        "code": "Maximum",
+                                        "display": "Maximum"
+                                    }
+                                ]
+                            }
+                        ],
+                        "valueQuantity": {
+                            "value": 200,
+                            "unit": "bpm"
+                        }
+                    },
+                    {
+                        "code": {
+                            "coding": [
+                                {
+                                    "system": "http://loinc.org",
+                                    "code": "8867-4",
+                                    "display": "Heart rate"
+                                }
+                            ]
+                        },
+                        "valueQuantity": {
+                            "value": 20,
+                            "unit": "bpm"
+                        },
+                        "interpretation": [
+                            {
+                                "coding": [
+                                    {
+                                        "code": "Minimum",
+                                        "display": "Minimum"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/98f3e5b7-c5a4-4c73-a2fe-ad2acc85d4dd",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Température"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "code": "8310-5",
+                            "display": "Body temperature"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-25T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 36.9,
+                    "unit": "°"
+                },
+                "bodySite": {
+                    "coding": [
+                        {
+                            "code": "Bras gauche",
+                            "display": "Bras gauche"
+                        }
+                    ]
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "98f3e5b7-c5a4-4c73-a2fe-ad2acc85d4dd",
+                "meta": {
+                    "versionId": "3a65f39b-32d3-4789-bbff-35d42953fa66",
+                    "lastUpdated": "2025-10-24T07:57:46.020Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/1df979b2-1107-4b2a-b3be-aaf348be47bc",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-12T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 981,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "1df979b2-1107-4b2a-b3be-aaf348be47bc",
+                "meta": {
+                    "versionId": "8ea73152-5137-41d3-98dc-b6f67cfffff9",
+                    "lastUpdated": "2025-10-30T14:50:43.253Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http://medplum.lan:8103/fhir/R4/Observation/31d73c0e-bd7f-46e5-a64c-186df02c9984",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "component": [
+                    {
+                        "code": {
+                            "coding": [
+                                {
+                                    "system": "http://loinc.org",
+                                    "code": "8480-6",
+                                    "display": "Systolic blood pressure"
+                                }
+                            ]
+                        },
+                        "valueQuantity": {
+                            "value": 134,
+                            "unit": "mmHg"
+                        }
+                    },
+                    {
+                        "code": {
+                            "coding": [
+                                {
+                                    "system": "http://loinc.org",
+                                    "code": "8462-4",
+                                    "display": "Diastolic blood pressure"
+                                }
+                            ]
+                        },
+                        "valueQuantity": {
+                            "value": 75,
+                            "unit": "mmHg"
+                        }
+                    }
+                ],
+                "identifier": [
+                    {
+                        "system": "Pression artérielle"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "85354-9",
+                            "display": "Blood pressure panel"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "bodySite": {
+                    "coding": [
+                        {
+                            "code": "Bras gauche",
+                            "display": "Bras gauche"
+                        }
+                    ]
+                },
+                "id": "31d73c0e-bd7f-46e5-a64c-186df02c9984",
+                "meta": {
+                    "versionId": "70249aa9-c34d-435a-b6c5-f8d9c11949cf",
+                    "lastUpdated": "2025-10-24T08:10:03.060Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/3a2344ef-55a2-4d19-b29f-28eb7ec33235",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-13T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 627,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "3a2344ef-55a2-4d19-b29f-28eb7ec33235",
+                "meta": {
+                    "versionId": "5f8629a0-85de-4c58-ad73-3c891b3da204",
+                    "lastUpdated": "2025-10-30T14:50:43.262Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/d7027dd8-c5e2-432f-81d4-3683de13a8b9",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Etages monrtés"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41918-7",
+                            "display": "Number of stair flights climbed"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-14T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 1,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "d7027dd8-c5e2-432f-81d4-3683de13a8b9",
+                "meta": {
+                    "versionId": "ed24405c-685d-4851-b51a-27527b54940d",
+                    "lastUpdated": "2025-10-30T14:50:44.078Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/3ef822aa-d64f-47b5-8d68-fb708ea87040",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Poids"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "29463-7",
+                            "display": "Body weight"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 78,
+                    "unit": "kg"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "3ef822aa-d64f-47b5-8d68-fb708ea87040",
+                "meta": {
+                    "versionId": "fc6cae7f-bd35-4bbd-9fac-e8746db8fc0e",
+                    "lastUpdated": "2025-10-24T08:16:15.731Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/27be0f4a-ad1a-460b-8916-9b0523d72da6",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-14T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 259,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "27be0f4a-ad1a-460b-8916-9b0523d72da6",
+                "meta": {
+                    "versionId": "5b34369e-e0f7-4c11-b4e7-1172ffb0468a",
+                    "lastUpdated": "2025-10-30T14:50:43.271Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/e0c7cd94-0ce2-43f2-8b2e-fd8e3d32f542",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Taille"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "8302-2",
+                            "display": "Body height"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 185,
+                    "unit": "cm"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "e0c7cd94-0ce2-43f2-8b2e-fd8e3d32f542",
+                "meta": {
+                    "versionId": "2c731b30-4f6c-43df-8450-00ee0b16661f",
+                    "lastUpdated": "2025-10-24T08:19:22.907Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/2045e06d-8aef-4b91-81d3-25d4f17dad75",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "IMC"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "vital-signs",
+                                "display": "Vital Signs"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "39156-5",
+                            "display": "Body mass index (BMI)"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 20,
+                    "unit": "kg/m²"
+                },
+                "method": {
+                    "coding": [
+                        {
+                            "code": "Calcul",
+                            "display": "Calcul"
+                        }
+                    ]
+                },
+                "id": "2045e06d-8aef-4b91-81d3-25d4f17dad75",
+                "meta": {
+                    "versionId": "fd944d5f-2f81-4c5c-a883-c87fc6050fa3",
+                    "lastUpdated": "2025-10-24T08:26:19.068Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/eddc7086-be65-406f-beb8-2180a6966373",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Tour de taille"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "survey",
+                                "display": "Survey"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "8280-0",
+                            "display": "Waist circumference (at umbilicus)"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 98,
+                    "unit": "cm"
+                },
+                "bodySite": {
+                    "coding": [
+                        {
+                            "code": "Taille",
+                            "display": "Taille"
+                        }
+                    ]
+                },
+                "id": "eddc7086-be65-406f-beb8-2180a6966373",
+                "meta": {
+                    "versionId": "9208baf3-f119-4f1f-8f2f-0e50daa9039f",
+                    "lastUpdated": "2025-10-24T08:31:08.796Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/2386dc80-beba-44cd-8195-6491d7f56f05",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Nombre de pas en 24h"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "activity",
+                                "display": "Activity"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "41950-7",
+                            "display": "Number of steps in 24 hour"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-09-15T00:00:00+02:00",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 683,
+                    "unit": "count"
+                },
+                "device": {
+                    "reference": "Device/c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+                    "display": "iphone-de-garth"
+                },
+                "id": "2386dc80-beba-44cd-8195-6491d7f56f05",
+                "meta": {
+                    "versionId": "b89ffbb7-e4a4-4255-8607-4906c5439202",
+                    "lastUpdated": "2025-10-30T14:50:43.278Z"
+                }
+            }
+        },
+        {
+            "fullUrl": "http: //medplum.lan:8103/fhir/R4/Observation/3e96318b-0154-400b-901d-8db917776108",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Observation",
+                "identifier": [
+                    {
+                        "system": "Tour de Hanches"
+                    }
+                ],
+                "status": "final",
+                "category": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                                "code": "survey",
+                                "display": "Survey"
+                            }
+                        ]
+                    }
+                ],
+                "code": {
+                    "coding": [
+                        {
+                            "system": "http://loinc.org",
+                            "code": "56063-1",
+                            "display": "Hip circumference"
+                        }
+                    ]
+                },
+                "subject": {
+                    "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                    "display": "M. Jérôme LE GAL"
+                },
+                "effectiveDateTime": "2025-10-24T08:00:00.000Z",
+                "performer": [
+                    {
+                        "reference": "Patient/1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+                        "display": "M. Jérôme LE GAL"
+                    }
+                ],
+                "valueQuantity": {
+                    "value": 100,
+                    "unit": "cm"
+                },
+                "bodySite": {
+                    "coding": [
+                        {
+                            "code": "Hanches",
+                            "display": "Hanches"
+                        }
+                    ]
+                },
+                "id": "3e96318b-0154-400b-901d-8db917776108",
+                "meta": {
+                    "versionId": "d9437d8f-4465-40f5-9950-88d823f563de",
+                    "lastUpdated": "2025-10-24T08:36:45.732Z"
+                }
+            }
+        }
+    ],
+    "link": [
+        {
+            "relation": "self",
+            "url": "http://medplum.lan:8103/fhir/R4/Observation?_count=20&patient=1797fcc2-2d95-47d6-9045-c188d9e1d02a"
+        },
+        {
+            "relation": "first",
+            "url": "http://medplum.lan:8103/fhir/R4/Observation?_count=20&patient=1797fcc2-2d95-47d6-9045-c188d9e1d02a"
+        },
+        {
+            "relation": "next",
+            "url": "http://medplum.lan:8103/fhir/R4/Observation?_count=20&_offset=20&patient=1797fcc2-2d95-47d6-9045-c188d9e1d02a"
+        }
+    ]
+}
