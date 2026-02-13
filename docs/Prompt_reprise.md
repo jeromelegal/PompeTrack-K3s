@@ -203,101 +203,150 @@ Ce que je veux dans la nouvelle discussion :
   3. que les NetworkPolicies restent strictes mais fonctionnelles
 * Garder une architecture unique et propre, étape par étape.
 
----
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-On arrête là. Le cerveau a aussi un `livenessProbe`, et là il est clairement en `BackOff`. 😄
-Bonne décision.
-
----
-
-## 1️⃣ Les fichiers `json6902`, on les garde ?
-
-Non.
-
-Tu es passé en `patchesStrategicMerge`, et ça fonctionne.
-Les fichiers :
-
-* `ingestion-probes-json6902.yaml`
-* `minio-probes-json6902.yaml`
-
-→ **ne servent plus à rien**.
-
-Tu peux les supprimer pour garder ton projet propre :
+## Etat Traefik : 
 
 ```bash
-rm deploy/post-renderer/pompetrack-core/*json6902.yaml
+garth@medplum:~/pompetrack-health/pompetrack-k3s$ kubectl -n kube-system get svc,deploy,pods -l app.kubernetes.io/name=traefik -o wide
+NAME              TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                      AGE     SELECTOR
+service/traefik   LoadBalancer   10.43.219.17   192.168.2.88   80:31725/TCP,443:31134/TCP   3d19h   app.kubernetes.io/instance=traefik-kube-system,app.kubernetes.io/name=traefik
+
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES                                   SELECTOR
+deployment.apps/traefik   1/1     1            1           3d19h   traefik      rancher/mirrored-library-traefik:3.5.1   app.kubernetes.io/instance=traefik-kube-system,app.kubernetes.io/name=traefik
+
+NAME                          READY   STATUS    RESTARTS       AGE     IP                NODE      NOMINATED NODE   READINESS GATES
+pod/traefik-6f5f87584-gmz6w   1/1     Running   10 (54m ago)   3d19h   192.168.180.178   medplum   <none>           <none>
+garth@medplum:~/pompetrack-health/pompetrack-k3s$ kubectl -n kube-system get svc traefik -o yaml | sed -n '1,220p'
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: traefik
+    meta.helm.sh/release-namespace: kube-system
+  creationTimestamp: "2026-02-09T14:30:41Z"
+  finalizers:
+  - service.kubernetes.io/load-balancer-cleanup
+  labels:
+    app.kubernetes.io/instance: traefik-kube-system
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: traefik
+    helm.sh/chart: traefik-37.1.1_up37.1.0
+  name: traefik
+  namespace: kube-system
+  resourceVersion: "347062"
+  uid: c0759fc6-caa6-46a4-9233-5621b1ccdb78
+spec:
+  allocateLoadBalancerNodePorts: true
+  clusterIP: 10.43.219.17
+  clusterIPs:
+  - 10.43.219.17
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: PreferDualStack
+  ports:
+  - name: web
+    nodePort: 31725
+    port: 80
+    protocol: TCP
+    targetPort: web
+  - name: websecure
+    nodePort: 31134
+    port: 443
+    protocol: TCP
+    targetPort: websecure
+  selector:
+    app.kubernetes.io/instance: traefik-kube-system
+    app.kubernetes.io/name: traefik
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+    - ip: 192.168.2.88
+      ipMode: VIP
 ```
 
-On garde uniquement :
+## Etat istio :
 
-* `ingestion-probes-patch.yaml`
-* `minio-probes-patch.yaml`
-* `kustomize.sh`
+```bash
+garth@medplum:~/pompetrack-health/pompetrack-k3s$ kubectl get ns --show-labels | egrep '^(NAME|medplum|pompetrack-core)'
+kubectl -n medplum get pods -o jsonpath='{range .items[*]}{.metadata.name}{" => "}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | head -n 50
+kubectl -n pompetrack-core get pods -o jsonpath='{range .items[*]}{.metadata.name}{" => "}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | head -n 50
+NAME              STATUS   AGE     LABELS
+medplum           Active   54m     istio.io/rev=default,kubernetes.io/metadata.name=medplum
+pompetrack-core   Active   54m     istio.io/rev=default,kubernetes.io/metadata.name=pompetrack-core
+medplum-7f5c5fbc7c-d4qq8 => medplum 
+medplum-app-7cd789c666-wjkhc => medplum-app 
+medplum-postgresql-0 => postgresql 
+medplum-redis-master-0 => redis 
+ingestion-868c48844d-hxb8k => ingestion 
+minio-init-x8kv6 => mc 
+pompetrack-core-minio-6547d86bf6-jr7bb => minio 
+```
 
-Un cluster propre commence par un repo propre.
+## Etat mTLS :
+
+```bash
+garth@medplum:~/pompetrack-health/pompetrack-k3s$ kubectl -n medplum get peerauthentication,authorizationpolicy,requestauthentication,destinationrule -o wide
+kubectl -n pompetrack-core get peerauthentication,authorizationpolicy,requestauthentication,destinationrule -o wide
+NAME                                                              MODE         AGE
+peerauthentication.security.istio.io/default                      STRICT       55m
+peerauthentication.security.istio.io/medplum-app-permissive       PERMISSIVE   55m
+peerauthentication.security.istio.io/medplum-service-permissive   PERMISSIVE   55m
+NAME                                                                             MODE     AGE
+peerauthentication.security.istio.io/minio-mtls-strict-with-console-permissive   STRICT   55m
+peerauthentication.security.istio.io/mtls                                        STRICT   55m
+
+NAME                                                                           ACTION   AGE
+authorizationpolicy.security.istio.io/minio-allow-only-ingestion-and-console   ALLOW    55m
+garth@medplum:~/pompetrack-health/pompetrack-k3s$ 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ---
 
-# 🔁 Prompt de reprise pour demain
 
-Copie-colle ça dans une nouvelle discussion :
 
----
 
-## CHECKPOINT REPRISE — PompeTrack K3s + Istio + Post-Renderer
 
-Contexte :
 
-* K3s (Ubuntu 24.04)
-* Istio 1.28.3 (sidecar injection via label `istio.io/rev=default`)
-* Traefik (LoadBalancer + NodePort via Yunohost)
-* NetworkPolicies strictes (deny-all + allow ciblés)
-* Déploiement via `./deploy/apply.sh`
-* Charts Helm :
 
-  * medplum
-  * pompetrack-core (minio + ingestion)
 
-État actuel :
 
-* Les namespaces `medplum` et `pompetrack-core` sont créés avec label Istio dès le départ.
-* Un post-renderer Kustomize est utilisé pour injecter les probes :
 
-  * `ingestion-probes-patch.yaml`
-  * `minio-probes-patch.yaml`
-* Le rendu Helm avec post-renderer injecte correctement :
 
-  * livenessProbe
-  * readinessProbe
-  * startupProbe
-  * timeoutSeconds: 3
 
-Objectif pour aujourd’hui :
 
-1. Vérifier qu’un `./deploy/apply.sh` complet démarre le cluster proprement.
-2. S’assurer qu’il n’y a pas de restart multiple au boot.
-3. Vérifier que Istio est bien actif sur tous les pods (istio-proxy présent).
-4. Confirmer que mTLS STRICT fonctionne réellement.
-5. Ne rien corriger en live : corriger uniquement les fichiers si nécessaire.
+kubectl -n pompetrack-core delete job minio-init --ignore-not-found
+kubectl -n pompetrack-core apply -f deploy/charts/pompetrack-core/templates/minio-init-job.yaml
 
-On avance étape par étape, sans refactor massif.
-
----
-
-Demain on reprend proprement, calmement, méthodiquement.
-
-Un cluster stable, c’est comme du yoga pour DevOps :
-alignement, respiration… et pas de `kubectl panic`. 🧘‍♂️
+POD=$(kubectl -n pompetrack-core get pod -l job-name=minio-init -o jsonpath='{.items[0].metadata.name}')
+kubectl -n pompetrack-core logs "$POD" --all-containers=true
