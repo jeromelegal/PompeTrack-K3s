@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-app-to-server
+  namespace: medplum
+spec:
+  podSelector:
+    matchLabels:
+      app: medplum-app
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: medplum
+      ports:
+        - protocol: TCP
+          port: 8103

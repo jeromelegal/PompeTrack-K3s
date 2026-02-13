@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medplum
+  namespace: medplum
+spec:
+  template:
+    spec:
+      containers:
+        - name: medplum
+          livenessProbe:
+            timeoutSeconds: 3
+          readinessProbe:
+            timeoutSeconds: 3
+          startupProbe:
+            timeoutSeconds: 3
