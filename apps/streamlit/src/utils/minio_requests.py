@@ -7,7 +7,7 @@ from typing import Optional, Dict
 
 logger = logging.getLogger(__name__)
 
-TOKEN = os.getenv("TOKEN", "")
+TOKEN = os.getenv("TOKEN", "token")
 BASE_URL_API = os.getenv("BASE_URL_API", "http://ingestion")
 ENDPOINT_OBJECTS_LIST = os.getenv("ENDPOINT_OBJECTS_LIST", "/bucket/object-list/")
 ENDPOINT_OBJECT_JSON = os.getenv("ENDPOINT_OBJECT_JSON", "/object/json/")

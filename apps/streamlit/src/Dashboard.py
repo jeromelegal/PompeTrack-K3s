@@ -5,22 +5,22 @@ import pandas as pd
 import os
 from utils.common import is_admin, load_data, DEFAULT_LOOKBACK_DAYS
 
-API_URL = "http://api-ingestion/ingest/iphone"
-TOKEN = os.getenv("TOKEN", "")
+INGEST_BASE_URL = "http://ingestion/"
+TOKEN = os.getenv("TOKEN", "token")
 
 ENDPOINTS = {
     "iphone": {
-        "url": "http://api-ingestion/ingest/iphone",
+        "url": "http://ingestion/ingest/iphone",
         "type": ["json"],
         "kind": "json_dict",
     },
     "spirometer": {
-        "url": "http://api-ingestion/ingest/spirometer",
+        "url": "http://ingestion/ingest/spirometer",
         "type": ["csv"],
         "kind": "csv_bytes",
     },
     "sqlite": {
-    "url": "http://api-ingestion/ingest/sqlite",
+    "url": "http://ingestion/ingest/sqlite",
     "type": ["db"],
     "kind": "file_multipart",
     },
