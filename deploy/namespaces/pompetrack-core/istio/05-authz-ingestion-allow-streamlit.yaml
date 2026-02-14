@@ -1,0 +1,22 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: authz-ingestion-allow-streamlit
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: ingestion
+  action: ALLOW
+  rules:
+  # streamlit -> ingestion port 80 uniquement
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/pompetrack-core/sa/streamlit
+    to:
+    - operation:
+        ports: ["80"]
+  - to:
+    - operation:
+        ports: ["80"]

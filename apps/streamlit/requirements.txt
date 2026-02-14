@@ -1,0 +1,16 @@
+requests
+python-multipart
+boto3
+botocore
+streamlit
+plotly
+statsmodels
+pandas
+numpy
+streamlit-image-coordinates
+pillow
+pytest
+pytest-mock
+pytest-asyncio
+httpx
+responses
