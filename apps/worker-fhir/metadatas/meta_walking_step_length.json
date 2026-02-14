@@ -1,0 +1,17 @@
+{
+  "name": "walking_step_length",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "https://medplum.phylcero.fr/run",
+    "cat_code": "Gait",
+    "cat_display": "Gait",
+    "code_system": "https://medplum.phylcero.fr/run",
+    "code_code": "walking_step_length",
+    "code_display": "Walking Step Length",
+    "code_text": "Longueur de pas",
+    "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+    "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "metrics"
+  }
+}

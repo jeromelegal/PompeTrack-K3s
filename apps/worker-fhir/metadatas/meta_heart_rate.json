@@ -1,0 +1,23 @@
+{
+    "name": "heart_rate",
+    "template": "heart_rate.json",
+    "constants": 
+      {
+        "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "cat_code": "vital-signs",
+        "cat_display": "Vital Signs",
+        "code_system": "http://loinc.org",
+        "code_code": "8867-4",
+        "code_display": "Heart rate --avg",
+        "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+        "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+        "code_system[0]":"https://medplum.phylcero.fr/run",
+        "code_code[0]": "Heart-rate-min",
+        "code_display[0]": "Heart rate minimum (day)",
+        "code_system[1]": "https://medplum.phylcero.fr/run",
+        "code_code[1]": "Heart-rate-max",
+        "code_display[1]": "Heart rate maximum (day)",
+        "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+        "tag_code": "metrics"
+      }
+  }

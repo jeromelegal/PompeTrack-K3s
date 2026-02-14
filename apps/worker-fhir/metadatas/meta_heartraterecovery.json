@@ -1,0 +1,11 @@
+{
+  "name": "meta_heartraterecovery",
+  "template": "daughter_heart_rate.json",
+  "constants": {
+    "code_system": "http://loinc.org",
+    "code_code": "8867-4",
+    "code_display": "Heart rate",
+    "code_text": "Heart rate - recovery",
+    "units": "bpm"
+  }
+}
