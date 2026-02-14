@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit
+  namespace: pompetrack-core
+  labels:
+    app: streamlit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit
+  template:
+    metadata:
+      labels:
+        app: streamlit
+    spec:
+      serviceAccountName: streamlit
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: streamlit
+          image: registry.phylcero.fr/garth/pompetrack/streamlit:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8501
+              name: http
+    
+
