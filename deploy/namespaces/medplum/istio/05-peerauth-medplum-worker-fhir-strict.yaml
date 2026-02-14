@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: medplum-service-mtls
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: medplum
+  mtls:
+    mode: STRICT

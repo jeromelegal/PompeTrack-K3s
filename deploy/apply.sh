@@ -48,12 +48,16 @@ echo "==> Secrets"
 echo "==> Helm deps"
 helm dependency update deploy/charts/medplum || true
 
-echo "==> Helm install/upgrade (with post-renderer patches)"
+echo "==> Helm install/upgrade medplum (with post-renderer patches)"
 helm upgrade --install medplum deploy/charts/medplum \
   -f deploy/charts/medplum/values-medplum.yaml \
   -n medplum \
   --post-renderer ./deploy/post-renderer/medplum/kustomize.sh
 
+echo "==> Medplum bootstrap (project + worker-fhir client)"
+./deploy/secrets/medplum-config/generate-worker-fhir-medplum-client.sh
+
+echo "==> Helm install/upgrade pompetrack-core (with post-renderer patches)"
 helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
   -f deploy/charts/pompetrack-core/values-minio.yaml \
   -n pompetrack-core \

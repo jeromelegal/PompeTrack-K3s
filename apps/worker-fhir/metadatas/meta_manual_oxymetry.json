@@ -1,0 +1,17 @@
+{
+  "name": "manual_oxymetry",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "vital-signs",
+    "cat_display": "Vital Signs",
+    "code_system": "http://loinc.org",
+    "code_code": "59408-5",
+    "code_display": "Oxygen saturation in Arterial blood by Pulse oxymetry",
+    "code_text": "Saturation oxygène dans le sang",
+    "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
+    "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "manual_weekly"
+  }
+}

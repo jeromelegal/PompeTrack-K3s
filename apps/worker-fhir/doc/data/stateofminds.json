@@ -1,0 +1,518 @@
+[
+  {
+    "kind": "momentary_emotion",
+    "associations": [
+      "tasks",
+      "work",
+      "family"
+    ],
+    "id": "0630A61B-2B8F-4BFA-A140-5C9DB6193410",
+    "valenceClassification": "slightly_pleasant",
+    "end": "2025-12-07T13:32:10Z",
+    "valence": 0.33333333333333326,
+    "start": "2025-12-07T13:32:10Z",
+    "labels": [
+      "proud",
+      "satisfied"
+    ]
+  },
+  {
+    "end": "2025-11-26T13:32:08Z",
+    "valenceClassification": "slightly_pleasant",
+    "kind": "momentary_emotion",
+    "valence": 0.14529910803714507,
+    "labels": [
+      "excited",
+      "satisfied",
+      "calm"
+    ],
+    "associations": [],
+    "id": "B57AFEF3-1E11-44C9-BA07-34E7309439FD",
+    "start": "2025-11-26T13:32:08Z"
+  },
+  {
+    "valence": 0,
+    "associations": [
+      "health",
+      "fitness",
+      "work"
+    ],
+    "labels": [
+      "content",
+      "calm"
+    ],
+    "start": "2025-11-24T13:32:08Z",
+    "end": "2025-11-24T13:32:08Z",
+    "kind": "momentary_emotion",
+    "valenceClassification": "neutral",
+    "id": "6160D59B-6A4C-4397-B17F-19422B3FFEEB"
+  },
+  {
+    "associations": [
+      "work",
+      "family",
+      "health"
+    ],
+    "valenceClassification": "slightly_unpleasant",
+    "start": "2025-11-20T13:32:08Z",
+    "id": "81A53AC1-CA0F-428E-9645-0DD694C3DA5C",
+    "labels": [
+      "anxious",
+      "stressed",
+      "hopeless"
+    ],
+    "end": "2025-11-20T13:32:08Z",
+    "kind": "momentary_emotion",
+    "valence": -0.19902323628519913
+  },
+  {
+    "associations": [
+      "tasks",
+      "work",
+      "health"
+    ],
+    "valence": 0,
+    "valenceClassification": "neutral",
+    "start": "2025-11-19T13:49:47Z",
+    "labels": [
+      "content",
+      "drained"
+    ],
+    "id": "D23105B1-5B6D-4328-BB3F-AA8962F560E1",
+    "kind": "momentary_emotion",
+    "end": "2025-11-19T13:49:47Z"
+  },
+  {
+    "associations": [
+      "family",
+      "tasks",
+      "work",
+      "health"
+    ],
+    "labels": [
+      "drained"
+    ],
+    "start": "2025-11-15T13:32:03Z",
+    "kind": "momentary_emotion",
+    "valence": -0.1428571428571429,
+    "id": "5FA6ECBF-6A30-4C3B-99A2-4DD2689F0F1C",
+    "end": "2025-11-15T13:32:03Z",
+    "valenceClassification": "neutral"
+  },
+  {
+    "end": "2025-11-12T14:15:29Z",
+    "start": "2025-11-12T14:15:29Z",
+    "kind": "momentary_emotion",
+    "labels": [
+      "content"
+    ],
+    "valenceClassification": "neutral",
+    "valence": 0,
+    "associations": [
+      "health",
+      "family",
+      "tasks"
+    ],
+    "id": "EDD8730A-0262-4B82-B07B-1629DB2353B3"
+  },
+  {
+    "valenceClassification": "slightly_pleasant",
+    "associations": [
+      "health",
+      "tasks",
+      "work"
+    ],
+    "end": "2025-11-10T21:00:16Z",
+    "kind": "daily_mood",
+    "valence": 0.28937728937728946,
+    "labels": [
+      "proud"
+    ],
+    "start": "2025-11-10T21:00:16Z",
+    "id": "CB96266D-F9DD-407A-BEBB-8EBD93D171B1"
+  },
+  {
+    "valenceClassification": "slightly_pleasant",
+    "kind": "momentary_emotion",
+    "end": "2025-11-10T13:52:35Z",
+    "start": "2025-11-10T13:52:35Z",
+    "valence": 0.31379727653531364,
+    "id": "4FBEE662-20AC-4363-A234-7966E0FEC7FE",
+    "associations": [
+      "health",
+      "tasks",
+      "work"
+    ],
+    "labels": [
+      "proud",
+      "satisfied"
+    ]
+  },
+  {
+    "labels": [
+      "amazed",
+      "brave",
+      "proud",
+      "calm"
+    ],
+    "kind": "daily_mood",
+    "end": "2025-11-09T21:00:36Z",
+    "valenceClassification": "slightly_pleasant",
+    "valence": 0.29914526188329904,
+    "id": "162EB16A-8D18-4FC5-9367-D2E3A09B590A",
+    "start": "2025-11-09T21:00:36Z",
+    "associations": [
+      "health",
+      "tasks",
+      "work"
+    ]
+  },
+  {
+    "labels": [
+      "proud",
+      "satisfied"
+    ],
+    "end": "2025-11-06T20:45:25Z",
+    "associations": [
+      "health",
+      "work",
+      "family"
+    ],
+    "id": "00A4FD28-A8B6-44E1-AE81-90E6DBB77BFB",
+    "kind": "daily_mood",
+    "valence": 0.29181925455729174,
+    "start": "2025-11-06T20:45:25Z",
+    "valenceClassification": "slightly_pleasant"
+  },
+  {
+    "kind": "momentary_emotion",
+    "labels": [
+      "proud",
+      "brave"
+    ],
+    "associations": [
+      "health",
+      "partner",
+      "tasks"
+    ],
+    "id": "B2D75D02-1FBC-4A1D-B8D4-E959D8F701A6",
+    "valenceClassification": "slightly_pleasant",
+    "end": "2025-11-06T13:50:50Z",
+    "valence": 0.18437110984718408,
+    "start": "2025-11-06T13:50:50Z"
+  },
+  {
+    "valenceClassification": "slightly_pleasant",
+    "valence": 0.3015872270633013,
+    "id": "FD1E2528-9EED-46B3-A430-50D49C94BE34",
+    "kind": "momentary_emotion",
+    "end": "2025-11-05T13:32:07Z",
+    "labels": [
+      "relieved",
+      "peaceful",
+      "proud"
+    ],
+    "start": "2025-11-05T13:32:07Z",
+    "associations": [
+      "health",
+      "self_care",
+      "work"
+    ]
+  },
+  {
+    "start": "2025-11-02T13:32:10Z",
+    "valenceClassification": "neutral",
+    "labels": [
+      "drained"
+    ],
+    "end": "2025-11-02T13:32:10Z",
+    "associations": [
+      "health",
+      "fitness",
+      "weather",
+      "work"
+    ],
+    "id": "FF3B4079-BE26-4902-BD04-E5DDA7DB4763",
+    "kind": "momentary_emotion",
+    "valence": 0
+  },
+  {
+    "associations": [
+      "health",
+      "fitness",
+      "family"
+    ],
+    "kind": "daily_mood",
+    "labels": [
+      "excited",
+      "amused",
+      "content"
+    ],
+    "start": "2025-10-31T20:45:12Z",
+    "end": "2025-10-31T20:45:12Z",
+    "id": "30308E03-39AC-4949-9349-CC25C64E52AC",
+    "valence": 0.33577529851333554,
+    "valenceClassification": "slightly_pleasant"
+  },
+  {
+    "start": "2025-10-28T13:53:13Z",
+    "associations": [
+      "health",
+      "fitness",
+      "family"
+    ],
+    "labels": [
+      "proud",
+      "content"
+    ],
+    "valenceClassification": "slightly_pleasant",
+    "valence": 0.2869352124112867,
+    "id": "159625FB-0253-47FB-8CEA-908FDA03757E",
+    "end": "2025-10-28T13:53:13Z",
+    "kind": "momentary_emotion"
+  },
+  {
+    "id": "FE548E3D-5B6A-4303-BE29-C8D9A7795CDC",
+    "end": "2025-10-25T19:45:11Z",
+    "labels": [
+      "drained"
+    ],
+    "start": "2025-10-25T19:45:11Z",
+    "valenceClassification": "neutral",
+    "associations": [
+      "health",
+      "fitness"
+    ],
+    "kind": "daily_mood",
+    "valence": 0
+  },
+  {
+    "start": "2025-10-24T12:34:51Z",
+    "valence": 0,
+    "kind": "momentary_emotion",
+    "associations": [
+      "health",
+      "work",
+      "fitness"
+    ],
+    "id": "94FC3FDA-BF8F-4952-B1AF-F57550CD0FA1",
+    "valenceClassification": "neutral",
+    "end": "2025-10-24T12:34:51Z",
+    "labels": [
+      "drained"
+    ]
+  },
+  {
+    "start": "2025-10-24T12:32:12Z",
+    "end": "2025-10-24T12:32:12Z",
+    "labels": [
+      "drained"
+    ],
+    "kind": "momentary_emotion",
+    "associations": [
+      "health",
+      "fitness",
+      "work"
+    ],
+    "valence": 0,
+    "valenceClassification": "neutral",
+    "id": "88D1B14C-93A6-481E-8994-466992B5161D"
+  },
+  {
+    "valence": -0.3992673992673993,
+    "valenceClassification": "slightly_unpleasant",
+    "labels": [
+      "stressed",
+      "drained"
+    ],
+    "id": "E9767D50-6AF1-4185-9AE5-B4B2AFE5AFE3",
+    "associations": [
+      "health",
+      "family"
+    ],
+    "end": "2025-10-22T12:56:09Z",
+    "start": "2025-10-22T12:56:09Z",
+    "kind": "momentary_emotion"
+  },
+  {
+    "associations": [
+      "health",
+      "family",
+      "work"
+    ],
+    "valenceClassification": "slightly_pleasant",
+    "labels": [
+      "calm"
+    ],
+    "id": "E1A7AEB2-76A8-4D25-8AAA-0295EA9A30FE",
+    "start": "2025-10-20T19:45:06Z",
+    "end": "2025-10-20T19:45:06Z",
+    "kind": "daily_mood",
+    "valence": 0.24542124542124544
+  },
+  {
+    "end": "2025-10-18T19:49:50Z",
+    "valence": -0.11599519051911633,
+    "labels": [
+      "drained"
+    ],
+    "valenceClassification": "neutral",
+    "id": "DD34844D-48B9-451D-B335-2FFC4918E5BD",
+    "associations": [
+      "health",
+      "family"
+    ],
+    "start": "2025-10-18T19:49:50Z",
+    "kind": "daily_mood"
+  },
+  {
+    "valence": 0,
+    "start": "2025-10-17T12:32:08Z",
+    "end": "2025-10-17T12:32:08Z",
+    "valenceClassification": "neutral",
+    "labels": [
+      "drained"
+    ],
+    "associations": [
+      "health",
+      "family"
+    ],
+    "id": "4FB7D9FD-819C-4793-87ED-72B2627CB193",
+    "kind": "momentary_emotion"
+  },
+  {
+    "kind": "momentary_emotion",
+    "id": "A75BDDE8-29F3-4797-82F6-35D7C0370C5B",
+    "valenceClassification": "slightly_pleasant",
+    "valence": 0.2576311831072573,
+    "start": "2025-10-16T12:32:06Z",
+    "associations": [
+      "health",
+      "fitness",
+      "family",
+      "work"
+    ],
+    "labels": [
+      "calm",
+      "peaceful"
+    ],
+    "end": "2025-10-16T12:32:06Z"
+  },
+  {
+    "kind": "momentary_emotion",
+    "valenceClassification": "neutral",
+    "end": "2025-10-15T12:33:58Z",
+    "start": "2025-10-15T12:33:58Z",
+    "id": "A913F832-99B5-4CD2-BECE-B26818CE8AC4",
+    "associations": [
+      "tasks",
+      "work"
+    ],
+    "labels": [
+      "drained"
+    ],
+    "valence": 0
+  },
+  {
+    "start": "2025-10-14T12:32:09Z",
+    "kind": "momentary_emotion",
+    "labels": [
+      "drained"
+    ],
+    "end": "2025-10-14T12:32:09Z",
+    "associations": [
+      "health",
+      "self_care",
+      "family"
+    ],
+    "valence": -0.17460324912717495,
+    "valenceClassification": "slightly_unpleasant",
+    "id": "8B32DE15-AD4E-438B-BB85-2E69689085D9"
+  },
+  {
+    "valence": -0.2551893297132555,
+    "valenceClassification": "slightly_unpleasant",
+    "labels": [
+      "annoyed",
+      "drained"
+    ],
+    "start": "2025-10-10T19:45:09Z",
+    "id": "789234B4-533B-4FDF-AE5C-37F3133A70E5",
+    "associations": [
+      "health",
+      "work"
+    ],
+    "end": "2025-10-10T19:45:09Z",
+    "kind": "daily_mood"
+  },
+  {
+    "associations": [
+      "health",
+      "work",
+      "family",
+      "friends"
+    ],
+    "kind": "daily_mood",
+    "labels": [
+      "satisfied",
+      "excited"
+    ],
+    "id": "0AC55801-CEA4-4DDE-892E-2F56E0E9A810",
+    "valenceClassification": "slightly_pleasant",
+    "start": "2025-10-08T19:45:30Z",
+    "end": "2025-10-08T19:45:30Z",
+    "valence": 0.2649571904332646
+  },
+  {
+    "associations": [
+      "health",
+      "family",
+      "work"
+    ],
+    "kind": "momentary_emotion",
+    "id": "1F0218D2-5996-4534-9959-42AEFB81FB0C",
+    "labels": [
+      "excited",
+      "amused",
+      "calm"
+    ],
+    "start": "2025-10-08T12:32:16Z",
+    "valenceClassification": "slightly_pleasant",
+    "end": "2025-10-08T12:32:16Z",
+    "valence": 0.2771672399052769
+  },
+  {
+    "end": "2025-10-06T19:47:11Z",
+    "associations": [
+      "fitness",
+      "tasks",
+      "work"
+    ],
+    "kind": "daily_mood",
+    "labels": [
+      "discouraged",
+      "drained",
+      "sad"
+    ],
+    "valenceClassification": "neutral",
+    "id": "3048D6CC-95C0-40A4-8852-C611F2369B15",
+    "start": "2025-10-06T19:47:11Z",
+    "valence": 0
+  },
+  {
+    "associations": [
+      "fitness",
+      "work",
+      "family"
+    ],
+    "valenceClassification": "neutral",
+    "labels": [
+      "calm"
+    ],
+    "valence": 0,
+    "end": "2025-10-06T08:28:03Z",
+    "start": "2025-10-06T08:28:03Z",
+    "id": "CCDBEF12-D4D3-4458-8DBC-0587AAA21C2E",
+    "kind": "momentary_emotion"
+  }
+]

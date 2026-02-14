@@ -1,0 +1,67 @@
+{"metrics":[
+    {
+        "name": "manual_quadriceps_left",
+        "type": "force",
+        "data": [
+            {
+                "qty": 0.4666666666666666,
+                "date": "2025-12-31T08:29:17.463614+00:00"
+            }
+        ],
+        "units": "N"
+    },
+    {
+        "name": "manual_quadriceps_right",
+        "type": "force",
+        "data": [
+            {
+                "qty": 48.0,
+                "date": "2025-12-31T08:29:17.463614+00:00"
+            }
+        ],
+        "units": "N"
+    },
+    {
+        "name": "manual_grip_right",
+        "type": "force",
+        "data": [
+            {
+                "qty": 50.0,
+                "date": "2025-12-31T08:29:17.463614+00:00"
+            }
+        ],
+        "units": "N"
+    },
+    {
+        "name": "manual_grip_left",
+        "type": "force",
+        "data": [
+            {
+                "qty": 0.6,
+                "date": "2025-12-31T08:29:17.463614+00:00"
+            }
+        ],
+        "units": "N"
+    },
+    {
+        "name": "manual_rpe",
+        "type": "force",
+        "data": [
+            {
+                "qty": 7,
+                "date": "2025-12-31T08:29:17.463614+00:00"
+            }
+        ]
+    },
+    {
+        "name": "manual_strength_notes",
+        "type": "force",
+        "data": [
+            {
+                "note": "En forme\nInfos détaillées :\nQuadriceps gauche : [0.5, 0.4, 0.5], {'max': 0.5, 'mean': 0.4666666666666666, 'fatigue_index_pct': 0.0}\nQuadriceps droits : [48.0, 48.0, 48.0], {'max': 48.0, 'mean': 48.0, 'fatigue_index_pct': 0.0}\nAssymétrie quadriceps : ⚠️ Différence gauche-droite = -99.0% (seuil 10.0%).\nGrip gauche : [0.6, 0.6, 0.6], {'max': 0.6, 'mean': 0.6, 'fatigue_index_pct': 0.0}\nGrip droit : [50.0, 50.0, 50.0], {'max': 50.0, 'mean': 50.0, 'fatigue_index_pct': 0.0}\nAssymétrie poigne : ⚠️ Différence gauche-droite = -98.8% (seuil 10.0%).\n",
+                "date": "2025-12-31T08:29:17.463614+00:00"
+            }
+        ]
+    }
+]
+}

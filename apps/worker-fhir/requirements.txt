@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+gunicorn
+requests
+aiohttp
+httpx
+python-multipart
+redis
+python-dateutil
+fhir.resources
+pint
+pytest
+pytest-mock
+responses
+pytest-asyncio

@@ -1,0 +1,47 @@
+{"metrics":[
+    {
+        "name": "manual_weight",
+        "type": "weekly",
+        "data": [
+            {
+                "qty": 75.0,
+                "date": "2026-01-01T18:17:59.191485+00:00"
+            }
+        ],
+        "units": "kg"
+    },
+    {
+        "name": "manual_heart_rate",
+        "type": "weekly",
+        "data": [
+            {
+                "qty": 70,
+                "date": "2026-01-01T18:17:59.191485+00:00"
+            }
+        ],
+        "units": "bpm"
+    },
+    {
+        "name": "manual_bp",
+        "type": "weekly",
+        "data": [
+            {
+                "systolic_value": 120,
+                "diastolic_value": 80,
+                "date": "2026-01-01T18:17:59.191485+00:00",
+                "units": "mmHg"
+            }
+        ]
+    },
+    {
+        "name": "manual_symptoms",
+        "type": "weekly",
+        "data": [
+            {
+                "note": "Suivi mensuel",
+                "date": "2026-01-01T18:17:59.191485+00:00"
+            }
+        ]
+    }
+]
+}

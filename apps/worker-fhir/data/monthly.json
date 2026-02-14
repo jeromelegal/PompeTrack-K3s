@@ -1,0 +1,90 @@
+ {"metrics":[
+    {
+        "name": "manual_calf_left",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 35.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_calf_right",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 35.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_thigh_left",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 55.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_thigh_right",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 55.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_waist",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 85.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_hips",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 95.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_neck",
+        "type": "monthly",
+        "data": [
+            {
+                "qty": 38.0,
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ],
+        "units": "cm"
+    },
+    {
+        "name": "manual_comments",
+        "type": "monthly",
+        "data": [
+            {
+                "note": "Suivi mensuel",
+                "date": "2026-01-01T18:18:18.098506+00:00"
+            }
+        ]
+    }
+]
+ }
