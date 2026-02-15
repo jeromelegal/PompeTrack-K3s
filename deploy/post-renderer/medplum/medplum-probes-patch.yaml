@@ -9,8 +9,8 @@ spec:
       containers:
         - name: medplum
           livenessProbe:
-            timeoutSeconds: 3
+            timeoutSeconds: 5
           readinessProbe:
-            timeoutSeconds: 3
+            timeoutSeconds: 5
           startupProbe:
-            timeoutSeconds: 3
+            timeoutSeconds: 5

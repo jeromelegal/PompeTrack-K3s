@@ -34,9 +34,9 @@ spec:
 
             # config Medplum api
             - name: MEDPLUM_BASE_URL
-              value: "http://medplum-service.medplum.svc.cluster.local"
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
             - name: MEDPLUM_TOKEN_ENDPOINT
-              value: "http://medplum-service.medplum.svc.cluster.local/oauth2/token"
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
             - name: MEDPLUM_SCOPE
               value: "system/*.*"
 

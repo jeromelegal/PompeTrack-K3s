@@ -32,6 +32,9 @@ apply_file_if_exists deploy/namespaces/pompetrack-core/00-namespace.yaml
 kubectl get ns medplum >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/medplum/00-namespace.yaml
 kubectl get ns pompetrack-core >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/pompetrack-core/00-namespace.yaml
 
+echo "== Services medplum =="
+kubectl apply -f deploy/namespaces/medplum/services/
+
 echo "==> Netpol (strict baseline + targeted allows)"
 apply_dir_ordered deploy/namespaces/medplum/netpol
 apply_dir_ordered deploy/namespaces/pompetrack-core/netpol
