@@ -1,0 +1,95 @@
+stages: [build]
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_BUILDKIT: "1"
+
+default:
+  image: docker:27
+  services:
+    - docker:27-dind
+  before_script:
+    - apk add --no-cache ca-certificates git && update-ca-certificates
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+
+build_changed_images:
+  stage: build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  script:
+    - |
+      set -eu
+
+      # 1) Déterminer la base du diff
+      # - en MR : compare à la target branch
+      # - en push : compare au commit précédent
+      if [ -n "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-}" ]; then
+        echo "MR pipeline: diff against origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+        git fetch origin "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+        BASE="origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+      else
+        echo "Push pipeline: diff against previous commit"
+        BASE="${CI_COMMIT_BEFORE_SHA:-}"
+        if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+          echo "No previous SHA (first commit on branch?) -> build all apps"
+          BASE=""
+        fi
+      fi
+
+      # 2) Liste des fichiers changés
+      if [ -z "$BASE" ]; then
+        CHANGED_FILES="$(git ls-files)"
+      else
+        CHANGED_FILES="$(git diff --name-only "$BASE" "$CI_COMMIT_SHA")"
+      fi
+
+      echo "Changed files:"
+      echo "$CHANGED_FILES" | sed 's/^/ - /' || true
+
+      # 3) Définir les apps et leurs chemins
+      #    (map: app_name -> app_path)
+      APPS="ingestion streamlit worker-fhir worker-sqlite worker-stream"
+
+      # 4) Détecter quelles apps sont impactées
+      #    - si un fichier sous apps/<app>/ a changé -> build cette app
+      #    - si un fichier "shared" a changé -> build toutes (ou une liste)
+      SHARED_REGEX='^(libs/|common/|shared/|requirements|pyproject\.toml|poetry\.lock|Dockerfile|\.dockerignore|deploy/|k8s/|helm/|charts/)'
+
+      BUILD_LIST=""
+
+      echo "$CHANGED_FILES" | grep -Eq "$SHARED_REGEX" && SHARED_CHANGED=1 || SHARED_CHANGED=0
+
+      if [ "$SHARED_CHANGED" -eq 1 ]; then
+        echo "Shared change detected -> build all apps"
+        BUILD_LIST="$APPS"
+      else
+        for app in $APPS; do
+          if echo "$CHANGED_FILES" | grep -qE "^apps/${app}/"; then
+            BUILD_LIST="$BUILD_LIST $app"
+          fi
+        done
+      fi
+
+      # 5) Si rien à builder, on sort clean
+      BUILD_LIST="$(echo "$BUILD_LIST" | xargs || true)"
+      if [ -z "$BUILD_LIST" ]; then
+        echo "No impacted app detected -> nothing to build."
+        exit 0
+      fi
+
+      echo "Apps to build: $BUILD_LIST"
+
+      # 6) Build & push
+      for app in $BUILD_LIST; do
+        APP_PATH="apps/$app"
+        echo "=== Building $app from $APP_PATH ==="
+        docker build \
+          -t "$CI_REGISTRY_IMAGE/$app:$CI_COMMIT_SHORT_SHA" \
+          -t "$CI_REGISTRY_IMAGE/$app:latest" \
+          "$APP_PATH"
+        docker push "$CI_REGISTRY_IMAGE/$app:$CI_COMMIT_SHORT_SHA"
+        docker push "$CI_REGISTRY_IMAGE/$app:latest"
+      done
