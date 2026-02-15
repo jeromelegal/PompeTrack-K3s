@@ -1,0 +1,11 @@
+# .gitlab-ci.yml
+
+stages:
+  - build
+
+include:
+  - local: 'apps/ingestion/.gitlab-ci.yml'
+  - local: 'apps/streamlit/.gitlab-ci.yml'
+  - local: 'apps/worker-fhir/.gitlab-ci.yml'
+  - local: 'apps/worker-sqlite/.gitlab-ci.yml'
+  - local: 'apps/worker-stream/.gitlab-ci.yml'
