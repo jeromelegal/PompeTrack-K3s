@@ -42,16 +42,17 @@ spec:
             - name: FHIR_BASE
               value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
             - name: BASE_URL_MINIO_API
-              vale: "http://ingestion"
+              value: "http://ingestion"
 
           volumeMounts:
             - name: medplum-creds
-              mountPath: /var/run/secrets
+              mountPath: /etc/secrets
               readOnly: true
       volumes:
         - name: medplum-creds
           secret:
             secretName: worker-fhir-medplum-client
+            defaultMode: 0400
             items:
               - key: MEDPLUM_CLIENT_ID
                 path: MEDPLUM_CLIENT_ID
