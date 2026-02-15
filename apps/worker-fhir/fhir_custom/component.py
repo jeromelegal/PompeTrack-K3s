@@ -7,7 +7,7 @@ from pydantic import ValidationError
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  
+logging.basicConfig(level=logging.INFO)
 
 class ComponentValidationError(ValueError):
     pass

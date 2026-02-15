@@ -13,7 +13,7 @@ import uuid
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  
+logging.basicConfig(level=logging.INFO)  
 
 def to_fhir_datetime(value):
     """

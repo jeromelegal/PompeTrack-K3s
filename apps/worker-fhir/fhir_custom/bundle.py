@@ -10,8 +10,9 @@ import requests
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
-FHIR_BASE = os.getenv("FHIR_BASE", "http://medplum:8103/fhir/R4/")
+FHIR_BASE = os.getenv("FHIR_BASE", "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4/")
 
 def build_bundle_fhir(observations: List[Observation]) -> Bundle:
     bundle = Bundle(

@@ -6,9 +6,10 @@ import json
 from typing import Optional, Dict
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("TOKEN", "token")
-BASE_URL_API = os.getenv("BASE_URL_API", "http://ingestion")
+BASE_URL_MINIO_API = os.getenv("BASE_URL_MINIO_API", "http://ingestion")
 ENDPOINT_OBJECTS_LIST = os.getenv("ENDPOINT_OBJECTS_LIST", "/bucket/object-list/")
 ENDPOINT_OBJECT_JSON = os.getenv("ENDPOINT_OBJECT_JSON", "/object/json/")
 ENDPOINT_OBJECT_MOVE = os.getenv("ENDPOINT_OBJECT_MOVE", "/object/move/")
@@ -23,7 +24,7 @@ def get_object_list(bucket: str,
     """
     Retrieve objects list in a bucket.
     """
-    url = BASE_URL_API + ENDPOINT_OBJECTS_LIST + bucket
+    url = BASE_URL_MINIO_API + ENDPOINT_OBJECTS_LIST + bucket
     headers = {
         "Authorization": f"Bearer {token}",
     }
@@ -41,7 +42,7 @@ def get_object_json(bucket: str,
     """
     Download json file.
     """
-    url = BASE_URL_API + ENDPOINT_OBJECT_JSON + bucket + "/" + object_name
+    url = BASE_URL_MINIO_API + ENDPOINT_OBJECT_JSON + bucket + "/" + object_name
     logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
@@ -66,7 +67,7 @@ def move_object(object_name: str,
     """
     Move object from a bucket to an other.
     """
-    url = BASE_URL_API + ENDPOINT_OBJECT_MOVE + object_name + "/" + source_bucket + "/" + destination_bucket
+    url = BASE_URL_MINIO_API + ENDPOINT_OBJECT_MOVE + object_name + "/" + source_bucket + "/" + destination_bucket
     headers = {
         "Authorization": f"Bearer {token}",
     }
@@ -101,7 +102,7 @@ def upload_manual_file(object_name: str, token=TOKEN):
     """
     Upload an object to a bucket.
     """
-    url = BASE_URL_API + ENDPOINT_INGEST_MANUAL
+    url = BASE_URL_MINIO_API + ENDPOINT_INGEST_MANUAL
     logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
@@ -130,7 +131,7 @@ def upload_object_into_bucket(
     Upload an object to the API endpoint expecting multipart/form-data with field 'file'
     and optional form field 'metadata' (JSON string).
     """
-    url = BASE_URL_API + ENDPOINT_GENERIC + bucket
+    url = BASE_URL_MINIO_API + ENDPOINT_GENERIC + bucket
     logger.info("URL used : %s", url)
     headers = {
         "Authorization": f"Bearer {token}",
@@ -164,7 +165,7 @@ def get_object(
     """
     Download file.
     """
-    url = BASE_URL_API + ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name
+    url = BASE_URL_MINIO_API + ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name
     logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
@@ -192,7 +193,7 @@ def delete_object_on_minio(
     """
     Delete object in a bucket
     """
-    url = BASE_URL_API + ENDPOINT_OBJECT_DELETE + bucket + "/" + object_name
+    url = BASE_URL_MINIO_API + ENDPOINT_OBJECT_DELETE + bucket + "/" + object_name
     logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
@@ -218,7 +219,7 @@ def download_db_object_to_tmp(
     Download minio object and write it on '/tmp' in binary.
     Return local path.
     """
-    url = BASE_URL_API + ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name
+    url = BASE_URL_MINIO_API + ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name
     headers = {"Authorization": f"Bearer {token}"}
 
     os.makedirs(tmp_dir, exist_ok=True)

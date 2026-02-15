@@ -6,12 +6,7 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-
-# Configuration du logging
-logging.basicConfig(
-    level=logging.INFO, 
-    format='- %(name) - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 
 def split_json(json_file):
     for k in json_file["data"].keys():

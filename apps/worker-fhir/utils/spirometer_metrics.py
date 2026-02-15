@@ -6,12 +6,7 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-
-# Configuration du logging
-logging.basicConfig(
-    level=logging.INFO, 
-    format='- %(name) - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 
 # For a complete spirometer file (not too large !! else use process_spirometer_by_cats)
 def process_global_spirometer(spirometer: Union[List, str]) -> Dict[str, Any]:
