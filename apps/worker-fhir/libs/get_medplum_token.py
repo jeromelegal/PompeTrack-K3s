@@ -2,7 +2,7 @@ import os
 import time
 import logging
 from typing import Optional
-from libs.security_redis import read_secret_from_file
+from libs.secrets_utils import read_secret_from_file
 
 import requests
 

@@ -1,14 +1,14 @@
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
-  name: medplum-service-permissive
+  name: postgresql-permissive
   namespace: medplum
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: medplum
+      app.kubernetes.io/name: postgresql
   mtls:
     mode: PERMISSIVE
   portLevelMtls:
-    "8103":
+    "5432":
       mode: PERMISSIVE

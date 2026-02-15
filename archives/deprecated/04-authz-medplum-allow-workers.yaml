@@ -15,7 +15,6 @@ spec:
         - cluster.local/ns/pompetrack-core/sa/worker-fhir
     to:
     - operation:
-        ports: ["80"]
         methods: ["POST", "GET"]
         paths:
         - "/oauth2/token"
