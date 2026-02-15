@@ -1,7 +1,3 @@
-workflow:
-  rules:
-    - when: always
-
 stages: [build]
 
 variables:
