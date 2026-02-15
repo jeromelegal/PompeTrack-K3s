@@ -1,0 +1,12 @@
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: medplum-server-8103-permissive
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: medplum
+  portLevelMtls:
+    "8103":
+      mode: PERMISSIVE
