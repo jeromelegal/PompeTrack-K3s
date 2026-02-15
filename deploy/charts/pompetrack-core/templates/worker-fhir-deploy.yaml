@@ -39,6 +39,10 @@ spec:
               value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
             - name: MEDPLUM_SCOPE
               value: "system/*.*"
+            - name: FHIR_BASE
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+            - name: BASE_URL_MINIO_API
+              vale: "http://ingestion"
 
           volumeMounts:
             - name: medplum-creds

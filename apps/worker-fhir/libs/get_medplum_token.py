@@ -7,7 +7,7 @@ from libs.secrets_utils import read_secret_from_file
 import requests
 
 logger = logging.getLogger("get_medplum_token")
-logger.setLevel(os.getenv("LOGLEVEL", "INFO"))
+logging.basicConfig(level=logging.INFO)
 if not logger.handlers:
     ch = logging.StreamHandler()
     ch.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s - %(message)s"))
@@ -15,7 +15,7 @@ if not logger.handlers:
 
 CLIENT_ID = read_secret_from_file("CLIENT_ID_FILE", "CLIENT_ID")
 CLIENT_SECRET = read_secret_from_file("CLIENT_SECRET_FILE", "CLIENT_SECRET")
-BASE_URL = os.getenv("MEDPLUM_BASE_URL", "https://app.phylcero.fr/api")
+BASE_URL = os.getenv("MEDPLUM_BASE_URL", "http://medplum-mesh.medplum.svc.cluster.local:8103")
 TOKEN_ENDPOINT = os.getenv("MEDPLUM_TOKEN_ENDPOINT", f"{BASE_URL}/oauth2/token")
 DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "system/*.*")
 

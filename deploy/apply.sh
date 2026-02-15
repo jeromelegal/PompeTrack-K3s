@@ -39,6 +39,11 @@ echo "==> Netpol (strict baseline + targeted allows)"
 apply_dir_ordered deploy/namespaces/medplum/netpol
 apply_dir_ordered deploy/namespaces/pompetrack-core/netpol
 
+echo "==> Wait for istiod (validation webhook needs ready endpoints)"
+kubectl -n istio-system rollout status deploy/istiod --timeout=180s
+kubectl -n istio-system wait --for=condition=Available deploy/istiod --timeout=180s
+kubectl -n istio-system get endpoints istiod
+
 echo "==> Istio policies (PeerAuth/Authz)"
 apply_dir_ordered deploy/namespaces/medplum/istio
 apply_dir_ordered deploy/namespaces/pompetrack-core/istio

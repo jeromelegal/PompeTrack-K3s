@@ -17,11 +17,20 @@ sudo reboot
  sudo chown "$USER":"$USER" ~/.kube/config
  chmod 600 ~/.kube/config
 
+---
+## Supprimer TOUT sur K3s et partir vraiment de 0:
+
+```bash
+sudo systemctl stop k3s
+sudo rm -rf /var/lib/rancher/k3s/agent/containerd
+sudo systemctl start k3s
+```
 
 
 ---
 ## Repartir à 0 :
 
+```bash
 helm -n pompetrack-core uninstall pompetrack-core || true
 helm -n medplum uninstall medplum || true
 kubectl delete namespace pompetrack-core
@@ -31,7 +40,7 @@ kubectl delete namespace medplum
 
 kubectl get all -n medplum
 kubectl get all -n pompetrack-core
-
+```
 ---
 
 ## Verifs istio :

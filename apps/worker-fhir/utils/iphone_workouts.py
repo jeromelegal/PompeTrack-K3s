@@ -7,11 +7,7 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-
-logging.basicConfig(
-    level=logging.INFO, 
-    format='- %(name) - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 
 def process_global_workouts(workouts: Union[List, str]) -> Dict[str, Any]:
     obs_list = []

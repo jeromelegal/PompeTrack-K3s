@@ -5,13 +5,8 @@ from utils.iphone_stateofminds import pipeline_stateofminds
 from libs.api_minio.minio_requests import get_object_list, get_object_json, move_object
 import logging
 
-
-logging.basicConfig(
-    level=logging.INFO, 
-    format='- %(name) - %(message)s'
-)
-
-logger = logging.getLogger("Worker")
+logger = logging.getLogger("Worker-fhir")
+logging.basicConfig(level=logging.INFO)
 
 BUCKET_RAW = "raw-iphone"
 BUCKET_PROCESSED = "processed-fhir"
