@@ -21,7 +21,7 @@ spec:
       containers:
         - name: worker-fhir
           image: registry.phylcero.fr/garth/pompetrack/worker-fhir:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               name: http
