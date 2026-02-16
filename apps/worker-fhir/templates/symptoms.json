@@ -1,6 +1,6 @@
 {
 
-    "effectiveDateTime": "date",
+    "effectiveDateTime": "start",
 
     "cat_system": "cat_system",
     "cat_code": "cat_code",
@@ -11,7 +11,12 @@
     "code_display": "code_display",
     "code_text": "code_text",
 
-    "value_string": "note",
+    "value_string": "name",
+
+    "vcc_system": "vcc_system",
+    "vcc_code": "vcc_code",
+    "vcc_display": "vcc_display",
+    "vcc_text": "vcc_text",
     
     "patient_id": "patient_id",
     "device_id": "device_id",
