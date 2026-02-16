@@ -1,7 +1,7 @@
 [
 {
     "cycleStart" : false,
-    "name" : "Fatigue",
+    "symptom" : "Fatigue",
     "userEntered" : true,
     "source" : "Santé",
     "severity" : "Léger",
@@ -9,7 +9,7 @@
     "end" : "2026-02-16 16:33:00 +0100"
     },
     {
-    "name" : "Fatigue",
+    "symptom" : "Fatigue",
     "start" : "2026-02-16 16:33:00 +0100",
     "severity" : "Modéré",
     "end" : "2026-02-16 16:33:00 +0100",
@@ -21,7 +21,7 @@
     "start" : "2026-02-16 16:33:00 +0100",
     "end" : "2026-02-16 16:33:00 +0100",
     "cycleStart" : false,
-    "name" : "Fatigue",
+    "symptom" : "Fatigue",
     "severity" : "Grave",
     "userEntered" : true,
     "source" : "Santé"
@@ -31,7 +31,7 @@
     "start" : "2026-01-18 12:45:00 +0100",
     "cycleStart" : false,
     "end" : "2026-01-18 12:45:00 +0100",
-    "name" : "Douleur au bas du dos",
+    "symptom" : "Douleur au bas du dos",
     "severity" : "Présent",
     "source" : "Santé"
     }
