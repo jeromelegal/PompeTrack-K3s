@@ -1,6 +1,6 @@
 from __future__ import annotations
 import json
-from typing import Dict, Any, Mapping, List
+from typing import Dict, Any, Mapping, List, Iterable
 import os, copy
 from dateutil import parser
 import logging
@@ -113,6 +113,35 @@ class FillResource:
                 if r is not None:
                     return r
         return None
+    
+    def update_codeable(
+        self,
+        *,
+        codeable_dict: Mapping[str, Mapping[str, Any]],
+        keyword: str | None,
+        prefix: str,
+        fields: Iterable[str] = ("system", "code", "display", "text"),
+        default: Mapping[str, Any] | None = None,
+    ) -> None:
+        """
+        Ajoute aux sources un dict plat du type:
+          {f"{prefix}_system": "...", f"{prefix}_code": "...", ...}
+        à partir d'un keyword (ex: "Léger").
+        """
+        if not keyword:
+            return
+
+        payload = codeable_dict.get(keyword) or default
+        if not payload:
+            return
+
+        extra: dict[str, Any] = {}
+        for f in fields:
+            if f in payload and payload[f] is not None:
+                extra[f"{prefix}_{f}"] = payload[f]
+
+        if extra:
+            self.update_sources(extra)
     
     def build(self, template: Mapping[str, Any]) -> Mapping[str, Any]:
         clone = copy.deepcopy(template)
@@ -401,6 +430,51 @@ class CreatePreFHIR_name(CreatePreFHIR):
             round_only_value_paths=round_only_value_paths,
             round_strings=round_strings
         )
+
+class CreatePreFHIR_symptoms:
+    """
+    Adapter pour le template meta_iphone_symptom.json / symptoms.json.
+
+    - start -> date  (effectiveDateTime attend "date")
+    - name  -> note  (value_string attend "note")
+    - severity -> keyword pour remplir vcc_* via SEVERITY_LEVELS
+    """
+    TEMPLATE_NAME = "iphone_symptom"
+
+    def process(self, symptom: Dict[str, Any]):
+        # 1) Fabrique un payload compatible CreatePreFHIR_name
+        payload = copy.deepcopy(symptom)
+
+        # 2) Crée le creator standard (charge meta_iphone_symptom.json)
+        creator = CreatePreFHIR_name(payload=payload, name=self.TEMPLATE_NAME)
+
+        # 3) Render standard, MAIS on injecte le codeable vcc_* avant build.
+        #    -> On refait ici une boucle très proche de CreatePreFHIR.render()
+        rendered = []
+
+        normalized_data = creator._normalize(creator.data)
+        entries = [normalized_data] if isinstance(normalized_data, dict) else normalized_data
+
+        for entry in entries:
+            resource = copy.deepcopy(creator.template)
+
+            filler = FillResource(
+                creator.constants,
+                entry,
+                {"units": creator.units},
+            )
+            filler.update_codeable(
+                codeable_dict=SEVERITY_LEVELS,
+                keyword=entry.get("severity"),
+                prefix="vcc",
+            )
+
+            rendered.append(filler.build(resource))
+
+        observations = rendered
+        parent_index = 0
+        children_indices = []
+        return observations, parent_index, children_indices
     
     
 if __name__ == "__main__":

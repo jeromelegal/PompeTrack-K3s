@@ -61,21 +61,21 @@ def process_stateofminds_by_cats(stateofmind: Union[dict, str]) -> Dict[str, Any
 
     # Instance CreatePreFHIR
     try: 
-        #logger.info(f"Creating PreFHIR for {i}.")
+        logger.info(f"Creating PreFHIR for stateofmind.")
         creator = CreatePreFHIR_name(stateofmind, name="stateofminds", round_digits=1)
         resource = creator.render()
         # print(json.dumps(resource, indent=2, sort_keys=False))
     except Exception as e:
-        logger.error(f"Fail to create PreFHIR for {i}.")
+        logger.error(f"Fail to create PreFHIR for stateofmind.")
         raise
     
     # Formating to FHIR 
     try: 
-        logger.info(f"Formating to FHIR for {i}.")
+        logger.info(f"Formating to FHIR for stateofmind.")
         obs, total_created = list_to_fhir_observation(resource, total_created)
         obs_list = obs_list + obs
     except Exception as e:
-        logger.error(f"Fail to format FHIR for {i}.")
+        logger.error(f"Fail to format FHIR for stateofmind.")
         raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
