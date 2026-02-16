@@ -46,7 +46,7 @@ def _make_object_name(bucket: str, filename: str | None):
     sous forme `bucket/<hex>.json` (ou selon votre convention).
     """
     if not filename:
-        return f"{bucket}/{uuid.uuid4().hex}"
+        return f"{uuid.uuid4().hex}"
     else:
         if str(filename).startswith(f"{bucket}/"):
             return filename
