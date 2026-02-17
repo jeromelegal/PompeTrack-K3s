@@ -15,6 +15,7 @@ from libs.get_medplum_token import get_token
 import requests
 import pprint
 from fhir_codes.severity_levels_code import SEVERITY_LEVELS
+from fhir_codes.symptoms_code import SYMPTOMS_CODE
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -463,6 +464,11 @@ class CreatePreFHIR_symptoms:
                 creator.constants,
                 entry,
                 {"units": creator.units},
+            )
+            filler.update_codeable(
+                codeable_dict=SYMPTOMS_CODE,
+                keyword=entry.get("symptom"),
+                prefix="code",
             )
             filler.update_codeable(
                 codeable_dict=SEVERITY_LEVELS,
