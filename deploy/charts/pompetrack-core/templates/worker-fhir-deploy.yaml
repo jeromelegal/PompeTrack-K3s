@@ -58,3 +58,5 @@ spec:
                 path: MEDPLUM_CLIENT_ID
               - key: MEDPLUM_CLIENT_SECRET
                 path: MEDPLUM_CLIENT_SECRET
+              - key: MEDPLUM_PROJECT_ID
+                path: MEDPLUM_PROJECT_ID
