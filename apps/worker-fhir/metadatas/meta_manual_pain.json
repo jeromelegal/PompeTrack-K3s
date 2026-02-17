@@ -10,8 +10,6 @@
     "code_display": "Pain severity - 0-10",
     "code_text": "Douleur mesurée 0-10",
     "value_unit": "pain",
-    "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
-    "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
     "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
     "tag_code": "manual_weekly"
   }

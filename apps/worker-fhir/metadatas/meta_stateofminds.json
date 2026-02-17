@@ -9,8 +9,6 @@
     "code_code": "momentary-emotion-valence",
     "code_display": "Momentary Emotion Valence",
     "code_text": "Etat d'esprit au moment",
-    "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
-    "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
     "interpret_system": "https://phylcero.fr/fhir/CodeSystem/emotion-classification",
     "code_system[0]": "http://example.org/fhir/StructureDefinition/emotion-associations",
     "code_code[0]": "associations",

@@ -16,8 +16,8 @@
     "vcc_display": "vcc_display",
     "vcc_text": "vcc_text",
     
-    "patient_id": "patient_id",
-    "device_id": "device_id",
+    "patient_id": "MEDPLUM_PATIENT_ID",
+    "device_id": "MEDPLUM_DEVICE_ID",
 
     "tag_system": "tag_system",
     "tag_code": "tag_code"
