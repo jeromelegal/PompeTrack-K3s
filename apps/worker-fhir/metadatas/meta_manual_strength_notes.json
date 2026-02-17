@@ -1,6 +1,6 @@
 {
   "name": "meta_manual_strength_notes",
-  "template": "symptoms.json",
+  "template": "symptoms_diary.json",
   "constants": {
     "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
     "cat_code": "survey",
