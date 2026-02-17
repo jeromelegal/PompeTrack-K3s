@@ -14,6 +14,7 @@ from fhir_custom.observation import to_fhir_observation
 from libs.get_medplum_token import get_token
 import requests
 import pprint
+from fhir_codes.severity_levels_code import SEVERITY_LEVELS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
