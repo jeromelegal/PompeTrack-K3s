@@ -69,13 +69,33 @@ def process_global_symptoms(symptoms: Union[List, str]) -> Dict[str, Any]:
     logger.info(f"Total transaction bundle uploaded : {transaction_bundle_created}")
     return True
 
+def _normalize_symptoms(symptoms):
+    """
+    symptoms: attendu = list[dict], mais tolère n'importe quoi sans lever d'exception.
+    Retourne toujours une list[dict].
+    """
+    if not isinstance(symptoms, list):
+        return []
+
+    out = []
+    for symptom in symptoms:
+        if not isinstance(symptom, dict):
+            continue
+        new = dict(symptom)
+        if "name" in new and "symptom" not in new:
+            new["symptom"] = new.pop("name")
+        out.append(new)
+    return out
+
 
 def pipeline_symptoms(symptoms: List[Union[str, Any]]):
     """
     Full process for symptoms
-    """            
+    """  
+    normalized_symptoms = _normalize_symptoms(symptoms)
+    
     try:
-        success = process_global_symptoms(symptoms)
+        success = process_global_symptoms(normalized_symptoms)
         
         if success:
             logger.info("Traitement des 'symptoms' terminé avec succès")
