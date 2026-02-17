@@ -5,15 +5,7 @@ import os, copy
 from dateutil import parser
 import logging
 import re, unicodedata
-import uuid
-import tempfile
-import shutil
 from pathlib import Path
-from fhir.resources.observation import Observation
-from fhir_custom.observation import to_fhir_observation
-from libs.get_medplum_token import get_token
-import requests
-import pprint
 from fhir_codes.severity_levels_code import SEVERITY_LEVELS
 from fhir_codes.symptoms_code import SYMPTOMS_CODE
 
@@ -733,7 +725,7 @@ if __name__ == "__main__":
 
     creator = CreatePreFHIR_workouts()
     resource = creator.process(payload)
-    pprint.pprint(resource, width=80)
+
     
     
     
