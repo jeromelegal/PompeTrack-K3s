@@ -126,7 +126,7 @@ def _build_obs_args(raw: dict) -> dict:
     # Add valueCodeableConcept if one code args in present (mandatory data)    
     if raw.get("vcc_system") is not None or raw.get("vcc_code") is not None or raw.get("vcc_display") is not None or raw.get("vcc_text") is not None:
         # logger.debug("Making 'code'")
-        obs_kwargs["valueCodeableConcept_system"] = _codeable(system=raw.get("vcc_system"), code=raw.get("vcc_code"), display=raw.get("vcc_display"), text=raw.get("vcc_text"))
+        obs_kwargs["valueCodeableConcept"] = _codeable(system=raw.get("vcc_system"), code=raw.get("vcc_code"), display=raw.get("vcc_display"), text=raw.get("vcc_text"))
         # logger.debug("Making 'valueCodeableConcept' ==> OK")
     # Add subject with mandatory prefix
     if raw.get("patient_id") is not None:
