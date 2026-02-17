@@ -220,7 +220,7 @@ SYMPTOMS_CODE = {
     "code": "422400008",
     "display": "Vomiting",
     "text": "Vomissements"
-  },{
+  },
   "Fatigue": {
     "system": "http://snomed.info/sct",
     "code": "84229001",
@@ -233,5 +233,4 @@ SYMPTOMS_CODE = {
     "display": "Low back pain (finding)",
     "text": "Lombalgie"
   }
-}
 }
