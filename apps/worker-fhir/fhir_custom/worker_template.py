@@ -24,6 +24,8 @@ _NUMERIC_STR_RE = re.compile(r'[+\-]?(\d+(\.\d*)?|\.\d+)([eE][+\-]?\d+)?')
 TEMPLATE_PATH = "templates"
 METADATA_PATH = "metadatas"
 FHIR_BASE = os.getenv("FHIR_BASE", "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4")
+MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
+MEDPLUM_DEVICE_ID = os.getenv("MEDPLUM_DEVICE_ID")
 
 # Workouts specifics
 raw = os.getenv("NEED_SUBOBSERVATIONS", "Yoga")

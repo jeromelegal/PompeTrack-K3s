@@ -9,8 +9,6 @@
     "code_code": "physic_activity",
     "code_display": "Physic activity",
     "code_text": "Activité physique",
-    "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
-    "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
     "code_system[0]": "http://loinc.org",
     "code_code[0]": "41981-2",
     "code_display[0]": "Energy expended",

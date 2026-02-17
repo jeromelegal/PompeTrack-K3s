@@ -44,6 +44,10 @@ spec:
             - name: BASE_URL_MINIO_API
               value: "http://ingestion"
 
+          envFrom:
+            - configMapRef:
+                name: medplum-ids
+
           volumeMounts:
             - name: medplum-creds
               mountPath: /etc/secrets
@@ -58,5 +62,4 @@ spec:
                 path: MEDPLUM_CLIENT_ID
               - key: MEDPLUM_CLIENT_SECRET
                 path: MEDPLUM_CLIENT_SECRET
-              - key: MEDPLUM_PROJECT_ID
-                path: MEDPLUM_PROJECT_ID
+

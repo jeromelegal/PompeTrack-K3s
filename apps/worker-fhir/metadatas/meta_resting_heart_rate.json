@@ -10,8 +10,6 @@
         "code_code": "8867-4",
         "code_display": "Heart rate --resting",
         "code_text": "Battements coeur/min au repos",
-        "patient_id": "1797fcc2-2d95-47d6-9045-c188d9e1d02a",
-        "device_id": "c9dea642-a030-4484-8b17-3cc0d0fdb9b0",
         "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
         "tag_code": "metrics"
       }
