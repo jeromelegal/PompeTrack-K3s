@@ -50,7 +50,7 @@ spec:
 
           volumeMounts:
             - name: medplum-creds
-              mountPath: /etc/secrets
+              mountPath: /var/run/secrets
               readOnly: true
       volumes:
         - name: medplum-creds
