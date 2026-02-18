@@ -33,7 +33,7 @@ logging.basicConfig(
 logger = logging.getLogger("Streamlit")
 
 TOKEN = os.getenv("TOKEN", "")
-PATIENT_ID = os.getenv("PATIENT_ID", "1797fcc2-2d95-47d6-9045-c188d9e1d02a")
+MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
 
 def _date_today():
     return pd.Timestamp.now().date()
@@ -67,7 +67,7 @@ def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
             "page_count": page_count
         }
     logger.info(f"Payload is : {payload}")
-    raw_data =  _stream_request(PATIENT_ID, TOKEN, payload)
+    raw_data =  _stream_request(MEDPLUM_PATIENT_ID, TOKEN, payload)
     if raw_data:
         logger.info(f"Data count retrieved : {len(raw_data)}")
         return raw_data.get("data")
