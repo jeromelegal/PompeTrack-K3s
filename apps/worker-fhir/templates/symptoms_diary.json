@@ -1,0 +1,22 @@
+{
+
+    "effectiveDateTime": "date",
+
+    "cat_system": "cat_system",
+    "cat_code": "cat_code",
+    "cat_display": "cat_display",
+
+    "code_system": "code_system",
+    "code_code": "code_code",
+    "code_display": "code_display",
+    "code_text": "code_text",
+
+    "value_string": "note",
+    
+    "patient_id": "patient_id",
+    "device_id": "device_id",
+
+    "tag_system": "tag_system",
+    "tag_code": "tag_code"
+  
+}

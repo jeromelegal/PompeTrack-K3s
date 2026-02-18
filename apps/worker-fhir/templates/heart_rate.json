@@ -1,0 +1,39 @@
+{
+
+    "effectiveDateTime": "date",
+
+    "cat_system": "cat_system",
+    "cat_code": "cat_code",
+    "cat_display": "cat_display",
+
+    "code_system": "code_system",
+    "code_code": "code_code",
+    "code_display": "code_display",
+
+    "value_value": "Avg",
+    "value_unit": "units",
+
+    "component": [
+        {
+            "code_system[0]": "code_system[0]", 
+            "code_code[0]": "code_code[0]", 
+            "code_display[0]": "code_display[0]", 
+            "value_value[0]": "Min", 
+            "value_unit[0]": "units"
+        },
+        {
+            "code_system[1]": "code_system[1]", 
+            "code_code[1]": "code_code[1]", 
+            "code_display[1]": "code_display[1]", 
+            "value_value[1]": "Max", 
+            "value_unit[1]": "units"
+        }
+    ],
+    
+    "patient_id": "patient_id",
+    "device_id": "device_id",
+
+    "tag_system": "tag_system",
+    "tag_code": "tag_code"
+
+}

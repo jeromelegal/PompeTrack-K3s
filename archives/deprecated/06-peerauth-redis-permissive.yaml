@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: redis-permissive
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  mtls:
+    mode: PERMISSIVE
+  portLevelMtls:
+    "6379":
+      mode: PERMISSIVE

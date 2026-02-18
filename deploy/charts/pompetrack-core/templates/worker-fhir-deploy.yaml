@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-fhir
+  namespace: pompetrack-core
+  labels:
+    app: worker-fhir
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-fhir
+  template:
+    metadata:
+      labels:
+        app: worker-fhir
+    spec:
+      serviceAccountName: worker-fhir
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: worker-fhir
+          image: registry.phylcero.fr/garth/pompetrack/worker-fhir:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            # Secrets via fichiers (compatibles avec ton entrypoint)
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+
+            # config Medplum api
+            - name: MEDPLUM_BASE_URL
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
+            - name: MEDPLUM_TOKEN_ENDPOINT
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
+            - name: MEDPLUM_SCOPE
+              value: "system/*.*"
+            - name: FHIR_BASE
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+            - name: BASE_URL_MINIO_API
+              value: "http://ingestion"
+
+          envFrom:
+            - configMapRef:
+                name: medplum-ids
+
+          volumeMounts:
+            - name: medplum-creds
+              mountPath: /var/run/secrets
+              readOnly: true
+      volumes:
+        - name: medplum-creds
+          secret:
+            secretName: worker-fhir-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET
+

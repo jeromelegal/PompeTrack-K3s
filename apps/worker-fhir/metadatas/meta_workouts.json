@@ -1,0 +1,19 @@
+{
+  "name": "meta_workouts",
+  "template": "workouts.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "activity",
+    "cat_display": "Activity",
+    "code_system": "https://medplum.phylcero.fr/run",
+    "code_code": "physic_activity",
+    "code_display": "Physic activity",
+    "code_text": "Activité physique",
+    "code_system[0]": "http://loinc.org",
+    "code_code[0]": "41981-2",
+    "code_display[0]": "Energy expended",
+    "code_text[0]": "Energie dépensée",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "workouts"
+  }
+}

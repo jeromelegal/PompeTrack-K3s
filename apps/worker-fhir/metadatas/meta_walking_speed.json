@@ -1,0 +1,15 @@
+{
+  "name": "walking_speed",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "https://medplum.phylcero.fr/run",
+    "cat_code": "Gait",
+    "cat_display": "Gait",
+    "code_system": "http://loinc.org",
+    "code_code": "41957-2",
+    "code_display": "Walking speed 24 hour mean (calculated)",
+    "code_text": "Vitesse marche moy 24h",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "metrics"
+  }
+}
