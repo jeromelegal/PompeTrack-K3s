@@ -1,0 +1,4352 @@
+[
+  {
+    "metadata": {},
+    "id": "19323448-8391-472B-9997-8E02A36615AD",
+    "end": "2025-12-27 09:46:11 +0100",
+    "heartRateData": [
+      {
+        "Avg": 85,
+        "date": "2025-12-27 09:35:51 +0100",
+        "source": "Connect",
+        "Max": 85,
+        "Min": 85,
+        "units": "count/min"
+      },
+      {
+        "Max": 91,
+        "source": "Connect",
+        "Min": 91,
+        "Avg": 91,
+        "date": "2025-12-27 09:37:51 +0100",
+        "units": "count/min"
+      },
+      {
+        "units": "count/min",
+        "source": "Connect",
+        "Max": 93,
+        "Min": 93,
+        "Avg": 93,
+        "date": "2025-12-27 09:39:51 +0100"
+      },
+      {
+        "units": "count/min",
+        "Min": 91,
+        "Max": 91,
+        "source": "Connect",
+        "date": "2025-12-27 09:41:51 +0100",
+        "Avg": 91
+      },
+      {
+        "source": "Connect",
+        "Max": 104,
+        "Avg": 104,
+        "date": "2025-12-27 09:43:51 +0100",
+        "Min": 104,
+        "units": "count/min"
+      },
+      {
+        "Max": 74,
+        "date": "2025-12-27 09:45:51 +0100",
+        "Avg": 74,
+        "units": "count/min",
+        "source": "Connect",
+        "Min": 74
+      }
+    ],
+    "heartRateRecovery": [
+      {
+        "Max": 70,
+        "date": "2025-12-27 09:47:59 +0100",
+        "Min": 70,
+        "units": "count/min",
+        "source": "Connect",
+        "Avg": 70
+      }
+    ],
+    "start": "2025-12-27 09:34:51 +0100",
+    "name": "Yoga",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 43
+    },
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    },
+    "duration": 680.2890014648438,
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "qty": 15.86784436725581,
+        "date": "2025-12-27 09:34:51 +0100",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-12-27 09:35:51 +0100",
+        "qty": 15.86784436725581,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 15.86784436725581,
+        "date": "2025-12-27 09:36:51 +0100",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-12-27 09:37:51 +0100",
+        "qty": 15.867844367255806,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-12-27 09:38:51 +0100",
+        "units": "kcal",
+        "qty": 15.867844367255806
+      },
+      {
+        "qty": 15.867844367255806,
+        "source": "Connect",
+        "date": "2025-12-27 09:39:51 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 15.867844367255802,
+        "date": "2025-12-27 09:40:51 +0100"
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 15.867844367255806,
+        "date": "2025-12-27 09:41:51 +0100"
+      },
+      {
+        "date": "2025-12-27 09:42:51 +0100",
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 15.867844367255804
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-27 09:43:51 +0100",
+        "qty": 15.867844367255806
+      },
+      {
+        "date": "2025-12-27 09:44:51 +0100",
+        "qty": 15.867844367255806,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-27 09:45:51 +0100",
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 5.365711960186096
+      }
+    ]
+  },
+  {
+    "start": "2025-12-20 11:02:29 +0100",
+    "name": "Yoga",
+    "heartRateData": [
+      {
+        "date": "2025-12-20 11:03:29 +0100",
+        "Min": 79,
+        "Max": 79,
+        "source": "Connect",
+        "Avg": 79,
+        "units": "count/min"
+      },
+      {
+        "units": "count/min",
+        "Max": 98,
+        "Min": 98,
+        "source": "Connect",
+        "date": "2025-12-20 11:05:29 +0100",
+        "Avg": 98
+      },
+      {
+        "units": "count/min",
+        "date": "2025-12-20 11:07:29 +0100",
+        "source": "Connect",
+        "Min": 95,
+        "Max": 95,
+        "Avg": 95
+      },
+      {
+        "Max": 93,
+        "Min": 93,
+        "source": "Connect",
+        "units": "count/min",
+        "Avg": 93,
+        "date": "2025-12-20 11:09:29 +0100"
+      },
+      {
+        "units": "count/min",
+        "date": "2025-12-20 11:11:29 +0100",
+        "source": "Connect",
+        "Min": 66,
+        "Avg": 66,
+        "Max": 66
+      },
+      {
+        "source": "Connect",
+        "Max": 63,
+        "Avg": 63,
+        "Min": 63,
+        "date": "2025-12-20 11:13:29 +0100",
+        "units": "count/min"
+      },
+      {
+        "source": "Connect",
+        "Min": 69,
+        "Max": 69,
+        "units": "count/min",
+        "date": "2025-12-20 11:15:29 +0100",
+        "Avg": 69
+      }
+    ],
+    "activeEnergy": [
+      {
+        "qty": 10.703681992912426,
+        "source": "Connect",
+        "date": "2025-12-20 11:02:29 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 10.703681992912426,
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-20 11:03:29 +0100"
+      },
+      {
+        "source": "Connect",
+        "qty": 10.703681992912426,
+        "date": "2025-12-20 11:04:29 +0100",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-20 11:05:29 +0100",
+        "units": "kcal",
+        "qty": 10.703681992912426,
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-20 11:06:29 +0100",
+        "qty": 10.703681992912426
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-20 11:07:29 +0100",
+        "qty": 10.703681992912422
+      },
+      {
+        "source": "Connect",
+        "date": "2025-12-20 11:08:29 +0100",
+        "qty": 10.703681992912422,
+        "units": "kcal"
+      },
+      {
+        "qty": 10.70368199291242,
+        "source": "Connect",
+        "date": "2025-12-20 11:09:29 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-12-20 11:10:29 +0100",
+        "qty": 10.703681992912422,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-20 11:11:29 +0100",
+        "units": "kcal",
+        "qty": 10.703681992912422,
+        "source": "Connect"
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 10.703681992912422,
+        "date": "2025-12-20 11:12:29 +0100"
+      },
+      {
+        "date": "2025-12-20 11:13:29 +0100",
+        "qty": 10.703681992912426,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 10.703681992912422,
+        "source": "Connect",
+        "date": "2025-12-20 11:14:29 +0100"
+      },
+      {
+        "date": "2025-12-20 11:15:29 +0100",
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 10.703681992912426
+      },
+      {
+        "units": "kcal",
+        "qty": 0.77245209922606,
+        "date": "2025-12-20 11:16:29 +0100",
+        "source": "Connect"
+      }
+    ],
+    "id": "F19C5635-5E92-4331-96C9-EF3F6892FF23",
+    "duration": 844.3300170898438,
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    },
+    "metadata": {},
+    "heartRateRecovery": [
+      {
+        "units": "count/min",
+        "source": "Connect",
+        "date": "2025-12-20 11:17:59 +0100",
+        "Max": 68,
+        "Min": 68,
+        "Avg": 68
+      }
+    ],
+    "end": "2025-12-20 11:16:33 +0100",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 36
+    }
+  },
+  {
+    "activeEnergyBurned": {
+      "qty": 24,
+      "units": "kJ"
+    },
+    "id": "7CEC0730-D56F-47B4-A4A4-26EFFC948BF7",
+    "name": "Yoga",
+    "duration": 454.822998046875,
+    "activeEnergy": [
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-13 09:56:31 +0100",
+        "qty": 13.246823546462474
+      },
+      {
+        "date": "2025-12-13 09:57:31 +0100",
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 13.246823546462476
+      },
+      {
+        "qty": 13.246823546462478,
+        "source": "Connect",
+        "date": "2025-12-13 09:58:31 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 13.246823546462478,
+        "date": "2025-12-13 09:59:31 +0100",
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "qty": 13.246823546462476,
+        "date": "2025-12-13 10:00:31 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-13 10:01:31 +0100",
+        "qty": 13.246823546462476,
+        "source": "Connect"
+      },
+      {
+        "qty": 13.246823546462474,
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-12-13 10:02:31 +0100"
+      },
+      {
+        "date": "2025-12-13 10:03:31 +0100",
+        "units": "kcal",
+        "qty": 7.688235174762674,
+        "source": "Connect"
+      }
+    ],
+    "heartRateRecovery": [
+      {
+        "units": "count/min",
+        "source": "Connect",
+        "date": "2025-12-13 10:05:59 +0100",
+        "Max": 80,
+        "Min": 80,
+        "Avg": 80
+      }
+    ],
+    "end": "2025-12-13 10:04:05 +0100",
+    "heartRateData": [
+      {
+        "Avg": 76,
+        "units": "count/min",
+        "source": "Connect",
+        "Max": 76,
+        "Min": 76,
+        "date": "2025-12-13 09:57:31 +0100"
+      },
+      {
+        "units": "count/min",
+        "Min": 91,
+        "date": "2025-12-13 09:59:31 +0100",
+        "Avg": 91,
+        "Max": 91,
+        "source": "Connect"
+      },
+      {
+        "Min": 89,
+        "date": "2025-12-13 10:01:31 +0100",
+        "Max": 89,
+        "source": "Connect",
+        "Avg": 89,
+        "units": "count/min"
+      },
+      {
+        "date": "2025-12-13 10:03:31 +0100",
+        "source": "Connect",
+        "Min": 87,
+        "units": "count/min",
+        "Max": 87,
+        "Avg": 87
+      }
+    ],
+    "distance": {
+      "units": "km",
+      "qty": 0
+    },
+    "start": "2025-12-13 09:56:31 +0100",
+    "stepCount": [
+      {
+        "units": "count",
+        "qty": 1.7586206896551724,
+        "date": "2025-12-13 09:59:31 +0100",
+        "source": "Connect"
+      },
+      {
+        "qty": 3.403781979977753,
+        "date": "2025-12-13 10:00:31 +0100",
+        "source": "Connect",
+        "units": "count"
+      },
+      {
+        "qty": 3.403781979977753,
+        "source": "Connect",
+        "date": "2025-12-13 10:01:31 +0100",
+        "units": "count"
+      },
+      {
+        "units": "count",
+        "source": "Connect",
+        "qty": 3.403781979977753,
+        "date": "2025-12-13 10:02:31 +0100"
+      },
+      {
+        "qty": 3.4037819799777536,
+        "units": "count",
+        "source": "Connect",
+        "date": "2025-12-13 10:03:31 +0100"
+      }
+    ],
+    "metadata": {}
+  },
+  {
+    "distance": {
+      "units": "km",
+      "qty": 0
+    },
+    "duration": 540.8510131835938,
+    "start": "2025-12-12 10:14:35 +0100",
+    "end": "2025-12-12 10:23:35 +0100",
+    "heartRateRecovery": [
+      {
+        "source": "Connect",
+        "Avg": 72,
+        "Max": 72,
+        "Min": 72,
+        "date": "2025-12-12 10:23:59 +0100",
+        "units": "count/min"
+      }
+    ],
+    "metadata": {},
+    "heartRateData": [
+      {
+        "units": "count/min",
+        "date": "2025-12-12 10:15:35 +0100",
+        "Max": 67,
+        "source": "Connect",
+        "Min": 67,
+        "Avg": 67
+      },
+      {
+        "source": "Connect",
+        "Avg": 71,
+        "date": "2025-12-12 10:17:35 +0100",
+        "Min": 71,
+        "Max": 71,
+        "units": "count/min"
+      },
+      {
+        "date": "2025-12-12 10:19:35 +0100",
+        "Avg": 73,
+        "units": "count/min",
+        "Min": 73,
+        "Max": 73,
+        "source": "Connect"
+      },
+      {
+        "Avg": 78,
+        "source": "Connect",
+        "units": "count/min",
+        "Min": 78,
+        "Max": 78,
+        "date": "2025-12-12 10:21:35 +0100"
+      }
+    ],
+    "name": "Yoga",
+    "id": "0A366947-9B7D-4786-B0AA-FB88026C971B",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 15
+    },
+    "stepCount": [
+      {
+        "source": "Connect",
+        "units": "count",
+        "qty": 1.9855394883203559,
+        "date": "2025-12-12 10:14:35 +0100"
+      },
+      {
+        "date": "2025-12-12 10:15:35 +0100",
+        "units": "count",
+        "qty": 3.403781979977753,
+        "source": "Connect"
+      },
+      {
+        "qty": 3.403781979977753,
+        "date": "2025-12-12 10:16:35 +0100",
+        "units": "count",
+        "source": "Connect"
+      },
+      {
+        "qty": 3.403781979977753,
+        "units": "count",
+        "source": "Connect",
+        "date": "2025-12-12 10:17:35 +0100"
+      },
+      {
+        "date": "2025-12-12 10:18:35 +0100",
+        "units": "count",
+        "qty": 3.4037819799777536,
+        "source": "Connect"
+      },
+      {
+        "qty": 3.403781979977754,
+        "date": "2025-12-12 10:19:35 +0100",
+        "units": "count",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-12-12 10:20:35 +0100",
+        "source": "Connect",
+        "qty": 3.403781979977754,
+        "units": "count"
+      },
+      {
+        "date": "2025-12-12 10:21:35 +0100",
+        "qty": 3.4037819799777536,
+        "source": "Connect",
+        "units": "count"
+      },
+      {
+        "qty": 3.403781979977754,
+        "source": "Connect",
+        "units": "count",
+        "date": "2025-12-12 10:22:35 +0100"
+      },
+      {
+        "qty": 3.4037819799777536,
+        "source": "Connect",
+        "date": "2025-12-12 10:23:35 +0100",
+        "units": "count"
+      }
+    ],
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 6.9623609981511745,
+        "date": "2025-12-12 10:14:35 +0100"
+      },
+      {
+        "date": "2025-12-12 10:15:35 +0100",
+        "units": "kcal",
+        "qty": 6.9623609981511745,
+        "source": "Connect"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-12 10:16:35 +0100",
+        "qty": 6.9623609981511745,
+        "source": "Connect"
+      },
+      {
+        "qty": 6.962360998151174,
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-12 10:17:35 +0100"
+      },
+      {
+        "date": "2025-12-12 10:18:35 +0100",
+        "qty": 6.962360998151173,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-12 10:19:35 +0100",
+        "qty": 6.962360998151174,
+        "units": "kcal",
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-12-12 10:20:35 +0100",
+        "qty": 6.962360998151174
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 6.9623609981511745,
+        "date": "2025-12-12 10:21:35 +0100"
+      },
+      {
+        "qty": 6.9623609981511745,
+        "date": "2025-12-12 10:22:35 +0100",
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-12 10:23:35 +0100",
+        "source": "Connect",
+        "qty": 0.09875101663942647,
+        "units": "kcal"
+      }
+    ]
+  },
+  {
+    "end": "2025-10-28 10:09:23 +0100",
+    "id": "A869AF8B-5D5E-4905-A997-E8812D9B4A69",
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    },
+    "activeEnergyBurned": {
+      "qty": 51,
+      "units": "kJ"
+    },
+    "heartRateData": [
+      {
+        "Max": 80,
+        "date": "2025-10-28 09:35:57 +0100",
+        "units": "count/min",
+        "Min": 80,
+        "source": "Connect",
+        "Avg": 80
+      },
+      {
+        "date": "2025-10-28 09:37:57 +0100",
+        "Min": 80,
+        "Avg": 80,
+        "units": "count/min",
+        "source": "Connect",
+        "Max": 80
+      },
+      {
+        "Min": 69,
+        "units": "count/min",
+        "date": "2025-10-28 09:39:57 +0100",
+        "Avg": 69,
+        "Max": 69,
+        "source": "Connect"
+      },
+      {
+        "Avg": 68,
+        "units": "count/min",
+        "source": "Connect",
+        "date": "2025-10-28 09:41:57 +0100",
+        "Min": 68,
+        "Max": 68
+      },
+      {
+        "units": "count/min",
+        "Avg": 85,
+        "Max": 85,
+        "Min": 85,
+        "date": "2025-10-28 09:43:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-10-28 09:45:57 +0100",
+        "Min": 80,
+        "Avg": 80,
+        "units": "count/min",
+        "source": "Connect",
+        "Max": 80
+      },
+      {
+        "units": "count/min",
+        "source": "Connect",
+        "Min": 67,
+        "Max": 67,
+        "date": "2025-10-28 09:47:57 +0100",
+        "Avg": 67
+      },
+      {
+        "Min": 72,
+        "units": "count/min",
+        "date": "2025-10-28 09:49:57 +0100",
+        "source": "Connect",
+        "Avg": 72,
+        "Max": 72
+      },
+      {
+        "units": "count/min",
+        "Min": 72,
+        "date": "2025-10-28 09:51:57 +0100",
+        "Max": 72,
+        "source": "Connect",
+        "Avg": 72
+      },
+      {
+        "Max": 74,
+        "Avg": 74,
+        "Min": 74,
+        "source": "Connect",
+        "date": "2025-10-28 09:53:57 +0100",
+        "units": "count/min"
+      },
+      {
+        "Max": 72,
+        "Min": 72,
+        "Avg": 72,
+        "date": "2025-10-28 09:55:57 +0100",
+        "units": "count/min",
+        "source": "Connect"
+      },
+      {
+        "Avg": 71,
+        "Max": 71,
+        "units": "count/min",
+        "source": "Connect",
+        "date": "2025-10-28 09:57:57 +0100",
+        "Min": 71
+      },
+      {
+        "units": "count/min",
+        "date": "2025-10-28 09:59:57 +0100",
+        "Min": 71,
+        "source": "Connect",
+        "Max": 71,
+        "Avg": 71
+      },
+      {
+        "Avg": 73,
+        "source": "Connect",
+        "Max": 73,
+        "date": "2025-10-28 10:01:57 +0100",
+        "Min": 73,
+        "units": "count/min"
+      },
+      {
+        "units": "count/min",
+        "source": "Connect",
+        "Avg": 84,
+        "Min": 84,
+        "Max": 84,
+        "date": "2025-10-28 10:03:57 +0100"
+      },
+      {
+        "units": "count/min",
+        "Max": 93,
+        "Min": 93,
+        "source": "Connect",
+        "Avg": 93,
+        "date": "2025-10-28 10:05:57 +0100"
+      },
+      {
+        "units": "count/min",
+        "Avg": 66,
+        "date": "2025-10-28 10:07:57 +0100",
+        "source": "Connect",
+        "Max": 66,
+        "Min": 66
+      }
+    ],
+    "heartRateRecovery": [
+      {
+        "Max": 68,
+        "units": "count/min",
+        "Avg": 68,
+        "source": "Connect",
+        "date": "2025-10-28 10:09:59 +0100",
+        "Min": 68
+      }
+    ],
+    "stepCount": [
+      {
+        "qty": 2.345939933259177,
+        "units": "count",
+        "date": "2025-10-28 09:44:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "qty": 2.469410456062292,
+        "units": "count",
+        "date": "2025-10-28 09:45:57 +0100"
+      },
+      {
+        "qty": 2.469410456062292,
+        "units": "count",
+        "date": "2025-10-28 09:46:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "qty": 2.4694104560622914,
+        "source": "Connect",
+        "date": "2025-10-28 09:47:57 +0100",
+        "units": "count"
+      },
+      {
+        "qty": 2.4694104560622914,
+        "source": "Connect",
+        "units": "count",
+        "date": "2025-10-28 09:48:57 +0100"
+      },
+      {
+        "units": "count",
+        "qty": 2.4694104560622914,
+        "date": "2025-10-28 09:49:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "units": "count",
+        "qty": 2.4694104560622914,
+        "date": "2025-10-28 09:50:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-28 09:51:57 +0100",
+        "qty": 2.4694104560622914,
+        "units": "count"
+      },
+      {
+        "date": "2025-10-28 09:52:57 +0100",
+        "units": "count",
+        "source": "Connect",
+        "qty": 2.4694104560622914
+      },
+      {
+        "units": "count",
+        "date": "2025-10-28 09:53:57 +0100",
+        "source": "Connect",
+        "qty": 2.4694104560622914
+      },
+      {
+        "source": "Connect",
+        "units": "count",
+        "qty": 2.469410456062291,
+        "date": "2025-10-28 09:54:57 +0100"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-28 09:55:57 +0100",
+        "qty": 2.4694104560622914,
+        "units": "count"
+      },
+      {
+        "source": "Connect",
+        "qty": 2.469410456062291,
+        "date": "2025-10-28 09:56:57 +0100",
+        "units": "count"
+      },
+      {
+        "source": "Connect",
+        "qty": 2.469410456062291,
+        "units": "count",
+        "date": "2025-10-28 09:57:57 +0100"
+      },
+      {
+        "date": "2025-10-28 09:58:57 +0100",
+        "source": "Connect",
+        "units": "count",
+        "qty": 2.469410456062291
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-28 09:59:57 +0100",
+        "qty": 5.1546162402669635,
+        "units": "count"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-28 10:00:57 +0100",
+        "qty": 5.339265850945495,
+        "units": "count"
+      },
+      {
+        "units": "count",
+        "source": "iPhone|Connect",
+        "qty": 19,
+        "date": "2025-10-28 10:01:57 +0100"
+      },
+      {
+        "source": "iPhone|Connect",
+        "units": "count",
+        "qty": 5.339265850945495,
+        "date": "2025-10-28 10:02:57 +0100"
+      },
+      {
+        "source": "iPhone|Connect",
+        "units": "count",
+        "date": "2025-10-28 10:03:57 +0100",
+        "qty": 5.339265850945495
+      },
+      {
+        "qty": 5.3392658509454956,
+        "source": "iPhone|Connect",
+        "date": "2025-10-28 10:04:57 +0100",
+        "units": "count"
+      },
+      {
+        "units": "count",
+        "qty": 5.339265850945495,
+        "date": "2025-10-28 10:05:57 +0100",
+        "source": "iPhone|Connect"
+      },
+      {
+        "qty": 5.3392658509454956,
+        "date": "2025-10-28 10:06:57 +0100",
+        "source": "iPhone|Connect",
+        "units": "count"
+      },
+      {
+        "date": "2025-10-28 10:07:57 +0100",
+        "units": "count",
+        "qty": 5.3392658509454956,
+        "source": "iPhone|Connect"
+      },
+      {
+        "units": "count",
+        "qty": 5.3392658509454956,
+        "source": "iPhone|Connect",
+        "date": "2025-10-28 10:08:57 +0100"
+      }
+    ],
+    "metadata": {},
+    "duration": 2006.345947265625,
+    "name": "Yoga",
+    "activeEnergy": [
+      {
+        "date": "2025-10-28 09:35:57 +0100",
+        "source": "Connect",
+        "qty": 6.381272390959691,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-28 09:36:57 +0100",
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 6.3812723909596905
+      },
+      {
+        "units": "kcal",
+        "qty": 6.381272390959691,
+        "source": "Connect",
+        "date": "2025-10-28 09:37:57 +0100"
+      },
+      {
+        "qty": 6.3812723909596905,
+        "units": "kcal",
+        "date": "2025-10-28 09:38:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-10-28 09:39:57 +0100",
+        "source": "Connect",
+        "qty": 6.3812723909596905,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-28 09:40:57 +0100",
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 6.3812723909596905
+      },
+      {
+        "source": "Connect",
+        "qty": 6.3812723909596905,
+        "date": "2025-10-28 09:41:57 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 6.38127239095969,
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-28 09:42:57 +0100"
+      },
+      {
+        "date": "2025-10-28 09:43:57 +0100",
+        "qty": 6.3812723909596905,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "qty": 6.3812723909596905,
+        "date": "2025-10-28 09:44:57 +0100",
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "qty": 6.38127239095969,
+        "date": "2025-10-28 09:45:57 +0100",
+        "units": "kcal",
+        "source": "Connect"
+      },
+      {
+        "qty": 6.38127239095969,
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-28 09:46:57 +0100"
+      },
+      {
+        "date": "2025-10-28 09:47:57 +0100",
+        "units": "kcal",
+        "qty": 6.38127239095969,
+        "source": "Connect"
+      },
+      {
+        "qty": 6.381272390959689,
+        "date": "2025-10-28 09:48:57 +0100",
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-28 09:49:57 +0100",
+        "qty": 6.38127239095969
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-10-28 09:50:57 +0100",
+        "qty": 6.381272390959689
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 6.381272390959688,
+        "date": "2025-10-28 09:51:57 +0100"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-28 09:52:57 +0100",
+        "units": "kcal",
+        "qty": 6.381272390959688
+      },
+      {
+        "units": "kcal",
+        "qty": 6.381272390959688,
+        "date": "2025-10-28 09:53:57 +0100",
+        "source": "Connect"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-10-28 09:54:57 +0100",
+        "source": "Connect",
+        "qty": 6.381272390959688
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-28 09:55:57 +0100",
+        "units": "kcal",
+        "qty": 6.381272390959687
+      },
+      {
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 6.381272390959686,
+        "date": "2025-10-28 09:56:57 +0100"
+      },
+      {
+        "qty": 6.381272390959687,
+        "source": "Connect",
+        "date": "2025-10-28 09:57:57 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-10-28 09:58:57 +0100",
+        "qty": 6.381272390959687,
+        "source": "Connect"
+      },
+      {
+        "qty": 6.381272390959687,
+        "date": "2025-10-28 09:59:57 +0100",
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-28 10:00:57 +0100",
+        "qty": 6.381272390959687,
+        "units": "kcal",
+        "source": "Connect"
+      },
+      {
+        "qty": 1.619208,
+        "units": "kcal",
+        "date": "2025-10-28 10:01:57 +0100",
+        "source": "iPhone|Connect"
+      },
+      {
+        "date": "2025-10-28 10:02:57 +0100",
+        "source": "iPhone|Connect",
+        "units": "kcal",
+        "qty": 6.381272390959686
+      },
+      {
+        "date": "2025-10-28 10:03:57 +0100",
+        "source": "iPhone|Connect",
+        "units": "kcal",
+        "qty": 6.381272390959686
+      },
+      {
+        "units": "kcal",
+        "date": "2025-10-28 10:04:57 +0100",
+        "source": "iPhone|Connect",
+        "qty": 6.381272390959687
+      },
+      {
+        "units": "kcal",
+        "qty": 6.381272390959686,
+        "source": "iPhone|Connect",
+        "date": "2025-10-28 10:05:57 +0100"
+      },
+      {
+        "units": "kcal",
+        "source": "iPhone|Connect",
+        "qty": 6.381272390959686,
+        "date": "2025-10-28 10:06:57 +0100"
+      },
+      {
+        "date": "2025-10-28 10:07:57 +0100",
+        "qty": 6.381272390959684,
+        "units": "kcal",
+        "source": "iPhone|Connect"
+      },
+      {
+        "date": "2025-10-28 10:08:57 +0100",
+        "units": "kcal",
+        "source": "iPhone|Connect",
+        "qty": 2.8020110983302104
+      }
+    ],
+    "start": "2025-10-28 09:35:57 +0100"
+  },
+  {
+    "heartRateRecovery": [
+      {
+        "date": "2025-10-14 11:25:59 +0200",
+        "source": "Connect",
+        "Max": 68,
+        "Min": 68,
+        "Avg": 68,
+        "units": "count/min"
+      }
+    ],
+    "end": "2025-10-14 11:24:46 +0200",
+    "metadata": {},
+    "id": "33780689-AC05-4621-BF4A-E11612E744E5",
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    },
+    "start": "2025-10-14 11:15:11 +0200",
+    "duration": 575.7319946289062,
+    "activeEnergyBurned": {
+      "qty": 25,
+      "units": "kJ"
+    },
+    "heartRateData": [
+      {
+        "units": "count/min",
+        "Max": 71,
+        "source": "Connect",
+        "Avg": 71,
+        "date": "2025-10-14 11:15:11 +0200",
+        "Min": 71
+      },
+      {
+        "source": "Connect",
+        "Min": 79,
+        "Max": 79,
+        "Avg": 79,
+        "date": "2025-10-14 11:17:11 +0200",
+        "units": "count/min"
+      },
+      {
+        "Min": 88,
+        "source": "Connect",
+        "date": "2025-10-14 11:19:11 +0200",
+        "Max": 88,
+        "Avg": 88,
+        "units": "count/min"
+      },
+      {
+        "Max": 84,
+        "units": "count/min",
+        "source": "Connect",
+        "date": "2025-10-14 11:21:11 +0200",
+        "Min": 84,
+        "Avg": 84
+      },
+      {
+        "source": "Connect",
+        "units": "count/min",
+        "Avg": 81,
+        "Min": 81,
+        "Max": 81,
+        "date": "2025-10-14 11:23:11 +0200"
+      }
+    ],
+    "name": "Yoga",
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-14 11:15:11 +0200",
+        "qty": 10.900905384015106
+      },
+      {
+        "qty": 10.900905384015108,
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-14 11:16:11 +0200"
+      },
+      {
+        "date": "2025-10-14 11:17:11 +0200",
+        "units": "kcal",
+        "qty": 10.900905384015106,
+        "source": "Connect"
+      },
+      {
+        "qty": 10.900905384015108,
+        "units": "kcal",
+        "date": "2025-10-14 11:18:11 +0200",
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-14 11:19:11 +0200",
+        "qty": 10.900905384015108,
+        "units": "kcal"
+      },
+      {
+        "qty": 10.900905384015108,
+        "source": "Connect",
+        "units": "kcal",
+        "date": "2025-10-14 11:20:11 +0200"
+      },
+      {
+        "units": "kcal",
+        "qty": 10.900905384015106,
+        "date": "2025-10-14 11:21:11 +0200",
+        "source": "Connect"
+      },
+      {
+        "qty": 10.900905384015106,
+        "source": "Connect",
+        "date": "2025-10-14 11:22:11 +0200",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-14 11:23:11 +0200",
+        "qty": 10.900905384015106,
+        "units": "kcal",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-10-14 11:24:11 +0200",
+        "source": "Connect",
+        "qty": 6.491851543864051,
+        "units": "kcal"
+      }
+    ]
+  },
+  {
+    "activeEnergyBurned": {
+      "qty": 42,
+      "units": "kJ"
+    },
+    "metadata": {},
+    "end": "2025-10-08 10:40:28 +0200",
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    },
+    "name": "Yoga",
+    "heartRateData": [
+      {
+        "date": "2025-10-08 10:31:19 +0200",
+        "Min": 78,
+        "Max": 78,
+        "Avg": 78,
+        "source": "Connect",
+        "units": "count/min"
+      },
+      {
+        "date": "2025-10-08 10:33:19 +0200",
+        "source": "Connect",
+        "Min": 93,
+        "Max": 93,
+        "units": "count/min",
+        "Avg": 93
+      },
+      {
+        "date": "2025-10-08 10:35:19 +0200",
+        "source": "Connect",
+        "Max": 105,
+        "Min": 105,
+        "Avg": 105,
+        "units": "count/min"
+      },
+      {
+        "source": "Connect",
+        "Avg": 100,
+        "Max": 100,
+        "Min": 100,
+        "units": "count/min",
+        "date": "2025-10-08 10:37:19 +0200"
+      },
+      {
+        "Max": 93,
+        "date": "2025-10-08 10:39:19 +0200",
+        "Min": 93,
+        "Avg": 93,
+        "units": "count/min",
+        "source": "Connect"
+      }
+    ],
+    "id": "1042DB64-588F-48B8-B966-10FF26A110C4",
+    "heartRateRecovery": [
+      {
+        "date": "2025-10-08 10:41:59 +0200",
+        "units": "count/min",
+        "source": "Connect",
+        "Max": 73,
+        "Min": 73,
+        "Avg": 73
+      }
+    ],
+    "start": "2025-10-08 10:31:19 +0200",
+    "duration": 549.7919921875,
+    "activeEnergy": [
+      {
+        "qty": 19.177580157268284,
+        "units": "kcal",
+        "date": "2025-10-08 10:31:19 +0200",
+        "source": "Connect"
+      },
+      {
+        "qty": 19.177580157268284,
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-08 10:32:19 +0200"
+      },
+      {
+        "qty": 19.177580157268284,
+        "source": "Connect",
+        "date": "2025-10-08 10:33:19 +0200",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-08 10:34:19 +0200",
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 19.177580157268288
+      },
+      {
+        "date": "2025-10-08 10:35:19 +0200",
+        "qty": 19.177580157268288,
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "source": "Connect",
+        "qty": 19.17758015726829,
+        "units": "kcal",
+        "date": "2025-10-08 10:36:19 +0200"
+      },
+      {
+        "date": "2025-10-08 10:37:19 +0200",
+        "units": "kcal",
+        "qty": 19.177580157268288,
+        "source": "Connect"
+      },
+      {
+        "qty": 19.177580157268288,
+        "units": "kcal",
+        "date": "2025-10-08 10:38:19 +0200",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-10-08 10:39:19 +0200",
+        "source": "Connect",
+        "units": "kcal",
+        "qty": 19.177580157268288
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 3.129778584585435,
+        "date": "2025-10-08 10:40:19 +0200"
+      }
+    ]
+  },
+  {
+    "heartRateRecovery": [
+      {
+        "date": "2025-10-06 09:23:59 +0200",
+        "source": "Connect",
+        "Min": 76,
+        "Avg": 76,
+        "Max": 76,
+        "units": "count/min"
+      }
+    ],
+    "heartRateData": [
+      {
+        "source": "Connect",
+        "units": "count/min",
+        "date": "2025-10-06 09:13:48 +0200",
+        "Max": 91,
+        "Avg": 91,
+        "Min": 91
+      },
+      {
+        "date": "2025-10-06 09:15:48 +0200",
+        "source": "Connect",
+        "Max": 68,
+        "Min": 68,
+        "Avg": 68,
+        "units": "count/min"
+      },
+      {
+        "source": "Connect",
+        "Min": 79,
+        "Avg": 79,
+        "units": "count/min",
+        "Max": 79,
+        "date": "2025-10-06 09:17:48 +0200"
+      },
+      {
+        "date": "2025-10-06 09:19:48 +0200",
+        "Max": 87,
+        "units": "count/min",
+        "Min": 87,
+        "source": "Connect",
+        "Avg": 87
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-06 09:21:48 +0200",
+        "Max": 105,
+        "units": "count/min",
+        "Min": 105,
+        "Avg": 105
+      }
+    ],
+    "activeEnergyBurned": {
+      "qty": 26,
+      "units": "kJ"
+    },
+    "name": "Yoga",
+    "id": "3FA45587-2515-4111-BA65-0FF04A768918",
+    "activeEnergy": [
+      {
+        "source": "Connect",
+        "date": "2025-10-06 09:13:48 +0200",
+        "qty": 12.624884774738668,
+        "units": "kcal"
+      },
+      {
+        "qty": 12.624884774738666,
+        "units": "kcal",
+        "date": "2025-10-06 09:14:48 +0200",
+        "source": "Connect"
+      },
+      {
+        "date": "2025-10-06 09:15:48 +0200",
+        "source": "Connect",
+        "qty": 12.624884774738668,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-06 09:16:48 +0200",
+        "source": "Connect",
+        "qty": 12.624884774738666,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-10-06 09:17:48 +0200",
+        "qty": 12.624884774738666,
+        "units": "kcal",
+        "source": "Connect"
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-06 09:18:48 +0200",
+        "qty": 12.624884774738668
+      },
+      {
+        "date": "2025-10-06 09:19:48 +0200",
+        "source": "Connect",
+        "qty": 12.624884774738666,
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 12.624884774738666,
+        "date": "2025-10-06 09:20:48 +0200"
+      },
+      {
+        "qty": 7.7849218020906665,
+        "units": "kcal",
+        "date": "2025-10-06 09:21:48 +0200",
+        "source": "Connect"
+      }
+    ],
+    "start": "2025-10-06 09:13:48 +0200",
+    "duration": 516.9979858398438,
+    "metadata": {},
+    "end": "2025-10-06 09:22:24 +0200",
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    }
+  },
+  {
+    "duration": 557.3179931640625,
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "qty": 12.612404562956176,
+        "source": "Connect",
+        "date": "2025-10-02 10:08:23 +0200"
+      },
+      {
+        "units": "kcal",
+        "source": "Connect",
+        "qty": 12.612404562956176,
+        "date": "2025-10-02 10:09:23 +0200"
+      },
+      {
+        "qty": 12.612404562956176,
+        "date": "2025-10-02 10:10:23 +0200",
+        "units": "kcal",
+        "source": "Connect"
+      },
+      {
+        "qty": 12.612404562956176,
+        "source": "Connect",
+        "date": "2025-10-02 10:11:23 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 12.612404562956177,
+        "units": "kcal",
+        "source": "Connect",
+        "date": "2025-10-02 10:12:23 +0200"
+      },
+      {
+        "qty": 12.612404562956177,
+        "source": "Connect",
+        "date": "2025-10-02 10:13:23 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 12.612404562956176,
+        "date": "2025-10-02 10:14:23 +0200",
+        "source": "Connect",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 12.612404562956176,
+        "date": "2025-10-02 10:15:23 +0200",
+        "source": "Connect"
+      },
+      {
+        "units": "kcal",
+        "qty": 12.612404562956176,
+        "date": "2025-10-02 10:16:23 +0200",
+        "source": "Connect"
+      },
+      {
+        "units": "kcal",
+        "qty": 3.640358933394429,
+        "date": "2025-10-02 10:17:23 +0200",
+        "source": "Connect"
+      }
+    ],
+    "heartRateData": [
+      {
+        "Avg": 80,
+        "source": "Connect",
+        "Max": 80,
+        "Min": 80,
+        "date": "2025-10-02 10:09:23 +0200",
+        "units": "count/min"
+      },
+      {
+        "Max": 75,
+        "source": "Connect",
+        "units": "count/min",
+        "Min": 75,
+        "date": "2025-10-02 10:11:23 +0200",
+        "Avg": 75
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-02 10:13:23 +0200",
+        "Avg": 80,
+        "units": "count/min",
+        "Min": 80,
+        "Max": 80
+      },
+      {
+        "Max": 96,
+        "Min": 96,
+        "units": "count/min",
+        "date": "2025-10-02 10:15:23 +0200",
+        "Avg": 96,
+        "source": "Connect"
+      }
+    ],
+    "stepCount": [
+      {
+        "qty": 2.8398220244716352,
+        "date": "2025-10-02 10:14:23 +0200",
+        "source": "Connect",
+        "units": "count"
+      },
+      {
+        "qty": 7.4082313681868746,
+        "units": "count",
+        "date": "2025-10-02 10:15:23 +0200",
+        "source": "Connect"
+      },
+      {
+        "units": "count",
+        "date": "2025-10-02 10:16:23 +0200",
+        "qty": 7.4082313681868746,
+        "source": "Connect"
+      },
+      {
+        "source": "Connect",
+        "date": "2025-10-02 10:17:23 +0200",
+        "units": "count",
+        "qty": 7.4082313681868746
+      }
+    ],
+    "heartRateRecovery": [
+      {
+        "Min": 92,
+        "Max": 92,
+        "date": "2025-10-02 10:17:59 +0200",
+        "source": "Connect",
+        "Avg": 92,
+        "units": "count/min"
+      }
+    ],
+    "id": "5AF662D6-C777-4EDE-BB08-68D642998A82",
+    "metadata": {},
+    "name": "Yoga",
+    "end": "2025-10-02 10:17:40 +0200",
+    "start": "2025-10-02 10:08:23 +0200",
+    "distance": {
+      "qty": 0,
+      "units": "km"
+    },
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 28
+    }
+  },
+  {
+    "activeEnergyBurned": {
+      "qty": 30,
+      "units": "kJ"
+    },
+    "start": "2025-07-07 18:51:59 +0200",
+    "id": "6B3966B1-DE23-42C8-91DF-129E25675A65",
+    "duration": 485,
+    "stepCount": [
+      {
+        "qty": 9,
+        "date": "2025-07-07 18:51:59 +0200",
+        "source": "iPhone",
+        "units": "count"
+      }
+    ],
+    "activeEnergy": [
+      {
+        "source": "JustFit",
+        "date": "2025-07-07 18:51:59 +0200",
+        "qty": 14.392456072395973,
+        "units": "kcal"
+      },
+      {
+        "qty": 14.392456072395973,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-07-07 18:52:59 +0200"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 14.392456072395973,
+        "date": "2025-07-07 18:53:59 +0200"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 14.392456072395976,
+        "date": "2025-07-07 18:54:59 +0200"
+      },
+      {
+        "date": "2025-07-07 18:55:59 +0200",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 14.392456072395975
+      },
+      {
+        "date": "2025-07-07 18:56:59 +0200",
+        "units": "kcal",
+        "qty": 14.392456072395975,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-07-07 18:57:59 +0200",
+        "qty": 14.392456072395976
+      },
+      {
+        "date": "2025-07-07 18:58:59 +0200",
+        "source": "JustFit",
+        "qty": 14.392456072395975,
+        "units": "kcal"
+      },
+      {
+        "qty": 10.380351420832218,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-07-07 18:59:59 +0200"
+      }
+    ],
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "end": "2025-07-07 19:00:42 +0200",
+    "heartRateRecovery": [
+      {
+        "Avg": 87,
+        "Max": 87,
+        "units": "count/min",
+        "Min": 87,
+        "source": "JustFit",
+        "date": "2025-07-07 19:01:30 +0200"
+      }
+    ]
+  },
+  {
+    "end": "2025-06-01 18:47:01 +0200",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "duration": 1764,
+    "id": "1C00D93B-4504-4DF4-AA1D-E55D3E8F7BC3",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 197
+    },
+    "activeEnergy": [
+      {
+        "date": "2025-06-01 18:19:15 +0200",
+        "qty": 29.68680715480432,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 29.686807154804324,
+        "date": "2025-06-01 18:20:15 +0200"
+      },
+      {
+        "date": "2025-06-01 18:21:15 +0200",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 29.686807154804324
+      },
+      {
+        "date": "2025-06-01 18:22:15 +0200",
+        "qty": 29.686807154804324,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-06-01 18:23:15 +0200",
+        "qty": 29.686807154804324,
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 29.686807154804328,
+        "date": "2025-06-01 18:24:15 +0200",
+        "source": "JustFit"
+      },
+      {
+        "qty": 29.68680715480433,
+        "date": "2025-06-01 18:25:15 +0200",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "qty": 29.686807154804335,
+        "source": "JustFit",
+        "date": "2025-06-01 18:26:15 +0200",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-06-01 18:27:15 +0200",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 29.686807154804335
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 29.686807154804335,
+        "date": "2025-06-01 18:28:15 +0200"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 29.686807154804338,
+        "date": "2025-06-01 18:29:15 +0200"
+      },
+      {
+        "date": "2025-06-01 18:30:15 +0200",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 29.686807154804338
+      },
+      {
+        "source": "JustFit",
+        "qty": 29.686807154804338,
+        "date": "2025-06-01 18:31:15 +0200",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-06-01 18:32:15 +0200",
+        "source": "JustFit",
+        "qty": 29.686807154804335
+      },
+      {
+        "qty": 29.686807154804335,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-06-01 18:33:15 +0200"
+      },
+      {
+        "source": "JustFit",
+        "qty": 29.686807154804335,
+        "date": "2025-06-01 18:34:15 +0200",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-06-01 18:35:15 +0200",
+        "qty": 29.68680715480433,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "qty": 29.68680715480433,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-06-01 18:36:15 +0200"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-06-01 18:37:15 +0200",
+        "qty": 29.686807154804328
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-06-01 18:38:15 +0200",
+        "qty": 29.68680715480433
+      },
+      {
+        "source": "JustFit",
+        "qty": 29.686807154804335,
+        "units": "kcal",
+        "date": "2025-06-01 18:39:15 +0200"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-06-01 18:40:15 +0200",
+        "qty": 29.686807154804335,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-06-01 18:41:15 +0200",
+        "units": "kcal",
+        "qty": 29.686807154804328,
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 29.68680715480433,
+        "date": "2025-06-01 18:42:15 +0200",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-06-01 18:43:15 +0200",
+        "source": "JustFit",
+        "qty": 29.68680715480433
+      },
+      {
+        "date": "2025-06-01 18:44:15 +0200",
+        "units": "kcal",
+        "qty": 29.68680715480433,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-06-01 18:45:15 +0200",
+        "qty": 29.68680715480433
+      },
+      {
+        "qty": 22.704206820283332,
+        "source": "JustFit",
+        "date": "2025-06-01 18:46:15 +0200",
+        "units": "kcal"
+      }
+    ],
+    "start": "2025-06-01 18:19:15 +0200"
+  },
+  {
+    "activeEnergyBurned": {
+      "qty": 56,
+      "units": "kJ"
+    },
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "date": "2025-05-29 19:18:51 +0200",
+        "source": "JustFit",
+        "qty": 19.474820734507826
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 19.474820734507823,
+        "date": "2025-05-29 19:19:51 +0200"
+      },
+      {
+        "qty": 19.47482073450782,
+        "source": "JustFit",
+        "date": "2025-05-29 19:20:51 +0200",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 19.474820734507823,
+        "date": "2025-05-29 19:21:51 +0200"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 19.474820734507823,
+        "date": "2025-05-29 19:22:51 +0200"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 19.474820734507823,
+        "date": "2025-05-29 19:23:51 +0200"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 19.474820734507823,
+        "date": "2025-05-29 19:24:51 +0200"
+      },
+      {
+        "qty": 19.47482073450782,
+        "date": "2025-05-29 19:25:51 +0200",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-29 19:26:51 +0200",
+        "source": "JustFit",
+        "qty": 19.47482073450782
+      },
+      {
+        "qty": 19.47482073450782,
+        "date": "2025-05-29 19:27:51 +0200",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-05-29 19:28:51 +0200",
+        "qty": 19.47482073450782,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-05-29 19:29:51 +0200",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 19.474820734507823
+      },
+      {
+        "source": "JustFit",
+        "qty": 0.6061511859061469,
+        "units": "kcal",
+        "date": "2025-05-29 19:30:51 +0200"
+      }
+    ],
+    "id": "F2798F48-AC53-4F66-8966-CA5F00D5C354",
+    "heartRateRecovery": [
+      {
+        "source": "JustFit",
+        "Min": 82,
+        "Avg": 82,
+        "units": "count/min",
+        "date": "2025-05-29 19:31:31 +0200",
+        "Max": 82
+      }
+    ],
+    "duration": 769,
+    "end": "2025-05-29 19:30:53 +0200",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "start": "2025-05-29 19:18:51 +0200"
+  },
+  {
+    "end": "2025-05-26 19:00:08 +0200",
+    "stepCount": [
+      {
+        "date": "2025-05-26 18:57:57 +0200",
+        "qty": 8,
+        "source": "iPhone",
+        "units": "count"
+      }
+    ],
+    "activeEnergyBurned": {
+      "qty": 70,
+      "units": "kJ"
+    },
+    "duration": 769,
+    "start": "2025-05-26 18:47:57 +0200",
+    "activeEnergy": [
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-05-26 18:47:57 +0200",
+        "qty": 24.034095752467902
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-26 18:48:57 +0200",
+        "qty": 24.034095752467902,
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 24.034095752467902,
+        "source": "JustFit",
+        "date": "2025-05-26 18:49:57 +0200"
+      },
+      {
+        "source": "JustFit",
+        "qty": 24.034095752467902,
+        "date": "2025-05-26 18:50:57 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 24.034095752467902,
+        "date": "2025-05-26 18:51:57 +0200",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-05-26 18:52:57 +0200",
+        "units": "kcal",
+        "qty": 24.034095752467902
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-26 18:53:57 +0200",
+        "source": "JustFit",
+        "qty": 24.034095752467902
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-05-26 18:54:57 +0200",
+        "qty": 24.034095752467902,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-05-26 18:55:57 +0200",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 24.034095752467902
+      },
+      {
+        "qty": 24.034095752467902,
+        "source": "JustFit",
+        "date": "2025-05-26 18:56:57 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 24.034095752467902,
+        "units": "kcal",
+        "date": "2025-05-26 18:57:57 +0200",
+        "source": "JustFit"
+      },
+      {
+        "qty": 24.034095752467902,
+        "units": "kcal",
+        "date": "2025-05-26 18:58:57 +0200",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 4.470850970385213,
+        "date": "2025-05-26 18:59:57 +0200",
+        "units": "kcal"
+      }
+    ],
+    "id": "ECA31F3A-9567-48EF-9A46-D2F171CB4B8C",
+    "name": "Entra\u00eenement de Force Fonctionnelle"
+  },
+  {
+    "duration": 485,
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "heartRateRecovery": [
+      {
+        "Avg": 86,
+        "Min": 86,
+        "date": "2025-05-19 18:10:34 +0200",
+        "source": "JustFit",
+        "Max": 86,
+        "units": "count/min"
+      }
+    ],
+    "end": "2025-05-19 18:09:50 +0200",
+    "start": "2025-05-19 18:01:45 +0200",
+    "activeEnergyBurned": {
+      "qty": 30,
+      "units": "kJ"
+    },
+    "id": "4B8708CA-0685-45F4-9384-E9067A7792DB",
+    "activeEnergy": [
+      {
+        "date": "2025-05-19 18:01:45 +0200",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 15.518705943839276
+      },
+      {
+        "source": "JustFit",
+        "qty": 15.518705943839276,
+        "date": "2025-05-19 18:02:45 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 15.518705943839278,
+        "date": "2025-05-19 18:03:45 +0200",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 15.518705943839278,
+        "units": "kcal",
+        "date": "2025-05-19 18:04:45 +0200",
+        "source": "JustFit"
+      },
+      {
+        "qty": 15.518705943839278,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-05-19 18:05:45 +0200"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-19 18:06:45 +0200",
+        "qty": 15.518705943839278,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-05-19 18:07:45 +0200",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 15.518705943839278
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-19 18:08:45 +0200",
+        "source": "JustFit",
+        "qty": 15.518705943839274
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-19 18:09:45 +0200",
+        "source": "JustFit",
+        "qty": 1.3703524492857957
+      }
+    ]
+  },
+  {
+    "activeEnergyBurned": {
+      "qty": 43,
+      "units": "kJ"
+    },
+    "start": "2025-05-16 18:11:42 +0200",
+    "heartRateRecovery": [
+      {
+        "Min": 85,
+        "date": "2025-05-16 18:21:30 +0200",
+        "Avg": 85,
+        "source": "JustFit",
+        "units": "count/min",
+        "Max": 85
+      }
+    ],
+    "activeEnergy": [
+      {
+        "qty": 21.10336414095162,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-05-16 18:11:42 +0200"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-05-16 18:12:42 +0200",
+        "qty": 21.103364140951616
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-05-16 18:13:42 +0200",
+        "qty": 21.103364140951616
+      },
+      {
+        "source": "JustFit",
+        "qty": 21.10336414095162,
+        "units": "kcal",
+        "date": "2025-05-16 18:14:42 +0200"
+      },
+      {
+        "units": "kcal",
+        "qty": 21.10336414095162,
+        "source": "JustFit",
+        "date": "2025-05-16 18:15:42 +0200"
+      },
+      {
+        "qty": 21.10336414095162,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-05-16 18:16:42 +0200"
+      },
+      {
+        "date": "2025-05-16 18:17:42 +0200",
+        "units": "kcal",
+        "qty": 21.10336414095162,
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-05-16 18:18:42 +0200",
+        "qty": 21.103364140951616
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-05-16 18:19:42 +0200",
+        "units": "kcal",
+        "qty": 11.085086872387032
+      }
+    ],
+    "end": "2025-05-16 18:20:14 +0200",
+    "id": "E403AD97-7DB7-44CA-9A84-6FDAA20C1213",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "duration": 540
+  },
+  {
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "end": "2025-05-04 19:11:21 +0200",
+    "activeEnergyBurned": {
+      "qty": 20,
+      "units": "kJ"
+    },
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "qty": 7.52433337737078,
+        "date": "2025-05-04 19:00:14 +0200",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 7.524333377370779,
+        "units": "kcal",
+        "date": "2025-05-04 19:01:14 +0200"
+      },
+      {
+        "source": "iPhone|JustFit",
+        "qty": 0.974872,
+        "units": "kcal",
+        "date": "2025-05-04 19:02:14 +0200"
+      },
+      {
+        "qty": 7.5243333773707795,
+        "source": "iPhone|JustFit",
+        "date": "2025-05-04 19:03:14 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 7.5243333773707795,
+        "date": "2025-05-04 19:04:14 +0200",
+        "units": "kcal",
+        "source": "iPhone|JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 7.52433337737078,
+        "source": "iPhone|JustFit",
+        "date": "2025-05-04 19:05:14 +0200"
+      },
+      {
+        "qty": 7.52433337737078,
+        "units": "kcal",
+        "source": "iPhone|JustFit",
+        "date": "2025-05-04 19:06:14 +0200"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-05-04 19:07:14 +0200",
+        "qty": 7.52433337737078,
+        "source": "iPhone|JustFit"
+      },
+      {
+        "source": "iPhone|JustFit",
+        "units": "kcal",
+        "date": "2025-05-04 19:08:14 +0200",
+        "qty": 7.524333377370781
+      },
+      {
+        "qty": 7.524333377370781,
+        "date": "2025-05-04 19:09:14 +0200",
+        "source": "iPhone|JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-05-04 19:10:14 +0200",
+        "source": "iPhone|JustFit",
+        "qty": 7.5243333773707795,
+        "units": "kcal"
+      },
+      {
+        "source": "iPhone|JustFit",
+        "date": "2025-05-04 19:11:14 +0200",
+        "units": "kcal",
+        "qty": 0.91233284892142
+      }
+    ],
+    "start": "2025-05-04 19:00:14 +0200",
+    "duration": 587,
+    "id": "6559A692-C41A-4978-BC5A-55018D83FABF"
+  },
+  {
+    "activeEnergyBurned": {
+      "qty": 42,
+      "units": "kJ"
+    },
+    "activeEnergy": [
+      {
+        "date": "2025-04-28 18:23:26 +0200",
+        "qty": 20.114008031413654,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-04-28 18:24:26 +0200",
+        "qty": 20.114008031413654
+      },
+      {
+        "source": "JustFit",
+        "qty": 20.114008031413654,
+        "date": "2025-04-28 18:25:26 +0200",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 20.114008031413654,
+        "date": "2025-04-28 18:26:26 +0200",
+        "source": "JustFit"
+      },
+      {
+        "qty": 20.114008031413654,
+        "date": "2025-04-28 18:27:26 +0200",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 20.11400803141365,
+        "date": "2025-04-28 18:28:26 +0200"
+      },
+      {
+        "source": "JustFit",
+        "qty": 20.11400803141365,
+        "date": "2025-04-28 18:29:26 +0200",
+        "units": "kcal"
+      },
+      {
+        "qty": 20.114008031413654,
+        "date": "2025-04-28 18:30:26 +0200",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 14.815935748690741,
+        "date": "2025-04-28 18:31:26 +0200",
+        "source": "JustFit"
+      }
+    ],
+    "duration": 545,
+    "end": "2025-04-28 18:32:10 +0200",
+    "id": "F265084E-9F24-4386-8060-834A198B0032",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "heartRateRecovery": [
+      {
+        "Max": 82,
+        "Min": 82,
+        "source": "JustFit",
+        "date": "2025-04-28 18:32:59 +0200",
+        "Avg": 82,
+        "units": "count/min"
+      }
+    ],
+    "start": "2025-04-28 18:23:26 +0200"
+  },
+  {
+    "heartRateRecovery": [
+      {
+        "Min": 86,
+        "units": "count/min",
+        "date": "2025-03-15 18:27:57 +0100",
+        "source": "JustFit",
+        "Avg": 86,
+        "Max": 86
+      }
+    ],
+    "duration": 715,
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 70
+    },
+    "id": "D09E72D1-22D6-4243-9003-67EF3F4DA85D",
+    "end": "2025-03-15 18:27:12 +0100",
+    "activeEnergy": [
+      {
+        "source": "JustFit",
+        "qty": 25.276905851791803,
+        "date": "2025-03-15 18:15:37 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "qty": 25.276905851791803,
+        "units": "kcal",
+        "date": "2025-03-15 18:16:37 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-03-15 18:17:37 +0100",
+        "units": "kcal",
+        "qty": 25.276905851791803
+      },
+      {
+        "date": "2025-03-15 18:18:37 +0100",
+        "qty": 25.276905851791806,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 25.276905851791803,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-03-15 18:19:37 +0100"
+      },
+      {
+        "source": "JustFit",
+        "qty": 25.276905851791806,
+        "units": "kcal",
+        "date": "2025-03-15 18:20:37 +0100"
+      },
+      {
+        "qty": 25.27690585179181,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-03-15 18:21:37 +0100"
+      },
+      {
+        "date": "2025-03-15 18:22:37 +0100",
+        "units": "kcal",
+        "qty": 25.276905851791806,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 25.27690585179181,
+        "date": "2025-03-15 18:23:37 +0100"
+      },
+      {
+        "source": "JustFit",
+        "qty": 25.27690585179181,
+        "date": "2025-03-15 18:24:37 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-03-15 18:25:37 +0100",
+        "qty": 25.276905851791806,
+        "source": "JustFit"
+      },
+      {
+        "qty": 14.834035630290192,
+        "units": "kcal",
+        "date": "2025-03-15 18:26:37 +0100",
+        "source": "JustFit"
+      }
+    ],
+    "start": "2025-03-15 18:15:37 +0100"
+  },
+  {
+    "heartRateRecovery": [
+      {
+        "Avg": 85,
+        "date": "2025-03-13 18:21:21 +0100",
+        "Max": 85,
+        "Min": 85,
+        "units": "count/min",
+        "source": "JustFit"
+      }
+    ],
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "start": "2025-03-13 18:11:16 +0100",
+    "end": "2025-03-13 18:19:51 +0100",
+    "activeEnergy": [
+      {
+        "qty": 21.418468689669826,
+        "date": "2025-03-13 18:11:16 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 21.418468689669826,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-03-13 18:12:16 +0100"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-03-13 18:13:16 +0100",
+        "qty": 21.418468689669826,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-03-13 18:14:16 +0100",
+        "source": "JustFit",
+        "qty": 21.418468689669822,
+        "units": "kcal"
+      },
+      {
+        "qty": 21.418468689669826,
+        "source": "JustFit",
+        "date": "2025-03-13 18:15:16 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 21.418468689669822,
+        "date": "2025-03-13 18:16:16 +0100",
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-03-13 18:17:16 +0100",
+        "source": "JustFit",
+        "qty": 21.418468689669822,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-03-13 18:18:16 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 21.418468689669822
+      },
+      {
+        "qty": 12.748250482641396,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-03-13 18:19:16 +0100"
+      }
+    ],
+    "id": "91329450-DA2D-4B77-B154-990E722C4AA6",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 44
+    },
+    "duration": 545
+  },
+  {
+    "id": "936A5E5B-721A-452A-8447-F715E7E2DC0F",
+    "heartRateRecovery": [
+      {
+        "source": "JustFit",
+        "Min": 77,
+        "units": "count/min",
+        "Max": 77,
+        "Avg": 77,
+        "date": "2025-03-12 18:20:50 +0100"
+      }
+    ],
+    "duration": 545,
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 42
+    },
+    "end": "2025-03-12 18:19:54 +0100",
+    "start": "2025-03-12 18:11:18 +0100",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "date": "2025-03-12 18:11:18 +0100",
+        "source": "JustFit",
+        "qty": 20.43872092280925
+      },
+      {
+        "date": "2025-03-12 18:12:18 +0100",
+        "qty": 20.43872092280925,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 20.43872092280925,
+        "units": "kcal",
+        "date": "2025-03-12 18:13:18 +0100"
+      },
+      {
+        "qty": 20.43872092280925,
+        "date": "2025-03-12 18:14:18 +0100",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "qty": 20.438720922809253,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-03-12 18:15:18 +0100"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 20.438720922809253,
+        "date": "2025-03-12 18:16:18 +0100"
+      },
+      {
+        "date": "2025-03-12 18:17:18 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 20.438720922809253
+      },
+      {
+        "qty": 20.438720922809253,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-03-12 18:18:18 +0100"
+      },
+      {
+        "date": "2025-03-12 18:19:18 +0100",
+        "source": "JustFit",
+        "qty": 12.218232617525995,
+        "units": "kcal"
+      }
+    ]
+  },
+  {
+    "end": "2025-02-09 19:40:52 +0100",
+    "duration": 1326,
+    "heartRateRecovery": [
+      {
+        "date": "2025-02-09 19:42:01 +0100",
+        "Min": 82,
+        "source": "JustFit",
+        "Max": 82,
+        "Avg": 82,
+        "units": "count/min"
+      }
+    ],
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "activeEnergy": [
+      {
+        "qty": 25.673541666536632,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-02-09 19:20:11 +0100"
+      },
+      {
+        "source": "JustFit",
+        "qty": 25.673541666536632,
+        "units": "kcal",
+        "date": "2025-02-09 19:21:11 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-02-09 19:22:11 +0100",
+        "units": "kcal",
+        "qty": 25.673541666536632
+      },
+      {
+        "units": "kcal",
+        "qty": 25.673541666536636,
+        "source": "JustFit",
+        "date": "2025-02-09 19:23:11 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-02-09 19:24:11 +0100",
+        "units": "kcal",
+        "qty": 25.673541666536636
+      },
+      {
+        "date": "2025-02-09 19:25:11 +0100",
+        "source": "JustFit",
+        "qty": 25.673541666536636,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-02-09 19:26:11 +0100",
+        "qty": 25.673541666536636,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-02-09 19:27:11 +0100",
+        "qty": 25.67354166653664,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-02-09 19:28:11 +0100",
+        "qty": 25.67354166653664,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-02-09 19:29:11 +0100",
+        "units": "kcal",
+        "qty": 25.67354166653664,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-02-09 19:30:11 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 25.673541666536643
+      },
+      {
+        "date": "2025-02-09 19:31:11 +0100",
+        "qty": 25.67354166653664,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 25.67354166653664,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-02-09 19:32:11 +0100"
+      },
+      {
+        "units": "kcal",
+        "qty": 25.67354166653664,
+        "source": "JustFit",
+        "date": "2025-02-09 19:33:11 +0100"
+      },
+      {
+        "qty": 25.673541666536636,
+        "date": "2025-02-09 19:34:11 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-02-09 19:35:11 +0100",
+        "qty": 25.67354166653664,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-02-09 19:36:11 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 25.673541666536643
+      },
+      {
+        "source": "JustFit",
+        "qty": 25.673541666536643,
+        "date": "2025-02-09 19:37:11 +0100",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-02-09 19:38:11 +0100",
+        "units": "kcal",
+        "qty": 25.67354166653664,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-02-09 19:39:11 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 25.673541666536646
+      },
+      {
+        "units": "kcal",
+        "date": "2025-02-09 19:40:11 +0100",
+        "source": "JustFit",
+        "qty": 17.897166669267342
+      }
+    ],
+    "activeEnergyBurned": {
+      "qty": 127,
+      "units": "kJ"
+    },
+    "id": "F75A6C10-89DC-4588-923F-5937D27DC02F",
+    "start": "2025-02-09 19:20:11 +0100"
+  },
+  {
+    "activeEnergy": [
+      {
+        "qty": 20.14880548923676,
+        "units": "kcal",
+        "date": "2025-12-28 18:17:20 +0100",
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-28 18:18:20 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 20.14880548923676
+      },
+      {
+        "source": "JustFit",
+        "qty": 20.14880548923676,
+        "date": "2025-12-28 18:19:20 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 20.14880548923676,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-28 18:20:20 +0100"
+      },
+      {
+        "qty": 20.148805489236757,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-28 18:21:20 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-28 18:22:20 +0100",
+        "qty": 20.148805489236757,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-28 18:23:20 +0100",
+        "qty": 20.148805489236754,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-28 18:24:20 +0100",
+        "qty": 20.148805489236757,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-28 18:25:20 +0100",
+        "units": "kcal",
+        "qty": 20.148805489236757
+      },
+      {
+        "source": "JustFit",
+        "qty": 20.148805489236757,
+        "units": "kcal",
+        "date": "2025-12-28 18:26:20 +0100"
+      },
+      {
+        "qty": 20.148805489236754,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-28 18:27:20 +0100"
+      },
+      {
+        "qty": 20.148805489236754,
+        "source": "JustFit",
+        "date": "2025-12-28 18:28:20 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-28 18:29:20 +0100",
+        "units": "kcal",
+        "qty": 20.148805489236754
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-28 18:30:20 +0100",
+        "source": "JustFit",
+        "qty": 20.148805489236754
+      },
+      {
+        "qty": 20.148805489236754,
+        "source": "JustFit",
+        "date": "2025-12-28 18:31:20 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-28 18:32:20 +0100",
+        "qty": 20.14880548923675
+      },
+      {
+        "date": "2025-12-28 18:33:20 +0100",
+        "qty": 20.148805489236754,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-28 18:34:20 +0100",
+        "source": "JustFit",
+        "qty": 20.14880548923675,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "qty": 9.697501193738308,
+        "units": "kcal",
+        "date": "2025-12-28 18:35:20 +0100"
+      }
+    ],
+    "id": "4572F379-0D84-4793-98A1-53F77F53248F",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 89
+    },
+    "start": "2025-12-28 18:17:20 +0100",
+    "end": "2025-12-28 18:35:49 +0100",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "duration": 1070
+  },
+  {
+    "duration": 1366,
+    "end": "2025-12-25 19:21:44 +0100",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "activeEnergy": [
+      {
+        "date": "2025-12-25 19:00:09 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 16.286243995201914
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 16.286243995201914,
+        "date": "2025-12-25 19:01:09 +0100"
+      },
+      {
+        "date": "2025-12-25 19:02:09 +0100",
+        "units": "kcal",
+        "qty": 16.286243995201918,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-25 19:03:09 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 16.286243995201918
+      },
+      {
+        "qty": 16.286243995201918,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-25 19:04:09 +0100"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 16.286243995201914,
+        "date": "2025-12-25 19:05:09 +0100"
+      },
+      {
+        "date": "2025-12-25 19:06:09 +0100",
+        "units": "kcal",
+        "qty": 16.286243995201914,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 16.286243995201914,
+        "units": "kcal",
+        "date": "2025-12-25 19:07:09 +0100"
+      },
+      {
+        "date": "2025-12-25 19:08:09 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 16.286243995201914
+      },
+      {
+        "qty": 16.286243995201914,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-25 19:09:09 +0100"
+      },
+      {
+        "qty": 16.286243995201914,
+        "source": "JustFit",
+        "date": "2025-12-25 19:10:09 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-25 19:11:09 +0100",
+        "qty": 16.286243995201914,
+        "units": "kcal"
+      },
+      {
+        "qty": 16.286243995201914,
+        "date": "2025-12-25 19:12:09 +0100",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 16.286243995201914,
+        "units": "kcal",
+        "date": "2025-12-25 19:13:09 +0100"
+      },
+      {
+        "date": "2025-12-25 19:14:09 +0100",
+        "qty": 16.286243995201914,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-25 19:15:09 +0100",
+        "qty": 16.28624399520191,
+        "units": "kcal"
+      },
+      {
+        "qty": 16.286243995201914,
+        "date": "2025-12-25 19:16:09 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-25 19:17:09 +0100",
+        "qty": 16.28624399520191,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 16.28624399520191,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-25 19:18:09 +0100"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-25 19:19:09 +0100",
+        "qty": 16.28624399520191
+      },
+      {
+        "qty": 16.28624399520191,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-25 19:20:09 +0100"
+      },
+      {
+        "date": "2025-12-25 19:21:09 +0100",
+        "source": "JustFit",
+        "qty": 9.444876100759775,
+        "units": "kcal"
+      }
+    ],
+    "start": "2025-12-25 19:00:09 +0100",
+    "id": "F4757165-4895-4918-9553-3EA8CFE7E00F",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 84
+    }
+  },
+  {
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "id": "3ECE2690-ACC5-4FAA-BD5E-CBEF4998F887",
+    "stepCount": [
+      {
+        "date": "2025-12-22 18:57:27 +0100",
+        "qty": 17,
+        "source": "iPhone",
+        "units": "count"
+      }
+    ],
+    "end": "2025-12-22 18:59:43 +0100",
+    "start": "2025-12-22 18:38:27 +0100",
+    "duration": 1326,
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "qty": 27.15981391811848,
+        "source": "JustFit",
+        "date": "2025-12-22 18:38:27 +0100"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-22 18:39:27 +0100",
+        "qty": 27.159813918118477,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-22 18:40:27 +0100",
+        "qty": 27.159813918118477,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-22 18:41:27 +0100",
+        "qty": 27.159813918118477,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 27.159813918118477,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-22 18:42:27 +0100"
+      },
+      {
+        "date": "2025-12-22 18:43:27 +0100",
+        "qty": 27.159813918118473,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-22 18:44:27 +0100",
+        "qty": 27.15981391811847
+      },
+      {
+        "date": "2025-12-22 18:45:27 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 27.159813918118473
+      },
+      {
+        "qty": 27.159813918118466,
+        "date": "2025-12-22 18:46:27 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "qty": 27.159813918118466,
+        "units": "kcal",
+        "date": "2025-12-22 18:47:27 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-22 18:48:27 +0100",
+        "units": "kcal",
+        "qty": 27.159813918118463
+      },
+      {
+        "source": "JustFit",
+        "qty": 27.159813918118466,
+        "units": "kcal",
+        "date": "2025-12-22 18:49:27 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-22 18:50:27 +0100",
+        "units": "kcal",
+        "qty": 27.159813918118466
+      },
+      {
+        "qty": 27.159813918118466,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-22 18:51:27 +0100"
+      },
+      {
+        "date": "2025-12-22 18:52:27 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 27.159813918118466
+      },
+      {
+        "source": "JustFit",
+        "qty": 27.159813918118466,
+        "date": "2025-12-22 18:53:27 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 27.159813918118466,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-22 18:54:27 +0100"
+      },
+      {
+        "date": "2025-12-22 18:55:27 +0100",
+        "qty": 27.159813918118466,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-22 18:56:27 +0100",
+        "qty": 27.159813918118466,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 27.159813918118466,
+        "units": "kcal",
+        "date": "2025-12-22 18:57:27 +0100",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-22 18:58:27 +0100",
+        "source": "JustFit",
+        "qty": 27.15981391811847
+      },
+      {
+        "date": "2025-12-22 18:59:27 +0100",
+        "units": "kcal",
+        "qty": 7.314836796660383,
+        "source": "JustFit"
+      }
+    ],
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 138.06666564941406
+    }
+  },
+  {
+    "duration": 1408,
+    "end": "2025-12-11 19:33:09 +0100",
+    "heartRateRecovery": [
+      {
+        "units": "count/min",
+        "date": "2025-12-11 19:33:53 +0100",
+        "Max": 95,
+        "source": "JustFit",
+        "Avg": 95,
+        "Min": 95
+      }
+    ],
+    "id": "306DB9FB-F0AC-41AB-A943-3C4D4F6F672C",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "start": "2025-12-11 19:11:30 +0100",
+    "activeEnergy": [
+      {
+        "qty": 23.782695083252825,
+        "date": "2025-12-11 19:11:30 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-11 19:12:30 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 23.782695083252825
+      },
+      {
+        "source": "JustFit",
+        "qty": 23.782695083252825,
+        "date": "2025-12-11 19:13:30 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-11 19:14:30 +0100",
+        "qty": 23.782695083252825
+      },
+      {
+        "date": "2025-12-11 19:15:30 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 23.782695083252825
+      },
+      {
+        "qty": 23.782695083252825,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-11 19:16:30 +0100"
+      },
+      {
+        "units": "kcal",
+        "qty": 23.782695083252825,
+        "date": "2025-12-11 19:17:30 +0100",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-11 19:18:30 +0100",
+        "units": "kcal",
+        "qty": 23.782695083252825
+      },
+      {
+        "date": "2025-12-11 19:19:30 +0100",
+        "qty": 23.782695083252822,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-11 19:20:30 +0100",
+        "source": "JustFit",
+        "qty": 23.782695083252825,
+        "units": "kcal"
+      },
+      {
+        "qty": 23.782695083252822,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-11 19:21:30 +0100"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-11 19:22:30 +0100",
+        "qty": 23.78269508325282
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-11 19:23:30 +0100",
+        "source": "JustFit",
+        "qty": 23.78269508325282
+      },
+      {
+        "date": "2025-12-11 19:24:30 +0100",
+        "qty": 23.782695083252822,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-11 19:25:30 +0100",
+        "qty": 23.78269508325282,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-11 19:26:30 +0100",
+        "qty": 23.782695083252822,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-11 19:27:30 +0100",
+        "units": "kcal",
+        "qty": 23.782695083252825
+      },
+      {
+        "date": "2025-12-11 19:28:30 +0100",
+        "source": "JustFit",
+        "qty": 23.782695083252825,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-11 19:29:30 +0100",
+        "qty": 23.78269508325283,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 23.782695083252825,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-11 19:30:30 +0100"
+      },
+      {
+        "date": "2025-12-11 19:31:30 +0100",
+        "source": "JustFit",
+        "qty": 23.782695083252822,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-11 19:32:30 +0100",
+        "qty": 15.195403251690657
+      }
+    ],
+    "activeEnergyBurned": {
+      "qty": 123,
+      "units": "kJ"
+    }
+  },
+  {
+    "heartRateRecovery": [
+      {
+        "source": "JustFit",
+        "date": "2025-12-10 18:58:40 +0100",
+        "Max": 87,
+        "Min": 87,
+        "Avg": 87,
+        "units": "count/min"
+      }
+    ],
+    "start": "2025-12-10 18:37:03 +0100",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "id": "4B2EB09D-278E-4BFE-B568-0075CED4559D",
+    "duration": 1338,
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 182
+    },
+    "end": "2025-12-10 18:57:48 +0100",
+    "activeEnergy": [
+      {
+        "qty": 36.72167038692035,
+        "date": "2025-12-10 18:37:03 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-10 18:38:03 +0100",
+        "source": "JustFit",
+        "qty": 36.72167038692036
+      },
+      {
+        "qty": 36.72167038692036,
+        "date": "2025-12-10 18:39:03 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 36.72167038692036,
+        "source": "JustFit",
+        "date": "2025-12-10 18:40:03 +0100"
+      },
+      {
+        "source": "JustFit",
+        "qty": 36.72167038692036,
+        "units": "kcal",
+        "date": "2025-12-10 18:41:03 +0100"
+      },
+      {
+        "units": "kcal",
+        "qty": 36.72167038692036,
+        "source": "JustFit",
+        "date": "2025-12-10 18:42:03 +0100"
+      },
+      {
+        "qty": 36.72167038692037,
+        "date": "2025-12-10 18:43:03 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 36.72167038692037,
+        "date": "2025-12-10 18:44:03 +0100",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-10 18:45:03 +0100",
+        "qty": 36.721670386920366,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-10 18:46:03 +0100",
+        "qty": 36.721670386920366,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-10 18:47:03 +0100",
+        "qty": 36.72167038692036,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-10 18:48:03 +0100",
+        "qty": 36.721670386920366,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-10 18:49:03 +0100",
+        "qty": 36.72167038692036
+      },
+      {
+        "qty": 36.72167038692035,
+        "date": "2025-12-10 18:50:03 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-10 18:51:03 +0100",
+        "qty": 36.72167038692036
+      },
+      {
+        "source": "JustFit",
+        "qty": 36.72167038692036,
+        "units": "kcal",
+        "date": "2025-12-10 18:52:03 +0100"
+      },
+      {
+        "date": "2025-12-10 18:53:03 +0100",
+        "qty": 36.72167038692036,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-10 18:54:03 +0100",
+        "qty": 36.72167038692036
+      },
+      {
+        "date": "2025-12-10 18:55:03 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 36.721670386920366
+      },
+      {
+        "units": "kcal",
+        "qty": 36.721670386920366,
+        "source": "JustFit",
+        "date": "2025-12-10 18:56:03 +0100"
+      },
+      {
+        "qty": 27.05459226159301,
+        "source": "JustFit",
+        "date": "2025-12-10 18:57:03 +0100",
+        "units": "kcal"
+      }
+    ]
+  },
+  {
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "duration": 1434,
+    "heartRateRecovery": [
+      {
+        "date": "2025-12-08 18:59:45 +0100",
+        "Min": 94,
+        "units": "count/min",
+        "Avg": 94,
+        "Max": 94,
+        "source": "JustFit"
+      }
+    ],
+    "id": "22F5D649-0204-41CB-866C-2058FF0058C1",
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 172
+    },
+    "activeEnergy": [
+      {
+        "source": "JustFit",
+        "qty": 33.26802922673644,
+        "date": "2025-12-08 18:37:06 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 33.26802922673644,
+        "date": "2025-12-08 18:38:06 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-08 18:39:06 +0100",
+        "source": "JustFit",
+        "qty": 33.268029226736445,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-08 18:40:06 +0100",
+        "qty": 33.26802922673644,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "qty": 33.26802922673644,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-08 18:41:06 +0100"
+      },
+      {
+        "date": "2025-12-08 18:42:06 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 33.26802922673644
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-08 18:43:06 +0100",
+        "qty": 33.26802922673644,
+        "units": "kcal"
+      },
+      {
+        "qty": 33.26802922673644,
+        "date": "2025-12-08 18:44:06 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-08 18:45:06 +0100",
+        "source": "JustFit",
+        "qty": 33.26802922673644
+      },
+      {
+        "source": "JustFit",
+        "qty": 33.26802922673644,
+        "units": "kcal",
+        "date": "2025-12-08 18:46:06 +0100"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-08 18:47:06 +0100",
+        "qty": 33.26802922673644
+      },
+      {
+        "date": "2025-12-08 18:48:06 +0100",
+        "qty": 33.26802922673644,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-08 18:49:06 +0100",
+        "qty": 33.26802922673643,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-08 18:50:06 +0100",
+        "qty": 33.26802922673643,
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-08 18:51:06 +0100",
+        "qty": 33.26802922673643,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-08 18:52:06 +0100",
+        "qty": 33.26802922673644
+      },
+      {
+        "date": "2025-12-08 18:53:06 +0100",
+        "source": "JustFit",
+        "qty": 33.26802922673643,
+        "units": "kcal"
+      },
+      {
+        "qty": 33.26802922673643,
+        "date": "2025-12-08 18:54:06 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-08 18:55:06 +0100",
+        "qty": 33.26802922673643
+      },
+      {
+        "date": "2025-12-08 18:56:06 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 33.26802922673643
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-08 18:57:06 +0100",
+        "qty": 33.268029226736424
+      },
+      {
+        "qty": 21.01938623853467,
+        "units": "kcal",
+        "date": "2025-12-08 18:58:06 +0100",
+        "source": "JustFit"
+      }
+    ],
+    "start": "2025-12-08 18:37:06 +0100",
+    "end": "2025-12-08 18:58:44 +0100"
+  },
+  {
+    "activeEnergy": [
+      {
+        "qty": 23.665046424542975,
+        "date": "2025-12-05 19:16:41 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "qty": 23.665046424542975,
+        "date": "2025-12-05 19:17:41 +0100",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-05 19:18:41 +0100",
+        "units": "kcal",
+        "qty": 23.665046424542975
+      },
+      {
+        "date": "2025-12-05 19:19:41 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 23.665046424542975
+      },
+      {
+        "qty": 23.665046424542975,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-05 19:20:41 +0100"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 23.665046424542975,
+        "date": "2025-12-05 19:21:41 +0100"
+      },
+      {
+        "date": "2025-12-05 19:22:41 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 23.665046424542975
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-05 19:23:41 +0100",
+        "source": "JustFit",
+        "qty": 23.665046424542975
+      },
+      {
+        "source": "JustFit",
+        "qty": 23.66504642454297,
+        "units": "kcal",
+        "date": "2025-12-05 19:24:41 +0100"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-05 19:25:41 +0100",
+        "qty": 23.665046424542975
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-05 19:26:41 +0100",
+        "qty": 23.66504642454297,
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-05 19:27:41 +0100",
+        "qty": 23.66504642454297,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "qty": 23.66504642454297,
+        "date": "2025-12-05 19:28:41 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 23.66504642454297,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-05 19:29:41 +0100"
+      },
+      {
+        "units": "kcal",
+        "qty": 23.665046424542968,
+        "date": "2025-12-05 19:30:41 +0100",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 23.665046424542968,
+        "date": "2025-12-05 19:31:41 +0100",
+        "source": "JustFit"
+      },
+      {
+        "qty": 23.665046424542968,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-05 19:32:41 +0100"
+      },
+      {
+        "date": "2025-12-05 19:33:41 +0100",
+        "source": "JustFit",
+        "qty": 23.66504642454297,
+        "units": "kcal"
+      },
+      {
+        "qty": 23.66504642454297,
+        "date": "2025-12-05 19:34:41 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 5.0254406265545715,
+        "date": "2025-12-05 19:35:41 +0100",
+        "source": "JustFit"
+      }
+    ],
+    "activeEnergyBurned": {
+      "qty": 108.66666412353516,
+      "units": "kJ"
+    },
+    "duration": 1104,
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "id": "5DE79DDE-73AF-470C-8C7D-3E26F9205BF4",
+    "start": "2025-12-05 19:16:41 +0100",
+    "end": "2025-12-05 19:35:54 +0100"
+  },
+  {
+    "end": "2025-12-04 19:36:46 +0100",
+    "id": "E1FFAC0D-6894-4BAC-B130-D50C2D16A90E",
+    "duration": 1419,
+    "activeEnergy": [
+      {
+        "date": "2025-12-04 19:14:53 +0100",
+        "source": "JustFit",
+        "qty": 25.4414186503237,
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 25.4414186503237,
+        "source": "JustFit",
+        "date": "2025-12-04 19:15:53 +0100"
+      },
+      {
+        "qty": 25.4414186503237,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-04 19:16:53 +0100"
+      },
+      {
+        "qty": 25.4414186503237,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-04 19:17:53 +0100"
+      },
+      {
+        "date": "2025-12-04 19:18:53 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 25.441418650323698
+      },
+      {
+        "date": "2025-12-04 19:19:53 +0100",
+        "qty": 25.441418650323698,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 25.441418650323698,
+        "source": "JustFit",
+        "date": "2025-12-04 19:20:53 +0100"
+      },
+      {
+        "qty": 25.441418650323694,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-04 19:21:53 +0100"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-04 19:22:53 +0100",
+        "qty": 25.441418650323698,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-04 19:23:53 +0100",
+        "qty": 25.441418650323694,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 25.441418650323694,
+        "date": "2025-12-04 19:24:53 +0100"
+      },
+      {
+        "qty": 25.441418650323694,
+        "units": "kcal",
+        "date": "2025-12-04 19:25:53 +0100",
+        "source": "JustFit"
+      },
+      {
+        "qty": 25.44141865032369,
+        "units": "kcal",
+        "date": "2025-12-04 19:26:53 +0100",
+        "source": "JustFit"
+      },
+      {
+        "qty": 25.441418650323694,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-04 19:27:53 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-04 19:28:53 +0100",
+        "units": "kcal",
+        "qty": 25.441418650323694
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-04 19:29:53 +0100",
+        "qty": 25.44141865032369
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-04 19:30:53 +0100",
+        "qty": 25.441418650323694
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-04 19:31:53 +0100",
+        "qty": 25.441418650323698,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-04 19:32:53 +0100",
+        "qty": 25.441418650323698
+      },
+      {
+        "date": "2025-12-04 19:33:53 +0100",
+        "units": "kcal",
+        "qty": 25.441418650323694,
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 25.441418650323694,
+        "date": "2025-12-04 19:34:53 +0100"
+      },
+      {
+        "qty": 22.202208343202297,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-04 19:35:53 +0100"
+      }
+    ],
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "start": "2025-12-04 19:14:53 +0100",
+    "activeEnergyBurned": {
+      "qty": 133,
+      "units": "kJ"
+    }
+  },
+  {
+    "id": "E1B826DF-FC0E-4337-8B7A-792B9EC52B51",
+    "duration": 1399,
+    "activeEnergyBurned": {
+      "units": "kJ",
+      "qty": 149
+    },
+    "start": "2025-12-03 19:12:23 +0100",
+    "end": "2025-12-03 19:33:58 +0100",
+    "activeEnergy": [
+      {
+        "qty": 28.890243493506805,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-03 19:12:23 +0100"
+      },
+      {
+        "date": "2025-12-03 19:13:23 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 28.89024349350681
+      },
+      {
+        "source": "JustFit",
+        "qty": 28.89024349350681,
+        "date": "2025-12-03 19:14:23 +0100",
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-03 19:15:23 +0100",
+        "units": "kcal",
+        "source": "JustFit",
+        "qty": 28.89024349350681
+      },
+      {
+        "units": "kcal",
+        "qty": 28.890243493506812,
+        "date": "2025-12-03 19:16:23 +0100",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 28.89024349350681,
+        "date": "2025-12-03 19:17:23 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-03 19:18:23 +0100",
+        "qty": 28.890243493506812,
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-03 19:19:23 +0100",
+        "qty": 28.890243493506816,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "qty": 28.890243493506816,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-03 19:20:23 +0100"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-03 19:21:23 +0100",
+        "qty": 28.89024349350682,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-03 19:22:23 +0100",
+        "qty": 28.890243493506823,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 28.890243493506816,
+        "source": "JustFit",
+        "date": "2025-12-03 19:23:23 +0100"
+      },
+      {
+        "qty": 28.89024349350682,
+        "units": "kcal",
+        "date": "2025-12-03 19:24:23 +0100",
+        "source": "JustFit"
+      },
+      {
+        "units": "kcal",
+        "qty": 28.890243493506823,
+        "source": "JustFit",
+        "date": "2025-12-03 19:25:23 +0100"
+      },
+      {
+        "qty": 28.89024349350682,
+        "units": "kcal",
+        "date": "2025-12-03 19:26:23 +0100",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "qty": 28.890243493506823,
+        "date": "2025-12-03 19:27:23 +0100",
+        "units": "kcal"
+      },
+      {
+        "qty": 28.890243493506823,
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-03 19:28:23 +0100"
+      },
+      {
+        "units": "kcal",
+        "qty": 28.890243493506823,
+        "source": "JustFit",
+        "date": "2025-12-03 19:29:23 +0100"
+      },
+      {
+        "date": "2025-12-03 19:30:23 +0100",
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 28.890243493506823
+      },
+      {
+        "units": "kcal",
+        "qty": 28.890243493506823,
+        "date": "2025-12-03 19:31:23 +0100",
+        "source": "JustFit"
+      },
+      {
+        "qty": 28.89024349350683,
+        "date": "2025-12-03 19:32:23 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 16.72088663635707,
+        "date": "2025-12-03 19:33:23 +0100"
+      }
+    ],
+    "name": "Entra\u00eenement de Force Fonctionnelle"
+  },
+  {
+    "duration": 1465,
+    "end": "2025-12-02 19:31:21 +0100",
+    "start": "2025-12-02 19:07:29 +0100",
+    "name": "Entra\u00eenement de Force Fonctionnelle",
+    "id": "5E148A4B-C118-4706-9B4D-F3A0FF27A627",
+    "activeEnergyBurned": {
+      "qty": 208,
+      "units": "kJ"
+    },
+    "activeEnergy": [
+      {
+        "units": "kcal",
+        "qty": 36.48729848702623,
+        "source": "JustFit",
+        "date": "2025-12-02 19:07:29 +0100"
+      },
+      {
+        "units": "kcal",
+        "date": "2025-12-02 19:08:29 +0100",
+        "qty": 36.48729848702622,
+        "source": "JustFit"
+      },
+      {
+        "qty": 36.48729848702622,
+        "date": "2025-12-02 19:09:29 +0100",
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "qty": 36.48729848702622,
+        "date": "2025-12-02 19:10:29 +0100"
+      },
+      {
+        "qty": 36.487298487026216,
+        "units": "kcal",
+        "date": "2025-12-02 19:11:29 +0100",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-02 19:12:29 +0100",
+        "qty": 36.48729848702622,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "qty": 36.48729848702622,
+        "units": "kcal",
+        "date": "2025-12-02 19:13:29 +0100"
+      },
+      {
+        "date": "2025-12-02 19:14:29 +0100",
+        "qty": 36.487298487026216,
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-02 19:15:29 +0100",
+        "units": "kcal",
+        "qty": 36.487298487026216
+      },
+      {
+        "source": "JustFit",
+        "qty": 36.48729848702622,
+        "date": "2025-12-02 19:16:29 +0100",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 36.48729848702622,
+        "date": "2025-12-02 19:17:29 +0100",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-02 19:18:29 +0100",
+        "qty": 36.48729848702622,
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "qty": 36.48729848702622,
+        "date": "2025-12-02 19:19:29 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-02 19:20:29 +0100",
+        "qty": 36.48729848702622,
+        "units": "kcal"
+      },
+      {
+        "date": "2025-12-02 19:21:29 +0100",
+        "qty": 36.48729848702622,
+        "source": "JustFit",
+        "units": "kcal"
+      },
+      {
+        "units": "kcal",
+        "qty": 36.48729848702622,
+        "source": "JustFit",
+        "date": "2025-12-02 19:22:29 +0100"
+      },
+      {
+        "date": "2025-12-02 19:23:29 +0100",
+        "source": "JustFit",
+        "qty": 36.48729848702622,
+        "units": "kcal"
+      },
+      {
+        "qty": 36.48729848702623,
+        "date": "2025-12-02 19:24:29 +0100",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "source": "JustFit",
+        "date": "2025-12-02 19:25:29 +0100",
+        "qty": 36.48729848702623,
+        "units": "kcal"
+      },
+      {
+        "qty": 36.48729848702624,
+        "units": "kcal",
+        "source": "JustFit",
+        "date": "2025-12-02 19:26:29 +0100"
+      },
+      {
+        "qty": 36.48729848702623,
+        "source": "JustFit",
+        "date": "2025-12-02 19:27:29 +0100",
+        "units": "kcal"
+      },
+      {
+        "source": "JustFit",
+        "units": "kcal",
+        "date": "2025-12-02 19:28:29 +0100",
+        "qty": 36.48729848702624
+      },
+      {
+        "qty": 36.48729848702624,
+        "date": "2025-12-02 19:29:29 +0100",
+        "units": "kcal",
+        "source": "JustFit"
+      },
+      {
+        "date": "2025-12-02 19:30:29 +0100",
+        "qty": 31.064134798396793,
+        "units": "kcal",
+        "source": "JustFit"
+      }
+    ]
+  }
+]

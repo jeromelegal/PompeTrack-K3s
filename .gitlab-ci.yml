@@ -1,19 +1,20 @@
-stages:
-  - build
+stages: [build]
 
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_BUILDKIT: "1"
+  GIT_DEPTH: "0"
 
 default:
   image: docker:27
   services:
     - docker:27-dind
   before_script:
-    - apk add --no-cache ca-certificates && update-ca-certificates
+    - apk add --no-cache ca-certificates git && update-ca-certificates
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 
-.build_template:
+.build_app:
   stage: build
   script:
     - docker build -t "$CI_REGISTRY_IMAGE/$APP_NAME:$CI_COMMIT_SHORT_SHA" -t "$CI_REGISTRY_IMAGE/$APP_NAME:latest" "$APP_PATH"
@@ -21,7 +22,7 @@ default:
     - docker push "$CI_REGISTRY_IMAGE/$APP_NAME:latest"
 
 build_ingestion:
-  extends: .build_template
+  extends: .build_app
   variables:
     APP_NAME: ingestion
     APP_PATH: apps/ingestion
@@ -30,7 +31,7 @@ build_ingestion:
         - apps/ingestion/**
 
 build_streamlit:
-  extends: .build_template
+  extends: .build_app
   variables:
     APP_NAME: streamlit
     APP_PATH: apps/streamlit
@@ -39,28 +40,10 @@ build_streamlit:
         - apps/streamlit/**
 
 build_worker_fhir:
-  extends: .build_template
+  extends: .build_app
   variables:
     APP_NAME: worker-fhir
     APP_PATH: apps/worker-fhir
   rules:
     - changes:
         - apps/worker-fhir/**
-
-build_worker_sqlite:
-  extends: .build_template
-  variables:
-    APP_NAME: worker-sqlite
-    APP_PATH: apps/worker-sqlite
-  rules:
-    - changes:
-        - apps/worker-sqlite/**
-
-build_worker_stream:
-  extends: .build_template
-  variables:
-    APP_NAME: worker-stream
-    APP_PATH: apps/worker-stream
-  rules:
-    - changes:
-        - apps/worker-stream/**

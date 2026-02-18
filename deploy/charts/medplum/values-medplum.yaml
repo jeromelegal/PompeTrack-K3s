@@ -85,6 +85,8 @@ postgresql:
     username: medplum
     database: medplum
     existingSecret: pompetrack-postgres-auth
+    secretKeys:
+      userPasswordKey: password
   primary:
     persistence:
       enabled: true

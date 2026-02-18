@@ -350,3 +350,136 @@ kubectl -n pompetrack-core apply -f deploy/charts/pompetrack-core/templates/mini
 
 POD=$(kubectl -n pompetrack-core get pod -l job-name=minio-init -o jsonpath='{.items[0].metadata.name}')
 kubectl -n pompetrack-core logs "$POD" --all-containers=true
+
+
+
+
+
+
+
+
+
+
+
+---
+---
+---
+
+
+Parfait. On fige l’état du système comme un snapshot scientifique avant une nouvelle expérience.
+
+Voici ton prompt de checkpoint à copier-coller dans une nouvelle discussion :
+
+---
+
+## CHECKPOINT — PompeTrack / Medplum / Istio STRICT mTLS
+
+Contexte général :
+
+* Cluster K3s
+* Istio (rev: default)
+* mTLS STRICT activé dans le namespace `medplum`
+* Namespace `pompetrack-core` injecté dans le mesh
+* Calico actif
+* Traefik en frontal via Yunohost
+* Déploiement via script `apply.sh`
+* Medplum version 5.0.14
+
+---
+
+### État validé
+
+✔ Medplum démarre correctement
+✔ PostgreSQL et Redis fonctionnels
+✔ UI accessible via app.phylcero.fr
+✔ STRICT mTLS actif côté `medplum`
+✔ worker-fhir injecté (sidecar OK)
+✔ TCP mesh vers medplum-service OK
+✔ TLS ISTIO_MUTUAL actif côté client
+✔ SAN attendu : `spiffe://cluster.local/ns/medplum/sa/medplum`
+
+---
+
+### Problème identifié précédemment
+
+Appels worker → medplum-service (port 80 → 8103) produisaient :
+
+```
+503 upstream connect error
+reset reason: connection timeout
+```
+
+Cause identifiée :
+
+Service exposé en 80 → targetPort 8103
+En STRICT mTLS, SNI basé sur port 80
+Listener inbound côté serveur sur 8103
+→ filter chain mismatch
+→ timeout silencieux
+
+---
+
+### Décision architecturale
+
+Créer un service mesh dédié :
+
+```
+medplum-mesh
+port: 8103
+targetPort: 8103
+```
+
+Utilisé uniquement pour communication interne mesh.
+
+---
+
+### Nouvelle cible
+
+Depuis worker-fhir :
+
+```
+http://medplum-mesh.medplum.svc.cluster.local:8103
+```
+
+Avec :
+
+* PeerAuthentication STRICT côté medplum
+* Une seule DestinationRule ISTIO_MUTUAL côté pompetrack-core
+* Aucune DestinationRule côté medplum
+
+---
+
+### Objectif de la prochaine session
+
+1. Vérifier que l’apply complet redéploie proprement :
+
+   * namespace
+   * service medplum-mesh
+   * helm medplum
+   * règles Istio
+
+2. Tester depuis worker-fhir :
+
+   * GET /healthcheck
+   * GET /fhir/R4/metadata
+   * POST /oauth2/token
+
+Résultat attendu :
+
+* 200 ou 401 (mais plus de timeout 503)
+
+---
+
+Fin du checkpoint.
+
+---
+
+Tu peux maintenant :
+
+1. Tout supprimer
+2. Relancer apply propre
+3. Ouvrir une nouvelle fenêtre
+4. Coller le checkpoint
+5. On teste méthodiquement, une commande à la fois
+
+On transforme ce cluster en laboratoire propre, pas en champ de bataille.

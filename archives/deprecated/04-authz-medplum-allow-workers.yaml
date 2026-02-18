@@ -1,0 +1,21 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-workers
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: medplum
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/pompetrack-core/sa/worker-fhir
+    to:
+    - operation:
+        methods: ["POST", "GET"]
+        paths:
+        - "/oauth2/token"
+        - "/fhir/R4/*"

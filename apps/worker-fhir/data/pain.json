@@ -1,0 +1,27 @@
+{"metrics":[
+    {
+        "name":"manual_pain",
+        "data":
+        {
+            "body_system":"http://snomed.info/sct",
+            "body_code":"43799004",
+            "body_display":"Chest structure",
+            "value_value":5,
+            "note_text":["fff"],
+            "date":"2026-01-07T08:47:13.758796Z"
+        }
+    },
+    {
+        "name":"manual_pain",
+        "data":
+        {
+            "body_system":"http://snomed.info/sct",
+            "body_code":"77568009",
+            "body_display":"Back structure",
+            "body_text":"Région dorsale haute",
+            "value_value":2,
+            "note_text":["tee"],
+            "date":"2026-01-07T08:49:21.443598Z"
+        }
+    }
+]}

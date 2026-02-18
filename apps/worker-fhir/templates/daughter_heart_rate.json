@@ -1,0 +1,9 @@
+{
+  "id": "manual_id",
+  "code_system": "code_system",
+  "code_code": "code_code",
+  "code_display": "code_display",
+  "code_text": "code_text",
+  "value_value": "Avg",
+  "value_unit": "units"
+}

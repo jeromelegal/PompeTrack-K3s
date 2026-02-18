@@ -1,0 +1,15 @@
+{
+  "name": "fef50",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "vital-signs",
+    "cat_display": "Vital Signs",
+    "code_system": "http://loinc.org",
+    "code_code": "20154-1",
+    "code_display": "FEF50",
+    "code_text": "Vitesse d'expulsion de l'air à 50% de la FVC",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "spirometer"
+  }
+}
