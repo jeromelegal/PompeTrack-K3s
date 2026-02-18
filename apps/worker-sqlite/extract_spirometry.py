@@ -16,7 +16,7 @@ BUCKET_DB_RAW = "raw-db-spirometer"
 BUCKET_PROCESSED = "processed-db"
 DEVICE = os.getenv("DEVICE", "worker-sqlite")
 SPIROMETER_INGEST_URL = os.getenv("SPIROMETER_INGEST_URL", "http://ingestion/ingest/spirometer")
-TOKEN = os.getenv("TOKEN", None)
+TOKEN = os.getenv("TOKEN", "token")
 
 if not TOKEN:
     raise RuntimeError("TOKEN manquant")
