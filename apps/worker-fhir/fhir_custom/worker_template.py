@@ -34,7 +34,7 @@ WORKOUT_NAME_MAP = {
 
 MEDPLUM_IDS = {
     "patient_id": MEDPLUM_PATIENT_ID,
-    "device_id": MEDPLUM_DEVICE_ID",
+    "device_id": MEDPLUM_DEVICE_ID,
 }
 
 def normalize_name(raw_name: str) -> str:
