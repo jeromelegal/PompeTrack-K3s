@@ -47,9 +47,13 @@ def _stream_request(
     
     url = f"http://worker-stream/data/observation/{patient_id}"
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.post(url, headers=headers, json=payload).json()
-    logger.info(f"URL : {url}")
-    return response
+    resp = requests.post(url, headers=headers, json=payload, timeout=30)
+
+    logger.info("worker-stream status=%s content-type=%s", resp.status_code, resp.headers.get("content-type"))
+    logger.info("worker-stream body (first 500)=%r", resp.text[:500])
+
+    resp.raise_for_status()  
+    return resp.json()
 
 # Tag stream request
 def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
@@ -76,7 +80,7 @@ def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
         return None
 
 if __name__ == "__main__":
-    data = tag_stream_request("manual_weekly", 90)
+    data = tag_stream_request("metrics", 90)
     if data:
         df = shaping_metrics(data)
         print(df)
