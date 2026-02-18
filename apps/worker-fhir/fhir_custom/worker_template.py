@@ -32,6 +32,11 @@ WORKOUT_NAME_MAP = {
     "Musculation": "strength_training",
 }
 
+MEDPLUM_IDS = {
+    "patient_id": MEDPLUM_PATIENT_ID,
+    "device_id": MEDPLUM_DEVICE_ID",
+}
+
 def normalize_name(raw_name: str) -> str:
     """
     Convert a human-readable workout name into a safe technical identifier.
@@ -337,6 +342,7 @@ class CreatePreFHIR:
                     filler = FillResource(
                         self.constants,
                         entry,
+                        MEDPLUM_IDS,
                         {"units": self.units}
                     )
                     resource = filler.build(resource)
@@ -457,6 +463,7 @@ class CreatePreFHIR_symptoms:
             filler = FillResource(
                 creator.constants,
                 entry,
+                MEDPLUM_IDS,
                 {"units": creator.units},
             )
             filler.update_codeable(

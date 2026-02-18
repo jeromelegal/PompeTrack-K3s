@@ -54,9 +54,8 @@ apply_dir_ordered deploy/namespaces/medplum/istio
 apply_dir_ordered deploy/namespaces/pompetrack-core/istio
 
 # Secrets scripts
-echo "==> Secrets"
+echo "==> Medplum secrets"
 ./deploy/secrets/medplum/init-secrets.sh
-./deploy/secrets/pompetrack-core/init-secrets.sh
 ./deploy/secrets/registry/init-secrets.sh
 
 # Helm update
@@ -73,6 +72,10 @@ helm upgrade --install medplum deploy/charts/medplum \
 # Ids medplum create
 echo "==> Medplum bootstrap (project + worker-fhir client)"
 ./deploy/secrets/medplum-config/generate-worker-fhir-medplum-client.sh
+
+# Secrets scripts
+echo "==> Pompetrack-core secrets"
+./deploy/secrets/pompetrack-core/init-secrets.sh
 
 # ==> Publish IDs as ConfigMap (non-secret) for pompetrack-core
 echo "==> Publish Medplum IDs (ConfigMap)"
