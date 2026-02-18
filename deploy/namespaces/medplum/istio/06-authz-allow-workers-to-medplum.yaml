@@ -13,3 +13,4 @@ spec:
     - source:
         principals:
         - cluster.local/ns/pompetrack-core/sa/worker-fhir
+        - cluster.local/ns/pompetrack-core/sa/worker-stream

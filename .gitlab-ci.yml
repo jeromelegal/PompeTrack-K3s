@@ -56,3 +56,12 @@ build_worker_sqlite:
   rules:
     - changes:
         - apps/worker-sqlite/**
+
+build_worker_stream:
+  extends: .build_app
+  variables:
+    APP_NAME: worker-stream
+    APP_PATH: apps/worker-stream
+  rules:
+    - changes:
+        - apps/worker-stream/**

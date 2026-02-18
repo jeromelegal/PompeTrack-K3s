@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+gunicorn
+requests
+aiohttp
+python-multipart
+redis
+pandas
+pytest
+pytest-mock
+pytest-asyncio
+httpx
+responses
