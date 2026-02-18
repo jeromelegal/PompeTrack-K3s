@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-sqlite
+  namespace: pompetrack-core
+  labels:
+    app: worker-sqlite
+spec:
+  selector:
+    app: worker-sqlite
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP

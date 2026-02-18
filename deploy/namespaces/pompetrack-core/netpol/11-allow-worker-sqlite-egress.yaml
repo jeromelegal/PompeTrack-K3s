@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-worker-sqlite-egress
+  namespace: pompetrack-core
+spec:
+  podSelector:
+    matchLabels:
+      app: worker-sqlite
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: pompetrack-core
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/instance: ingestion
+    ports:
+    - protocol: TCP
+      port: 80
+
