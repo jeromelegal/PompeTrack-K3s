@@ -112,7 +112,7 @@ def pipeline_metrics(metrics: List[Union[str, Any]]):
     """
     for i, metric in enumerate(metrics):
         try:
-            bundle_json = process_metrics_by_cats(metric)
+            bundle_json = process_metrics_by_cats(i, metric)
             success = upload_bundle(bundle_json)
             
             if success:
