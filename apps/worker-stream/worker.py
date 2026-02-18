@@ -15,7 +15,7 @@ MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
 
 def build_search_url(base: str, resource_type: str, params: dict) -> str:
     query = urlencode({k: v for k, v in params.items() if v is not None}, doseq=True)
-    return urljoin(base, resource_type) + "?" + query
+    return base.rstrip("/") + "/" + resource_type + "?" + query
 
 
 def fetch_fhir_observation(
