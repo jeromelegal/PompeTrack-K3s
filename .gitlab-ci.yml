@@ -47,3 +47,12 @@ build_worker_fhir:
   rules:
     - changes:
         - apps/worker-fhir/**
+
+build_worker_sqlite:
+  extends: .build_app
+  variables:
+    APP_NAME: worker-sqlite
+    APP_PATH: apps/worker-sqlite
+  rules:
+    - changes:
+        - apps/worker-sqlite/**
