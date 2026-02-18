@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-worker-stream-ingress-from-streamlit
+  namespace: pompetrack-core
+spec:
+  podSelector:
+    matchLabels:
+      app: worker-stream
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: streamlit
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 15006

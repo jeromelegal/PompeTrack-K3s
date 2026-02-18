@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-streamlit-egress-to-worker-stream
+  namespace: pompetrack-core
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: streamlit
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: worker-stream
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 15006
