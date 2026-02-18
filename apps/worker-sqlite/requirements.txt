@@ -1,0 +1,5 @@
+pysqlite3
+requests
+fastapi
+uvicorn
+pytest

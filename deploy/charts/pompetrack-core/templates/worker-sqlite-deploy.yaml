@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-sqlite
+  namespace: pompetrack-core
+  labels:
+    app: worker-sqlite
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-sqlite
+  template:
+    metadata:
+      labels:
+        app: worker-sqlite
+    spec:
+      serviceAccountName: worker-sqlite
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: worker-sqlite
+          image: registry.phylcero.fr/garth/pompetrack/worker-sqlite:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: BASE_URL_MINIO_API
+              value: "http://ingestion"
+
+
+
