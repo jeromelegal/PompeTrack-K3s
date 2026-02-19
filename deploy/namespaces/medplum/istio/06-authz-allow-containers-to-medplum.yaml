@@ -1,7 +1,7 @@
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-worker-fhir-to-medplum
+  name: allow-containers-to-medplum
   namespace: medplum
 spec:
   selector:
