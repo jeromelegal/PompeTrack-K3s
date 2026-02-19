@@ -28,19 +28,26 @@ spec:
 
           env:
             # config JWT
-            - name: MEDPLUM_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: medplum-streamlit-creds
-                  key: MEDPLUM_CLIENT_ID
-            - name: MEDPLUM_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: medplum-streamlit-creds
-                  key: MEDPLUM_CLIENT_SECRET
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
 
           envFrom:
             - configMapRef:
                 name: medplum-ids
     
-
+          volumeMounts:
+            - name: medplum-creds-streamlit
+              mountPath: /var/run/secrets
+              readOnly: true
+      volumes:
+        - name: medplum-creds-streamlit
+          secret:
+            secretName: streamlit-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET
