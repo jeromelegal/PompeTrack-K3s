@@ -37,20 +37,27 @@ spec:
               value: "http://pompetrack-core-minio:9000"
 
             - name: CLIENT_ID_FILE
-              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
             - name: CLIENT_SECRET_FILE
-              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_SECRET
 
+            # (si ton app en a besoin)
+            - name: TOKEN_AUDIENCE_WORKER_FHIR_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_WORKER_FHIR
+            - name: TOKEN_AUDIENCE_STREAMLIT_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_STREAMLIT
+            - name: TOKEN_AUDIENCE_WORKER_SQLITE_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_WORKER_SQLITE
 
           volumeMounts:
             - name: minio-creds
               mountPath: /var/run/secrets/minio
               readOnly: true
             - name: medplum-creds-ingestion
-              mountPath: /var/run/secrets
+              mountPath: /var/run/secrets/medplum
               readOnly: true
             - name: medplum-client-ids
-              mountPath: /var/run/secrets
+              mountPath: /var/run/secrets/medplum-audiences
               readOnly: true
 
       volumes:
@@ -62,6 +69,7 @@ spec:
                 path: apiAccessKey
               - key: apiSecretKey
                 path: apiSecretKey
+
         - name: medplum-creds-ingestion
           secret:
             secretName: ingestion-medplum-client
@@ -70,15 +78,16 @@ spec:
               - key: MEDPLUM_CLIENT_ID
                 path: MEDPLUM_CLIENT_ID
               - key: MEDPLUM_CLIENT_SECRET
-                path: MEDPLUM_CLIENT_SECRET  
+                path: MEDPLUM_CLIENT_SECRET
+
         - name: medplum-client-ids
           secret:
-            secretName: medplum-clients
+            secretName: medplum-client-ids
             defaultMode: 0400
             items:
               - key: TOKEN_AUDIENCE_WORKER_FHIR
                 path: TOKEN_AUDIENCE_WORKER_FHIR
               - key: TOKEN_AUDIENCE_STREAMLIT
-                path: TOKEN_AUDIENCE_STREAMLIT       
+                path: TOKEN_AUDIENCE_STREAMLIT
               - key: TOKEN_AUDIENCE_WORKER_SQLITE
                 path: TOKEN_AUDIENCE_WORKER_SQLITE
