@@ -49,6 +49,10 @@ spec:
             - name: medplum-creds-ingestion
               mountPath: /var/run/secrets
               readOnly: true
+            - name: medplum-client-ids
+              mountPath: /var/run/secrets
+              readOnly: true
+
       volumes:
         - name: minio-creds
           secret:
@@ -66,4 +70,15 @@ spec:
               - key: MEDPLUM_CLIENT_ID
                 path: MEDPLUM_CLIENT_ID
               - key: MEDPLUM_CLIENT_SECRET
-                path: MEDPLUM_CLIENT_SECRET        
+                path: MEDPLUM_CLIENT_SECRET  
+        - name: medplum-client-ids
+          secret:
+            secretName: medplum-clients
+            defaultMode: 0400
+            items:
+              - key: TOKEN_AUDIENCE_WORKER_FHIR
+                path: TOKEN_AUDIENCE_WORKER_FHIR
+              - key: TOKEN_AUDIENCE_STREAMLIT
+                path: TOKEN_AUDIENCE_STREAMLIT       
+              - key: TOKEN_AUDIENCE_WORKER_SQLITE
+                path: TOKEN_AUDIENCE_WORKER_SQLITE
