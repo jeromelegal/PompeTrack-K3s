@@ -36,21 +36,18 @@ spec:
             - name: MINIO_ENDPOINT
               value: "http://pompetrack-core-minio:9000"
 
-            # config JWT
-            - name: MEDPLUM_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: medplum-ingestion-creds 
-                  key: MEDPLUM_CLIENT_ID
-            - name: MEDPLUM_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: medplum-ingestion-creds
-                  key: MEDPLUM_CLIENT_SECRET
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+
 
           volumeMounts:
             - name: minio-creds
               mountPath: /var/run/secrets/minio
+              readOnly: true
+            - name: medplum-creds-ingestion
+              mountPath: /var/run/secrets
               readOnly: true
       volumes:
         - name: minio-creds
@@ -61,3 +58,12 @@ spec:
                 path: apiAccessKey
               - key: apiSecretKey
                 path: apiSecretKey
+        - name: medplum-creds-ingestion
+          secret:
+            secretName: ingestion-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET        
