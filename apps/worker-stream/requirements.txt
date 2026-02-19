@@ -12,4 +12,3 @@ pytest-asyncio
 httpx
 responses
 PyJWT[crypto]
-curl

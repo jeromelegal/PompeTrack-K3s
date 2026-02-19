@@ -14,5 +14,4 @@ pytest-mock
 responses
 pytest-asyncio
 PyJWT[crypto]
-curl
 
