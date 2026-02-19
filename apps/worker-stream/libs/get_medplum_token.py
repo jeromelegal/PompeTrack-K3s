@@ -1,52 +1,124 @@
 import os
 import time
+import json
+import base64
 import logging
-from typing import Optional
-from libs.secrets_utils import read_secret_from_file
+from typing import Optional, Any, Dict, Tuple
 
 import requests
+from requests.auth import HTTPBasicAuth
+
+from libs.secrets_utils import read_secret_from_file
 
 logger = logging.getLogger("get_medplum_token")
 logging.basicConfig(level=logging.INFO)
-if not logger.handlers:
-    ch = logging.StreamHandler()
-    ch.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s - %(message)s"))
-    logger.addHandler(ch)
 
 CLIENT_ID = read_secret_from_file("MEDPLUM_CLIENT_ID")
 CLIENT_SECRET = read_secret_from_file("MEDPLUM_CLIENT_SECRET")
+
 BASE_URL = os.getenv("MEDPLUM_BASE_URL", "http://medplum-mesh.medplum.svc.cluster.local:8103")
 TOKEN_ENDPOINT = os.getenv("MEDPLUM_TOKEN_ENDPOINT", f"{BASE_URL}/oauth2/token")
-DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "system/*.*")
+
+DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "")
 
 _cached_token: Optional[str] = None
 _token_expires_at: Optional[float] = None
 
+
 class TokenError(RuntimeError):
     pass
+
 
 def _is_token_valid() -> bool:
     global _cached_token, _token_expires_at
     if not _cached_token or not _token_expires_at:
         return False
-    # small safety margin 10s
+    # safety margin 10s
     return time.time() + 10 < _token_expires_at
+
+
+def _b64url_decode(data: str) -> bytes:
+    # base64url padding
+    pad = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + pad)
+
+
+def _decode_jwt_no_verify(token: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """
+    Decode JWT header/payload WITHOUT verifying signature.
+    Only for debugging/logging purposes.
+    """
+    parts = token.split(".")
+    if len(parts) < 2:
+        raise ValueError("Not a JWT (expected at least 2 dot-separated parts)")
+
+    header_b = _b64url_decode(parts[0])
+    payload_b = _b64url_decode(parts[1])
+
+    header = json.loads(header_b.decode("utf-8"))
+    payload = json.loads(payload_b.decode("utf-8"))
+    return header, payload
+
+
+def _log_token_claims_info(access_token: str) -> None:
+    """
+    INFO logs: scopes and a few standard claims (best-effort).
+    Never logs the full token.
+    """
+    try:
+        header, payload = _decode_jwt_no_verify(access_token)
+
+        scope_str = payload.get("scope")
+        scp = payload.get("scp")
+
+        scopes: list[str] = []
+        if isinstance(scope_str, str) and scope_str.strip():
+            scopes.extend(scope_str.split())
+        if isinstance(scp, list):
+            scopes.extend([str(x) for x in scp if str(x).strip()])
+
+        # de-dup while preserving order
+        seen = set()
+        scopes = [s for s in scopes if not (s in seen or seen.add(s))]
+
+        iss = payload.get("iss")
+        aud = payload.get("aud")
+        sub = payload.get("sub")
+        exp = payload.get("exp")
+
+        logger.info(
+            "Medplum token claims: iss=%s aud=%s sub=%s exp=%s scopes=%s",
+            iss, aud, sub, exp, scopes
+        )
+
+        # (optionnel) algo / kid utiles en debug infra
+        alg = header.get("alg")
+        kid = header.get("kid")
+        logger.info("Medplum token header: alg=%s kid=%s", alg, kid)
+
+    except Exception as e:
+        logger.info("Could not decode JWT claims for logging: %s", e)
+
 
 def _fetch_token_from_server(scope: str = DEFAULT_SCOPE) -> dict:
     if not CLIENT_ID or not CLIENT_SECRET:
-        raise TokenError("WORKER_ID and WORKER_SECRET must be set in environment")
+        raise TokenError("MEDPLUM_CLIENT_ID / MEDPLUM_CLIENT_SECRET are missing")
 
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "scope": scope
-    }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
+    data = {"grant_type": "client_credentials"}
+    if scope:
+        data["scope"] = scope
+
     try:
-        logger.debug("Requesting token from", TOKEN_ENDPOINT)
-        resp = requests.post(TOKEN_ENDPOINT, headers=headers, data=data)
+        logger.debug("Requesting token from %s (scope=%r)", TOKEN_ENDPOINT, scope)
+        resp = requests.post(
+            TOKEN_ENDPOINT,
+            headers=headers,
+            data=data,
+            auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
+            timeout=10,
+        )
     except requests.RequestException as e:
         logger.exception("Network error while requesting token: %s", e)
         raise TokenError(f"Network error while requesting token: {e}") from e
@@ -67,9 +139,11 @@ def _fetch_token_from_server(scope: str = DEFAULT_SCOPE) -> dict:
 
     return token_json
 
+
 def get_token(scope: str = DEFAULT_SCOPE, force_refresh: bool = False) -> str:
     """
     Return a valid access token (cached in memory). Raises TokenError on failure.
+    Logs decoded scopes/claims at INFO on refresh.
     """
     global _cached_token, _token_expires_at
 
@@ -81,12 +155,20 @@ def get_token(scope: str = DEFAULT_SCOPE, force_refresh: bool = False) -> str:
 
     access_token = token_json.get("access_token")
     expires_in = int(token_json.get("expires_in", 3600))
-    # set expiry with small safety margin
-    _token_expires_at = time.time() + expires_in
 
+    if not access_token:
+        raise TokenError("Empty access_token in token response")
+
+    _token_expires_at = time.time() + expires_in
     _cached_token = access_token
+
     logger.info("Fetched new access token, expires in %s seconds", expires_in)
+
+    # INFO logging of scopes/claims (no signature verification)
+    _log_token_claims_info(access_token)
+
     return access_token
+
 
 if __name__ == "__main__":
     try:

@@ -3,9 +3,8 @@ from datetime import datetime, timezone
 import json
 import uuid
 import logging
-
+from libs.security_medplum import require_scopes
 from utils.api_minio import upload_file, get_object_json, bucket_create, bucket_list_objects, move_object, get_raw_object, object_delete
-# from libs.security_redis import require_api_key
 
 # Configuration
 logger = logging.getLogger("api-ingestion")
@@ -43,10 +42,10 @@ def _ingest_json(payload: dict, bucket: str, device: dict):
     if not payload:
         raise HTTPException(status_code=400, detail="empty payload")
     data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    res = upload_file(data, bucket, object_name=None)
+    response = upload_file(data, bucket, object_name=None)
 
-    if not res.get("ok"):
-        raise HTTPException(status_code=500, detail=res.get("error", "upload failed"))
+    if not response.get("ok"):
+        raise HTTPException(status_code=500, detail=response.get("error", "upload failed"))
 
     return {"status": "ok", "bytes": len(data), "device": device.get("device")}
 
@@ -56,44 +55,40 @@ def _ingest_bytes(data: bytes, bucket: str, device: dict, object_name: str | Non
     if len(data) < 16 or data[:16] != SQLITE_HEADER:
         raise HTTPException(status_code=400, detail="not a valid SQLite3 database file")
     
-    res = upload_file(data, bucket, object_name=None)
-    if not res.get("ok"):
-        raise HTTPException(status_code=500, detail=res.get("error", "upload failed"))
+    response = upload_file(data, bucket, object_name=None)
+    if not response.get("ok"):
+        raise HTTPException(status_code=500, detail=response.get("error", "upload failed"))
     return {"status": "ok", "bytes": len(data), "device": device.get("device")}
 
 # Iphone json ingest endpoint
 @app.post("/ingest/iphone")
 async def ingest_iphone(
     payload: dict = Body(...),
-    # device=Depends(api_key_dep(scopes=["ingest:iphone"])),
+    device=Depends(require_scopes(["ingest:iphone"])),
 ):
-    device = {"device": "iphone-de-garth"}
     return _ingest_json(payload, BUCKET_RAW_IPHONE, device)
 
 # Manual json ingest endpoint
 @app.post("/ingest/manual")
 async def ingest_manual(
     payload: dict = Body(...),
-    # device=Depends(api_key_dep(scopes=["ingest:manual"])),
+    device=Depends(require_scopes(["ingest:manual"])),
 ):
-    device = {"device": "streamlit"}
     return _ingest_json(payload, BUCKET_RAW_MANUAL, device)
 
 # Spirometer json ingest endpoint
 @app.post("/ingest/spirometer")
 async def ingest_spirometer(
     payload: dict = Body(...),
-    # device=Depends(api_key_dep(scopes=["ingest:spirometer"])),
+    device=Depends(require_scopes(["ingest:spirometer"])),
 ):
-    device = {"device": "spirometer"}
     return _ingest_json(payload, BUCKET_RAW_SPIROMETER, device)
 
 @app.post("/ingest/sqlite")
 async def ingest_sqlite(
     file: UploadFile = File(...),
-    # device=Depends(api_key_dep(scopes=["ingest:sqlite"])),
+    device=Depends(require_scopes(["ingest:sqlite"])),
 ):
-    device = {"device": "worker-sqlite"}
     if not file.filename:
         raise HTTPException(status_code=400, detail="missing filename")
     if not file.filename.lower().endswith(".db"):
@@ -107,9 +102,8 @@ async def ingest_sqlite(
 @app.post("/ingest/fhir")
 async def ingest_fhir(
     payload: dict = Body(...),
-    # device=Depends(api_key_dep(scopes=["ingest:fhir"])),
+    device=Depends(require_scopes(["ingest:fhir"])),
 ):
-    device = {"device": "worker"}
     return _ingest_json(payload, BUCKET_PROCESSED_FHIR, device)
 
 
@@ -120,9 +114,8 @@ async def ingest_generic(
     file: UploadFile = File(...),
     metadata: str | None = Form(None),
     object_name: str | None = Query(None),
-    #device=Depends(api_key_dep(scopes=["ingest:generic"])),
+    device=Depends(require_scopes(["ingest:generic"])),
 ):
-    device = {"device": "worker"}
     try:
         data = await file.read()
 
@@ -138,10 +131,10 @@ async def ingest_generic(
             except Exception:
                 raise HTTPException(status_code=400, detail="invalid metadata JSON")
 
-        res = upload_file(data, bucket=bucket, object_name=key, metadata=meta_dict)
+        response = upload_file(data, bucket=bucket, object_name=key, metadata=meta_dict)
 
-        if not res.get("ok"):
-            raise HTTPException(status_code=500, detail=res.get("error", "upload failed"))
+        if not response.get("ok"):
+            raise HTTPException(status_code=500, detail=response.get("error", "upload failed"))
 
         return {
             "status": "ok",
@@ -162,15 +155,14 @@ async def ingest_generic(
 @app.post("/ingest/dataframe")
 async def ingest_dataframe(
     file: UploadFile = File(...),
-    #device=Depends(api_key_dep(scopes=["ingest:df"])),
+    device=Depends(require_scopes(["ingest:df"])),
 ):
-    device = {"device": "worker"}
     data = await file.read()
     object_name = str(uuid.uuid4())
 
-    res = upload_file(data, bucket=BUCKET_PROCESSED_DF, object_name=object_name)
-    if not res.get("ok"):
-        raise HTTPException(status_code=500, detail=res.get("error", "upload failed"))
+    response = upload_file(data, bucket=BUCKET_PROCESSED_DF, object_name=object_name)
+    if not response.get("ok"):
+        raise HTTPException(status_code=500, detail=response.get("error", "upload failed"))
 
     return {
         "status": "ok",
@@ -185,9 +177,8 @@ async def ingest_dataframe(
 async def download_object(
     bucket: str,
     object_name: str,
-    # device=Depends(api_key_dep(scopes=["download:object"])),
+    device=Depends(require_scopes(["download:object"])),
 ):
-    device = {"device": "worker-sqlite"}
     return get_raw_object(bucket, object_name)
 
 # Json object download endpoint
@@ -195,9 +186,8 @@ async def download_object(
 async def get_json_object(
     bucket: str,
     object_name: str,
-    # device=Depends(api_key_dep(scopes=["download:json"])),
+    device=Depends(require_scopes(["download:json"])),
 ):
-    device = {"device": "worker"}
     try:
         return get_object_json(bucket, object_name)
     except Exception as exc:
@@ -210,9 +200,8 @@ async def get_json_object(
 @app.post("/bucket/create/{bucket}")
 async def bucket_creation(
     bucket: str,
-    # device=Depends(api_key_dep(scopes=["bucket:create"])),
+    device=Depends(require_scopes(["bucket:create"])),
 ):
-    device = {"device": "worker"}
     if not bucket_create(bucket_name=bucket):
         raise HTTPException(status_code=500, detail="bucket creation failed")
 
@@ -222,9 +211,8 @@ async def bucket_creation(
 @app.get("/bucket/object-list/{bucket}")
 async def bucket_object_list(
     bucket: str,
-    # device=Depends(api_key_dep(scopes=["object:list"])),
+    device=Depends(require_scopes(["object:list"])),
 ):
-    device = {"device": "worker"}
     return bucket_list_objects(bucket)
 
 
@@ -234,9 +222,8 @@ async def move_object_endpoint(
     object_name: str = None,
     source_bucket: str = None,
     destination_bucket: str = None,
-    # device=Depends(api_key_dep(scopes=["object:move"])),
+    device=Depends(require_scopes(["object:move"])),
 ):
-    device = {"device": "worker"}
     if not move_object(object_name, source_bucket, destination_bucket):
         raise HTTPException(status_code=500, detail="move failed")
 
@@ -247,9 +234,8 @@ async def move_object_endpoint(
 async def delete_object_endpoint(
     object_name: str,
     source_bucket: str,
-    # device=Depends(api_key_dep(scopes=["object:delete"])),
+    device=Depends(require_scopes(["object:delete"])),
 ):
-    device = {"device": "worker"}
     if not object_delete(object_name, source_bucket):
         raise HTTPException(status_code=500, detail="move failed")
 

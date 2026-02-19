@@ -29,5 +29,17 @@ spec:
             - name: BASE_URL_MINIO_API
               value: "http://ingestion"
 
+            # config JWT
+            - name: MEDPLUM_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: medplum-worker-sqlite-creds
+                  key: MEDPLUM_CLIENT_ID
+            - name: MEDPLUM_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: medplum-worker-sqlite-creds
+                  key: MEDPLUM_CLIENT_SECRET
+
 
 
