@@ -14,5 +14,4 @@ pytest-mock
 pytest-asyncio
 httpx
 responses
-python-jose[cryptography]==3.3.0
-requests==2.32.3
+PyJWT[crypto]
