@@ -20,18 +20,30 @@ JWKS_CACHE_TTL = 300  # 5 minutes
 def _get_jwks():
     now = time.time()
 
+    # ✅ si cache valide → on ne touche pas au réseau
     if _jwks_cache["keys"] and now < _jwks_cache["expires_at"]:
         return _jwks_cache["keys"]
 
-    response = requests.get(JWKS_URL, timeout=5)
-    response.raise_for_status()
+    try:
+        response = requests.get(JWKS_URL, timeout=15)
+        response.raise_for_status()
+        jwks = response.json()
 
-    jwks = response.json()
+        _jwks_cache["keys"] = jwks
+        _jwks_cache["expires_at"] = now + JWKS_CACHE_TTL
 
-    _jwks_cache["keys"] = jwks
-    _jwks_cache["expires_at"] = now + JWKS_CACHE_TTL
+        return jwks
 
-    return jwks
+    except Exception as e:
+        # ✅ si on a déjà un cache, on l'utilise même expiré
+        if _jwks_cache["keys"]:
+            return _jwks_cache["keys"]
+
+        raise HTTPException(
+            status_code=503,
+            detail=f"JWKS unavailable: {str(e)}"
+        )
+
 
 
 def verify_token(token: str, required_scopes: list[str] | None = None):

@@ -14,3 +14,6 @@ spec:
         principals:
         - cluster.local/ns/pompetrack-core/sa/worker-fhir
         - cluster.local/ns/pompetrack-core/sa/worker-stream
+        - cluster.local/ns/pompetrack-core/sa/worker-sqlite
+        - cluster.local/ns/pompetrack-core/sa/ingestion
+        - cluster.local/ns/pompetrack-core/sa/streamlit
