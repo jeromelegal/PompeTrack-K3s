@@ -1,10 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, Body, Depends, Form, Query, HTTPException
+from fastapi import FastAPI, UploadFile, File, Body, Depends, Form, Query, HTTPException, Header
 from datetime import datetime, timezone
 import json
 import uuid
 import logging
 from libs.security_medplum import require_scopes
 from utils.api_minio import upload_file, get_object_json, bucket_create, bucket_list_objects, move_object, get_raw_object, object_delete
+from libs.jwt_validator import verify_token
 
 # Configuration
 logger = logging.getLogger("api-ingestion")
@@ -24,8 +25,14 @@ app = FastAPI(title="Health Ingest")
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
-# def api_key_dep(scopes):
-#     return require_api_key(scopes=scopes)
+def get_current_token(
+    authorization: str = Header(...)
+):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = authorization.split(" ")[1]
+    return verify_token(token, required_scopes=["ingest:fhir"])
 
 # Global endpoints
 @app.get("/")
@@ -35,6 +42,11 @@ def root():
 @app.get("/healthz")
 async def healthz():
     return {"status": "ok", "time": now_iso()}
+
+
+@app.post("/ingest")
+def ingest_fhir(data: dict, token_payload=Depends(get_current_token)):
+    return {"status": "ok"}
 
 
 # Helper ingest 
