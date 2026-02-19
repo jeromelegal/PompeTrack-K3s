@@ -4,3 +4,4 @@ fastapi
 uvicorn
 pytest
 PyJWT[crypto]
+curl
