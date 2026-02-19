@@ -4,7 +4,7 @@ import time
 import logging
 import urllib.request
 import json
-
+from libs.secrets_utils import read_secret_from_file
 import jwt
 from jwt.algorithms import ECAlgorithm
 
@@ -12,17 +12,17 @@ logger = logging.getLogger(__name__)
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
-JWKS_URL = os.environ.get(
+JWKS_URL = os.getenv(
     "JWKS_URL",
     "http://medplum-mesh.medplum.svc.cluster.local:8103/.well-known/jwks.json",
 )
-TOKEN_ISSUER = os.environ.get("TOKEN_ISSUER", "https://app.phylcero.fr/api")
+TOKEN_ISSUER = os.getenv("TOKEN_ISSUER", "https://app.phylcero.fr/api")
 
-TOKEN_AUDIENCE_WORKER_FHIR   = os.environ.get("TOKEN_AUDIENCE_WORKER_FHIR", None)
-TOKEN_AUDIENCE_STREAMLIT     = os.environ.get("TOKEN_AUDIENCE_STREAMLIT", None)
-TOKEN_AUDIENCE_WORKER_SQLITE = os.environ.get("TOKEN_AUDIENCE_WORKER_SQLITE", None)
+TOKEN_AUDIENCE_WORKER_FHIR = os.getenv("TOKEN_AUDIENCE_WORKER_FHIR", None)
+TOKEN_AUDIENCE_STREAMLIT = os.getenv("TOKEN_AUDIENCE_STREAMLIT", None)
+TOKEN_AUDIENCE_WORKER_SQLITE = os.getenv("TOKEN_AUDIENCE_WORKER_SQLITE", None)
 
-JWKS_CACHE_TTL = int(os.environ.get("JWKS_CACHE_TTL", "300"))  # 5 min
+JWKS_CACHE_TTL = int(os.getenv("JWKS_CACHE_TTL", "300"))  # 5 min
 
 # ── Audiences autorisées ─────────────────────────────────────────────────────
 
