@@ -11,4 +11,3 @@ pytest
 pytest-mock
 httpx
 PyJWT[crypto]
-curl
