@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import requests
 from utils.common import is_admin
-from libs.minio_requests import upload_iphone_json, upload_object_into_bucket
+from libs.minio_requests import upload_iphone_json, upload_object_into_bucket, upload_db_file
 
 st.set_page_config("Dashboard Santé", layout="wide")
 
@@ -103,7 +103,7 @@ with b3:
         st.info(f"Fichier: {uploaded_sqlite.name} ({uploaded_sqlite.size} bytes)")
         if st.button("Envoyer DB"):
             try:
-                r = upload_object_into_bucket(file_path=uploaded_sqlite, bucket="raw-db-spirometer")
+                r = upload_db_file(object_name=uploaded_sqlite, bucket="raw-db-spirometer")
             except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
                 st.error(str(e))
             except requests.RequestException as e:
