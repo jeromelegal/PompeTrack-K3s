@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 import os, subprocess
 from datetime import datetime, timezone 
 from libs.security import require_scopes

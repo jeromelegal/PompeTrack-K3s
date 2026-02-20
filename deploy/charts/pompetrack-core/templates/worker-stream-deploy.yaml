@@ -43,7 +43,7 @@ spec:
               value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
 
             - name: TOKEN_AUDIENCE_STREAMLIT_FILE
-              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_STREAMLIT_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_STREAMLIT
 
           envFrom:
             - configMapRef:
@@ -71,6 +71,6 @@ spec:
             secretName: medplum-client-ids
             defaultMode: 0400
             items:
-              - key: TOKEN_AUDIENCE_STREAMLIT_FILE
-                path: TOKEN_AUDIENCE_STREAMLIT_FILE
+              - key: TOKEN_AUDIENCE_STREAMLIT
+                path: TOKEN_AUDIENCE_STREAMLIT
 
