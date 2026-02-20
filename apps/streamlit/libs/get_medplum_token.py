@@ -1,10 +1,9 @@
-# libs/get_medplum_token.py
-
 import os
 import time
 import json
 import base64
 import logging
+import threading
 from typing import Optional, Any, Dict, Tuple, List
 
 import requests
@@ -15,40 +14,17 @@ from libs.secrets_utils import read_secret_from_file
 logger = logging.getLogger("get_medplum_token")
 logging.basicConfig(level=logging.INFO)
 
-# ── Configuration ────────────────────────────────────────────────────────────
-
+# ── Configuration (immutable) ─────────────────────────────────────────────────
 CLIENT_ID = read_secret_from_file("MEDPLUM_CLIENT_ID")
 CLIENT_SECRET = read_secret_from_file("MEDPLUM_CLIENT_SECRET")
-
 BASE_URL = os.getenv("MEDPLUM_BASE_URL", "http://medplum-mesh.medplum.svc.cluster.local:8103")
 TOKEN_ENDPOINT = os.getenv("MEDPLUM_TOKEN_ENDPOINT", f"{BASE_URL}/oauth2/token")
-
 DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "")
-
-_token_cache: Dict[str, Tuple[str, float]] = {}
 
 class TokenError(RuntimeError):
     pass
 
-def _safe_cache() -> Dict[str, Tuple[str, float]]:
-    """
-    Retourne le cache, le réinitialise si jamais il est corrompu (None ou autre).
-    C'est une protection défensive contre d'éventuels restes d'ancien code.
-    """
-    global _token_cache
-    if not isinstance(_token_cache, dict):
-        logger.error(f"BUG: _token_cache était {type(_token_cache).__name__}, reset à {{}}")
-        _token_cache = {}
-    return _token_cache
-
-def _is_token_valid_for_scope(scope: str) -> bool:
-    """Vérifie si on a un token valide pour ce scope spécifique."""
-    cache = _safe_cache()
-    if scope not in cache:
-        return False
-    _, expires_at = cache[scope]
-    return time.time() + 10 < expires_at
-
+# ── Helpers JWT ──────────────────────────────────────────────────────────────
 def _b64url_decode(data: str) -> bytes:
     pad = "=" * (-len(data) % 4)
     return base64.urlsafe_b64decode(data + pad)
@@ -61,27 +37,24 @@ def _decode_jwt_no_verify(token: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     payload = json.loads(_b64url_decode(parts[1]).decode("utf-8"))
     return header, payload
 
-def _log_token_claims_info(access_token: str) -> None:
+def _log_token_claims(access_token: str) -> None:
     try:
-        header, payload = _decode_jwt_no_verify(access_token)
+        _, payload = _decode_jwt_no_verify(access_token)
         scope_str = payload.get("scope", "")
-        scp = payload.get("scp", [])
-        scopes = list(dict.fromkeys(  # de-dup preserve order
-            scope_str.split() if isinstance(scope_str, str) else [] + 
-            [str(x) for x in scp if isinstance(scp, list)]
-        ))
-        logger.info("Token scopes: %s | sub=%s | exp=%s", scopes, payload.get("sub"), payload.get("exp"))
-    except Exception as e:
-        logger.debug("Could not decode JWT for logging: %s", e)
+        scopes = scope_str.split() if isinstance(scope_str, str) else []
+        logger.info("Token scopes: %s | sub=%s", scopes, payload.get("sub"))
+    except Exception:
+        pass
 
-def _fetch_token_from_server(scope: str = DEFAULT_SCOPE) -> dict:
+# ── Fetch depuis Medplum ────────────────────────────────────────────────────
+def _fetch_token(scope: str) -> Tuple[str, int]:
     if not CLIENT_ID or not CLIENT_SECRET:
-        raise TokenError("MEDPLUM_CLIENT_ID / MEDPLUM_CLIENT_SECRET are missing")
-
+        raise TokenError("Missing MEDPLUM_CLIENT_ID or MEDPLUM_CLIENT_SECRET")
+    
     data = {"grant_type": "client_credentials"}
     if scope:
         data["scope"] = scope
-
+    
     try:
         resp = requests.post(
             TOKEN_ENDPOINT,
@@ -90,49 +63,60 @@ def _fetch_token_from_server(scope: str = DEFAULT_SCOPE) -> dict:
             auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
             timeout=10,
         )
+        resp.raise_for_status()
     except requests.RequestException as e:
         raise TokenError(f"Network error: {e}") from e
+    
+    token_json = resp.json()
+    access_token = token_json.get("access_token")
+    expires_in = int(token_json.get("expires_in", 3600))
+    
+    if not access_token:
+        raise TokenError("No access_token in response")
+    
+    return access_token, expires_in
 
-    if resp.status_code != 200:
-        raise TokenError(f"HTTP {resp.status_code}: {resp.text}")
-
-    return resp.json()
-
+# ── Fonction principale (cache intégré) ───────────────────────────────────────
 def get_token(scope: str = DEFAULT_SCOPE, force_refresh: bool = False) -> str:
     """
     Return a valid access token (cached per scope).
+    Cache stored as function attribute - no global variables.
     """
-    cache = _safe_cache()  # Utilise toujours cette fonction pour accéder au cache
+    # BULLETPROOF: Initialise le cache sur la fonction si inexistant ou corrompu
+    if not hasattr(get_token, "_cache") or not isinstance(get_token._cache, dict):
+        get_token._cache = {}  # {scope: (token, expires_at)}
+        get_token._cache_lock = threading.Lock()
     
-    # 1. Vérifier le cache
-    if not force_refresh and _is_token_valid_for_scope(scope):
-        token, _ = cache[scope]
-        logger.debug("Cache hit for scope=%r", scope)
-        return token
-
-    # 2. Fetch nouveau token
-    token_json = _fetch_token_from_server(scope=scope)
-    access_token = token_json.get("access_token")
-    expires_in = int(token_json.get("expires_in", 3600))
-
-    if not access_token:
-        raise TokenError("Empty access_token")
-
-    # 3. Stocker dans le cache (mutation, pas réassignation !)
-    cache[scope] = (access_token, time.time() + expires_in)
-
-    logger.info("New token fetched for scope=%r (expires in %ss)", scope, expires_in)
-    _log_token_claims_info(access_token)
-
+    cache = get_token._cache
+    lock = get_token._cache_lock
+    
+    with lock:  # Thread-safe
+        # Vérifier cache existant
+        if not force_refresh and scope in cache:
+            token, expires_at = cache[scope]
+            if time.time() + 10 < expires_at:  # Marge 10s
+                logger.debug("Cache HIT for scope=%r", scope)
+                return token
+        
+        # Fetch nouveau token
+        logger.info("Cache MISS - fetching new token for scope=%r", scope)
+        access_token, expires_in = _fetch_token(scope)
+        
+        # Stocker
+        cache[scope] = (access_token, time.time() + expires_in)
+    
+    _log_token_claims(access_token)
     return access_token
 
 if __name__ == "__main__":
     try:
-        tk1 = get_token("ingest:iphone")
-        print(f"iPhone: {tk1[:20]}...")
-        tk2 = get_token("ingest:sqlite")
-        print(f"SQLite: {tk2[:20]}...")
-        print("Différents?" , tk1 != tk2)
-    except TokenError as e:
-        logger.error("Fail: %s", e)
+        t1 = get_token("ingest:iphone")
+        print(f"iPhone: {t1[:20]}...")
+        t2 = get_token("ingest:sqlite")
+        print(f"SQLite: {t2[:20]}...")
+        t3 = get_token("ingest:iphone")  # Devrait être cache hit
+        print(f"iPhone again: {t3[:20]}... (should be same)")
+        print(f"Different tokens: {t1 != t2}")
+    except Exception as e:
+        logger.error("FAIL: %s", e)
         raise
