@@ -25,15 +25,26 @@ TOKEN_ENDPOINT = os.getenv("MEDPLUM_TOKEN_ENDPOINT", f"{BASE_URL}/oauth2/token")
 
 DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "")
 
-# ── Cache par scope (BUGFIX: avant c'était un cache global unique) ───────────
+# ── Cache par scope (défensif) ───────────────────────────────────────────────
 # Structure: {scope_string: (access_token, expires_at_timestamp)}
-_token_cache: Dict[str, Tuple[str, float]] = {}
+# Initialisé ici, mais on vérifie sa validité dans les fonctions au cas où
+_token_cache: Optional[Dict[str, Tuple[str, float]]] = {}
 
 class TokenError(RuntimeError):
     pass
 
+def _ensure_cache_initialized() -> None:
+    """Vérifie que le cache est un dict, le recrée si None (défensif)."""
+    global _token_cache
+    if _token_cache is None:
+        logger.warning("_token_cache was None, reinitializing to empty dict")
+        _token_cache = {}
+
 def _is_token_valid_for_scope(scope: str) -> bool:
     """Vérifie si on a un token valide pour ce scope spécifique."""
+    global _token_cache
+    _ensure_cache_initialized()
+    
     if scope not in _token_cache:
         return False
     _, expires_at = _token_cache[scope]
@@ -142,11 +153,10 @@ def _fetch_token_from_server(scope: str = DEFAULT_SCOPE) -> dict:
 def get_token(scope: str = DEFAULT_SCOPE, force_refresh: bool = False) -> str:
     """
     Return a valid access token (cached per scope).
-    
-    BUGFIX: Avant, un cache global (_cached_token) retournait le même token
-    pour tous les scopes, ce qui causait des 403 quand on changeait de scope.
-    Maintenant, le cache est indexé par scope: chaque scope a son propre token.
     """
+    global _token_cache
+    _ensure_cache_initialized()
+    
     # 1. Vérifier le cache spécifique à ce scope
     if not force_refresh and _is_token_valid_for_scope(scope):
         token, _ = _token_cache[scope]
@@ -182,7 +192,7 @@ if __name__ == "__main__":
         
         # Vérifier qu'on a bien deux tokens différents (ou pas si le serveur retourne le même)
         if tk1 == tk2:
-            print("\nLes deux tokens sont identiques (le serveur les a peut-être fusionnés)")
+            print("\n⚠️  Les deux tokens sont identiques (le serveur les a peut-être fusionnés)")
         else:
             print("\n✓ Deux tokens distincts en cache")
             
