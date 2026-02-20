@@ -187,7 +187,7 @@ def upload_db_file(object_name: str, scope=["ingest:sqlite"]):
     logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
+        "Accept": "application/json"
     }
     files = {
             "file": (object_name.name, object_name.getvalue(), "application/octet-stream")
