@@ -21,20 +21,18 @@ TOKEN_ENDPOINT = os.getenv("MEDPLUM_TOKEN_ENDPOINT", f"{BASE_URL}/oauth2/token")
 
 DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "")
 
-_cached_token: Optional[str] = None
-_token_expires_at: Optional[float] = None
-
+_token_cache: Dict[str, Tuple[str, float]] = {}
 
 class TokenError(RuntimeError):
     pass
 
 
-def _is_token_valid() -> bool:
-    global _cached_token, _token_expires_at
-    if not _cached_token or not _token_expires_at:
+def _is_token_valid_for_scope(scope: str) -> bool:
+    """Vérifie si on a un token valide pour ce scope spécifique."""
+    if scope not in _token_cache:
         return False
-    # safety margin 10s
-    return time.time() + 10 < _token_expires_at
+    _, expires_at = _token_cache[scope]
+    return time.time() + 10 < expires_at
 
 
 def _b64url_decode(data: str) -> bytes:
@@ -142,29 +140,26 @@ def _fetch_token_from_server(scope: str = DEFAULT_SCOPE) -> dict:
 
 def get_token(scope: str = DEFAULT_SCOPE, force_refresh: bool = False) -> str:
     """
-    Return a valid access token (cached in memory). Raises TokenError on failure.
-    Logs decoded scopes/claims at INFO on refresh.
+    Return a valid access token (cached per scope). Raises TokenError on failure.
     """
-    global _cached_token, _token_expires_at
+    # 1. Vérifier le cache spécifique à ce scope
+    if not force_refresh and _is_token_valid_for_scope(scope):
+        token, _ = _token_cache[scope]
+        logger.debug("Returning cached token for scope=%r", scope)
+        return token
 
-    if not force_refresh and _is_token_valid():
-        logger.debug("Returning cached token (valid until %s)", _token_expires_at)
-        return _cached_token  # type: ignore
-
+    # 2. Sinon, fetch nouveau token
     token_json = _fetch_token_from_server(scope=scope)
-
     access_token = token_json.get("access_token")
     expires_in = int(token_json.get("expires_in", 3600))
 
     if not access_token:
         raise TokenError("Empty access_token in token response")
 
-    _token_expires_at = time.time() + expires_in
-    _cached_token = access_token
-
-    logger.info("Fetched new access token, expires in %s seconds", expires_in)
-
-    # INFO logging of scopes/claims (no signature verification)
+    # 3. Stocker dans le cache avec la clé = scope
+    _token_cache[scope] = (access_token, time.time() + expires_in)
+    
+    logger.info("Fetched new token for scope=%r, expires in %s seconds", scope, expires_in)
     _log_token_claims_info(access_token)
 
     return access_token
