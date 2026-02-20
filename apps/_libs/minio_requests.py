@@ -4,11 +4,12 @@ import logging
 import time
 import json
 from typing import Optional, Dict
+from libs.get_medplum_token import get_token
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = os.getenv("TOKEN", "token")
+
 BASE_URL_MINIO_API = os.getenv("BASE_URL_MINIO_API", "http://ingestion")
 ENDPOINT_OBJECTS_LIST = os.getenv("ENDPOINT_OBJECTS_LIST", "/bucket/object-list/")
 ENDPOINT_OBJECT_JSON = os.getenv("ENDPOINT_OBJECT_JSON", "/object/json/")
@@ -17,13 +18,16 @@ ENDPOINT_OBJECT_DELETE = os.getenv("ENDPOINT_OBJECT_DELETE", "/object/delete/")
 ENDPOINT_INGEST_MANUAL = os.getenv("ENDPOINT_INGEST_MANUAL", "/ingest/manual")
 ENDPOINT_GENERIC = os.getenv("ENDPOINT_GENERIC", "/ingest/generic/")
 ENDPOINT_DOWNLOAD_GENERIC = os.getenv("ENDPOINT_DOWNLOAD_GENERIC", "/download/")
+ENDPOINT_SPIROMETER = os.getenv("ENDPOINT_SPIROMETER", "/ingest/spirometer/")
+ENDPOINT_IPHONE = os.getenv("ENDPOINT_IPHONE", "/ingest/iphone/")
 
 
-def get_object_list(bucket: str, 
-                     token=TOKEN):
+def get_object_list(bucket: str, scope=["object:list"]):
     """
     Retrieve objects list in a bucket.
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_OBJECTS_LIST + bucket
     headers = {
         "Authorization": f"Bearer {token}",
@@ -38,10 +42,12 @@ def get_object_list(bucket: str,
     
 def get_object_json(bucket: str, 
                     object_name: str, 
-                    token=TOKEN):
+                    scope=["download:json"]):
     """
     Download json file.
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_OBJECT_JSON + bucket + "/" + object_name
     logger.info(f"URL used : {url}")
     headers = {
@@ -54,19 +60,21 @@ def get_object_json(bucket: str,
         data = response.json()
         return data if data is not None else []
     except requests.exceptions.RequestException as e:
-        logger.error("Erreur get_object_list bucket=%s err=%s", bucket, e)
+        logger.error(f"Erreur get_object_list bucket={bucket} err={e}")
         return []
     except ValueError as e:
-        logger.error("Réponse non-JSON get_object_list bucket=%s err=%s", bucket, e)
+        logger.error(f"Réponse non-JSON get_object_list bucket={bucket} err={e}")
         return []
     
 def move_object(object_name: str, 
                 source_bucket: str, 
                 destination_bucket: str,
-                token=TOKEN):
+                scope=["object:move"]):
     """
     Move object from a bucket to an other.
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_OBJECT_MOVE + object_name + "/" + source_bucket + "/" + destination_bucket
     headers = {
         "Authorization": f"Bearer {token}",
@@ -98,16 +106,18 @@ def move_object(object_name: str,
     except requests.exceptions.RequestException as e:
         return {"ok": False, "error": str(e), "status_code": 0, "data": None}
 
-def upload_manual_file(object_name: str, token=TOKEN):
+def upload_manual_file(object_name: str, scope=["ingest:manual"]):
     """
     Upload an object to a bucket.
     """
+    token = get_token(scope)
     url = BASE_URL_MINIO_API + ENDPOINT_INGEST_MANUAL
     logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"  # Ajout du content-type
     }
+    
     try:
         #response = requests.post(url, json=object_name, headers=headers)
         response = requests.post(url, data=object_name, headers=headers)
@@ -115,24 +125,74 @@ def upload_manual_file(object_name: str, token=TOKEN):
         logger.info("Upload d'un objet : OK")
         return response.json()
     except requests.exceptions.RequestException as e:
-        logger.error(f"Erreur : {e}")
-        print(f"Erreur lors de la requête : {e}")
-        return None
+        logger.error(f"Error on uploading : {e}")
+        raise
+
+def upload_spirometer_file(object_name: str, scope=["ingest:spirometer"]):
+    """
+    Upload an object to spirometer bucket.
+    Returns the response JSON if successful, raises RequestException otherwise.
+    """
+    token = get_token(scope)
+    url = BASE_URL_MINIO_API + ENDPOINT_SPIROMETER
+    logger.info(f"URL used : {url}")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(url, json=object_name, headers=headers)
+        response.raise_for_status()
+        logger.info("Upload d'un objet : OK")
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error on uploading : {e}")
+        raise 
+
+def upload_iphone_json(object_name: str, scope=["ingest:iphone"])
+    """
+    Upload an object to iphone bucket.
+    Returns the response JSON if successful, raises RequestException otherwise.
+    """
+    token = get_token(scope)
+    url = BASE_URL_MINIO_API + ENDPOINT_IPHONE
+    logger.info(f"URL used : {url}")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    raw = object_name.getvalue()
+    payload = json.loads(raw.decode("utf-8"))
+    if not isinstance(payload, dict):
+        logger.warning(f"Not a JSON file : {object_name}")
+        raise ValueError("Le JSON doit être un objet (racine = { ... }).")
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        logger.info("Upload d'un objet : OK")
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error on uploading : {e}")
+        raise 
+
     
 def upload_object_into_bucket(
     file_path: str,
     bucket: str,
     filename: Optional[str] = None,
     metadata: Optional[Dict[str, str]] = None,
-    token=TOKEN,
+    scope=["ingest:generic"],
     timeout=120
 ):
     """
     Upload an object to the API endpoint expecting multipart/form-data with field 'file'
     and optional form field 'metadata' (JSON string).
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_GENERIC + bucket
-    logger.info("URL used : %s", url)
+    logger.info(f"URL used : {url}")
     headers = {
         "Authorization": f"Bearer {token}",
     }
@@ -151,20 +211,22 @@ def upload_object_into_bucket(
 
             response = requests.post(url, headers=headers, files=files, data=data, timeout=timeout)
             response.raise_for_status()
-            logger.info("Upload d'un objet : OK, status_code=%s", response.status_code)
+            logger.info(f"Upload d'un objet : OK, status_code={response.status_code}")
             return response.json()
     except requests.exceptions.RequestException:
-        logger.exception("Erreur lors de l'upload vers %s", url)
+        logger.exception(f"Erreur lors de l'upload vers {url}")
         return None
 
 def get_object(
     bucket: str, 
     object_name: str, 
-    token=TOKEN,
+    scope=["download:object"],
 ) -> bool:
     """
     Download file.
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name
     logger.info(f"URL used : {url}")
     headers = {
@@ -188,11 +250,13 @@ def get_object(
 def delete_object_on_minio(
     bucket: str, 
     object_name: str,
-    token=TOKEN
+    scope=["object:delete"]
 ) -> bool:
     """
     Delete object in a bucket
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_OBJECT_DELETE + bucket + "/" + object_name
     logger.info(f"URL used : {url}")
     headers = {
@@ -213,12 +277,14 @@ def download_db_object_to_tmp(
     bucket: str, 
     object_name: str, 
     tmp_dir: str = "/tmp", 
-    token=TOKEN
+    scope=["download:object"]
     ) -> str:
     """
     Download minio object and write it on '/tmp' in binary.
     Return local path.
     """
+    token = get_token(scope)
+    
     url = BASE_URL_MINIO_API + ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -234,8 +300,8 @@ def download_db_object_to_tmp(
                         f.write(chunk)
         return local_path
     except requests.exceptions.RequestException as e:
-        logger.error("Download KO object=%s bucket=%s err=%s", object_name, bucket, e)
+        logger.error(f"Download KO object={object_name} bucket={bucket} err={e}")
         return None
     except OSError as e:
-        logger.error("Écriture locale KO local=%s err=%s", local_path, e)
+        logger.error(f"Écriture locale KO local={local_path} err={e}")
         return None

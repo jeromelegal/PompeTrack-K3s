@@ -5,6 +5,7 @@ from libs.minio_requests import get_object_list, download_db_object_to_tmp, move
 import logging
 from pathlib import Path
 from typing import Optional
+from libs.minio_requests import upload_spirometer_file
 
 logging.basicConfig(
     level=logging.INFO
@@ -15,11 +16,7 @@ logger = logging.getLogger("Worke-Sqlite")
 BUCKET_DB_RAW = "raw-db-spirometer"
 BUCKET_PROCESSED = "processed-db"
 DEVICE = os.getenv("DEVICE", "worker-sqlite")
-SPIROMETER_INGEST_URL = os.getenv("SPIROMETER_INGEST_URL", "http://ingestion/ingest/spirometer")
-TOKEN = os.getenv("TOKEN", "token")
 
-if not TOKEN:
-    raise RuntimeError("TOKEN manquant")
 
 # TEST_content indices
 TEST_DATE_IDX = 2
@@ -126,26 +123,13 @@ def process_db_to_json(db_path):
     conn.close()
     json_file = {"metrics": instances}
     #print(f"JSON généré : {json_file}")
-    
-    headers = {
-        "Authorization": f"Bearer {TOKEN}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
 
     try:
-        response = requests.post(
-            SPIROMETER_INGEST_URL, 
-            json=json_file, 
-            headers=headers, 
-            timeout=20
-            )
-        response.raise_for_status()
-        # print("Succès :", response.json())
+        upload_spirometer_file(json_file)
+        logger.info("Fichier envoyé avec succès")
         return True
-        
     except requests.exceptions.RequestException as e:
-        print(f"Erreur lors de l’envoi : {e}")
+        logger.error(f"Erreur lors de l'envoi : {e}")
         return False
             
 

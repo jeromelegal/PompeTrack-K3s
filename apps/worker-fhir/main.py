@@ -1,8 +1,7 @@
 import os, subprocess
 from fastapi import FastAPI, HTTPException
 from datetime import datetime, timezone 
-
-SCOPES = "working:fhir"
+from libs.security import require_scopes
 
 app = FastAPI(title="Health Worker Controller")
 
@@ -17,7 +16,9 @@ async def healthz():
     return {"status": "ok", "time": now_iso()}
  
 @app.get("/run/iphone")
-def run_worker_iphone():
+def run_worker_iphone(
+    device: dict = Depends(require_scopes(["airflow:iphone"])),
+):
     try:
         print(f"Lancement du worker pour {now_iso()}")
         result = subprocess.run(["python", "/app/pipeline_iphone.py"], capture_output=True, text=True)
@@ -28,7 +29,9 @@ def run_worker_iphone():
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/run/manual")
-def run_worker_manual():
+def run_worker_manual(
+    device: dict = Depends(require_scopes(["airflow:manual"])),
+):
     try:
         print(f"Lancement du worker pour {now_iso()}")
         result = subprocess.run(["python", "/app/pipeline_manual.py"], capture_output=True, text=True)
@@ -39,7 +42,9 @@ def run_worker_manual():
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/run/spirometer")
-def run_worker_spirometer():
+def run_worker_spirometer(
+    device: dict = Depends(require_scopes(["airflow:spirometer"])),
+):
     try:
         print(f"Lancement du worker pour {now_iso()}")
         result = subprocess.run(["python", "/app/pipeline_spirometer.py"], capture_output=True, text=True)

@@ -4,6 +4,7 @@ from typing import Optional
 from worker import fetch_fhir_observation
 from fastapi.responses import JSONResponse
 import json
+from libs.security import require_scopes
 
 app = FastAPI(title="Health Worker Controller")
 
@@ -21,6 +22,7 @@ async def healthz():
 def fetch_obseration(
     patient_id: str,
     payload: Optional[dict] = Body(...),
+    device: dict = Depends(require_scopes(["stream:fhir"])),
 ):
     try:
         results = fetch_fhir_observation(patient_id, payload)
