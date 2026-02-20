@@ -20,6 +20,7 @@ ENDPOINT_GENERIC = os.getenv("ENDPOINT_GENERIC", "/ingest/generic/")
 ENDPOINT_DOWNLOAD_GENERIC = os.getenv("ENDPOINT_DOWNLOAD_GENERIC", "/download/")
 ENDPOINT_SPIROMETER = os.getenv("ENDPOINT_SPIROMETER", "/ingest/spirometer/")
 ENDPOINT_IPHONE = os.getenv("ENDPOINT_IPHONE", "/ingest/iphone/")
+ENDPOINT_INGEST_SQLITE = os.getenv("ENDPOINT_INGEST_SQLITE", "/ingest/sqlite/")
 
 
 def get_object_list(bucket: str, scope=["object:list"]):
@@ -153,7 +154,7 @@ def upload_spirometer_file(object_name: str, scope=["ingest:spirometer"]):
 def upload_iphone_json(object_name: str, scope=["ingest:iphone"]):
     """
     Upload an object to iphone bucket.
-    Returns the response JSON if successful, raises RequestException otherwise.
+    Returns the response if successful, raises RequestException otherwise.
     """
     token = get_token(scope)
     url = BASE_URL_MINIO_API + ENDPOINT_IPHONE
@@ -171,11 +172,34 @@ def upload_iphone_json(object_name: str, scope=["ingest:iphone"]):
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
         logger.info("Upload d'un objet : OK")
-        return response.json()
+        return response
     except requests.exceptions.RequestException as e:
         logger.error(f"Error on uploading : {e}")
         raise 
 
+def upload_db_file(object_name: str, scope=["ingest:sqlite"]):
+    """
+    Upload an object to db bucket.
+    Returns the response if successful, raises RequestException otherwise.
+    """
+    token = get_token(scope)
+    url = BASE_URL_MINIO_API + ENDPOINT_INGEST_SQLITE
+    logger.info(f"URL used : {url}")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    files = {
+            "file": (object_name.name, object_name.getvalue(), "application/octet-stream")
+        }
+    try:
+        response = requests.post(url, files=files, headers=headers, timeout=120)
+        response.raise_for_status()
+        logger.info("Upload d'un objet : OK")
+        return response
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error on uploading : {e}")
+        raise
     
 def upload_object_into_bucket(
     file_path: str,
@@ -212,7 +236,7 @@ def upload_object_into_bucket(
             response = requests.post(url, headers=headers, files=files, data=data, timeout=timeout)
             response.raise_for_status()
             logger.info(f"Upload d'un objet : OK, status_code={response.status_code}")
-            return response.json()
+            return response
     except requests.exceptions.RequestException:
         logger.exception(f"Erreur lors de l'upload vers {url}")
         return None
