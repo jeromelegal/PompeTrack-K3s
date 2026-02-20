@@ -150,7 +150,7 @@ def upload_spirometer_file(object_name: str, scope=["ingest:spirometer"]):
         logger.error(f"Error on uploading : {e}")
         raise 
 
-def upload_iphone_json(object_name: str, scope=["ingest:iphone"])
+def upload_iphone_json(object_name: str, scope=["ingest:iphone"]):
     """
     Upload an object to iphone bucket.
     Returns the response JSON if successful, raises RequestException otherwise.
