@@ -285,7 +285,7 @@ EOF
 # === Clients ===
 ensure_client "worker-fhir"    "$WORKER_FHIR_OUT_FILE"    "PompeTrack worker-fhir (machine-to-machine)"    "ingest:fhir object:list download:json object:move"
 ensure_client "worker-stream"  "$WORKER_STREAM_OUT_FILE"  "PompeTrack worker-stream (machine-to-machine)"  "stream:fhir"
-ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite"
+ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual ingest:generic download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite"
 ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sqlite (machine-to-machine)"  "object:list object:move object:delete download:object ingest:spirometer"
 ensure_client "ingestion"      "$INGESTION_OUT_FILE"      "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion"
 ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list worker:iphone worker:spirometer worker:manual"

@@ -35,9 +35,15 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
 
+            - name: TOKEN_AUDIENCE_AIRFLOW_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW_FILE
+
           volumeMounts:
             - name: medplum-creds-worker-sqlite
               mountPath: /var/run/secrets
+              readOnly: true
+            - name: medplum-client-ids
+              mountPath: /var/run/secrets/medplum-audiences
               readOnly: true
       volumes:
         - name: medplum-creds-worker-sqlite
@@ -49,4 +55,11 @@ spec:
                 path: MEDPLUM_CLIENT_ID
               - key: MEDPLUM_CLIENT_SECRET
                 path: MEDPLUM_CLIENT_SECRET
+        - name: medplum-client-ids
+          secret:
+            secretName: medplum-client-ids
+            defaultMode: 0400
+            items:
+              - key: TOKEN_AUDIENCE_AIRFLOW_FILE
+                path: TOKEN_AUDIENCE_AIRFLOW_FILE
 
