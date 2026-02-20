@@ -31,16 +31,16 @@ spec:
 
             # config JWT
             - name: CLIENT_ID_FILE
-              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
             - name: CLIENT_SECRET_FILE
-              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_SECRET
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
 
             - name: TOKEN_AUDIENCE_AIRFLOW_FILE
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
 
           volumeMounts:
             - name: medplum-creds-worker-sqlite
-              mountPath: /var/run/secrets/medplum
+              mountPath: /var/run/secrets
               readOnly: true
             - name: medplum-client-ids
               mountPath: /var/run/secrets/medplum-audiences

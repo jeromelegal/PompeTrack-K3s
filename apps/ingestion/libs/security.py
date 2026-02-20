@@ -16,12 +16,14 @@ bearer = HTTPBearer(auto_error=False)
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _extract_scopes(payload: Dict[str, Any]) -> List[str]:
-    """Extrait les scopes depuis 'scope' (str) ou 'scp' (list)."""
+    """Extrait les scopes depuis 'scope' (str ou list) ou 'scp' (list)."""
     scopes: List[str] = []
 
-    scope_str = payload.get("scope")
-    if isinstance(scope_str, str) and scope_str.strip():
-        scopes.extend(scope_str.split())
+    scope_field = payload.get("scope")
+    if isinstance(scope_field, str) and scope_field.strip():
+        scopes.extend(scope_field.split())
+    elif isinstance(scope_field, list): 
+        scopes.extend([str(x) for x in scope_field if str(x).strip()])
 
     scp = payload.get("scp")
     if isinstance(scp, list):
@@ -30,6 +32,7 @@ def _extract_scopes(payload: Dict[str, Any]) -> List[str]:
     # de-dup stable
     seen = set()
     return [s for s in scopes if not (s in seen or seen.add(s))]
+
 
 
 def _extract_caller(payload: Dict[str, Any]) -> str:
