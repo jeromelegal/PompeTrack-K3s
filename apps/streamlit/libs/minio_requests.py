@@ -171,7 +171,7 @@ def upload_iphone_json(object_name: str, scope=["ingest:iphone"]):
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
         logger.info("Upload d'un objet : OK")
-        return response.json()
+        return response
     except requests.exceptions.RequestException as e:
         logger.error(f"Error on uploading : {e}")
         raise 
