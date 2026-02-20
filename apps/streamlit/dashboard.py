@@ -103,7 +103,7 @@ with b3:
         st.info(f"Fichier: {uploaded_sqlite.name} ({uploaded_sqlite.size} bytes)")
         if st.button("Envoyer DB"):
             try:
-                r = upload_db_file(object_name=uploaded_sqlite, bucket="raw-db-spirometer")
+                r = upload_db_file(object_name=uploaded_sqlite)
             except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
                 st.error(str(e))
             except requests.RequestException as e:
