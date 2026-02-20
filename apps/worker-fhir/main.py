@@ -1,5 +1,5 @@
 import os, subprocess
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from datetime import datetime, timezone 
 from libs.security import require_scopes
 

@@ -45,7 +45,7 @@ spec:
               value: "http://ingestion"
 
             - name: TOKEN_AUDIENCE_AIRFLOW_FILE
-              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
 
           envFrom:
             - configMapRef:
@@ -73,6 +73,6 @@ spec:
             secretName: medplum-client-ids
             defaultMode: 0400
             items:
-              - key: TOKEN_AUDIENCE_AIRFLOW_FILE
-                path: TOKEN_AUDIENCE_AIRFLOW_FILE
+              - key: TOKEN_AUDIENCE_AIRFLOW
+                path: TOKEN_AUDIENCE_AIRFLOW
 
