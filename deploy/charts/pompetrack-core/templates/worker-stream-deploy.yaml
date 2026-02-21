@@ -44,6 +44,8 @@ spec:
 
             - name: TOKEN_AUDIENCE_STREAMLIT_FILE
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_STREAMLIT
+            - name: GUNICORN_CMD_ARGS
+              value: "--access-logfile - --error-logfile - --log-level info"
 
           envFrom:
             - configMapRef:
