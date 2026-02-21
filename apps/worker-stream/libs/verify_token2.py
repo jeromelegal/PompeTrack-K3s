@@ -5,8 +5,7 @@ import logging
 import urllib.request
 import json
 import copy
-import hashlib
-
+from libs.secrets_utils import read_secret_from_file
 import jwt
 from jwt.algorithms import ECAlgorithm
 
@@ -57,17 +56,6 @@ class InsufficientScopeError(Exception):
 _jwks_cache: dict = {}
 _jwks_cache_ts: float = 0.0
 
-
-def _token_fingerprint(token: str) -> str:
-    """
-    Empreinte courte pour corréler les logs sans exposer le token.
-    """
-    try:
-        return hashlib.sha256(token.encode("utf-8")).hexdigest()[:12]
-    except Exception:
-        return "unknown"
-
-
 def _fetch_jwks() -> dict:
     """Récupère les clés publiques depuis le JWKS endpoint."""
     logger.debug("Fetching JWKS from %s", JWKS_URL)
@@ -75,8 +63,6 @@ def _fetch_jwks() -> dict:
         with urllib.request.urlopen(JWKS_URL, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
-        # Log explicite: souvent la vraie cause des 401 si JWKS non joignable
-        logger.exception("Cannot fetch JWKS from %s: %s", JWKS_URL, exc)
         raise RuntimeError(f"Cannot fetch JWKS from {JWKS_URL}: {exc}") from exc
 
     keys = {}
@@ -88,11 +74,9 @@ def _fetch_jwks() -> dict:
         logger.debug("Loaded public key kid=%s", kid)
 
     if not keys:
-        logger.error("JWKS response contains no usable keys (url=%s)", JWKS_URL)
         raise RuntimeError("JWKS response contains no usable keys")
 
     return keys
-
 
 def _get_jwks() -> dict:
     """Retourne les clés JWKS (depuis le cache ou en refetchant)."""
@@ -104,7 +88,6 @@ def _get_jwks() -> dict:
         logger.info("JWKS cache refreshed (%d key(s))", len(_jwks_cache))
 
     return _jwks_cache
-
 
 def _get_public_key(kid: str):
     """Retourne la clé publique correspondant au kid."""
@@ -118,11 +101,9 @@ def _get_public_key(kid: str):
         keys = _get_jwks()
 
     if kid not in keys:
-        logger.error("Public key not found for kid=%s (jwks_url=%s)", kid, JWKS_URL)
         raise ValueError(f"Public key not found for kid={kid}")
 
     return keys[kid]
-
 
 # ── Vérification du token ────────────────────────────────────────────────────
 
@@ -130,34 +111,30 @@ def verify_token(token: str, required_scope: str | None = None) -> dict:
     """
     Vérifie un JWT signé ES256.
 
-    Logs ajoutés pour diagnostiquer les 401 (issuer/aud/exp/kid/jwks).
+    Args:
+        token:          Le JWT brut (Bearer token)
+        required_scope: Scope attendu (ex: "ingest:fhir"). Si fourni,
+                        lève InsufficientScopeError si absent du token.
+
+    Returns:
+        dict: payload décodé
+
+    Raises:
+        jwt.PyJWTError:        signature invalide, token expiré, issuer incorrect...
+        ValueError:            kid introuvable
+        RuntimeError:          JWKS inaccessible
+        InsufficientScopeError: token valide mais scope insuffisant
     """
-    fpr = _token_fingerprint(token)
-
-    # 1) Header (kid/alg)
-    try:
-        unverified_header = jwt.get_unverified_header(token)
-    except Exception as exc:
-        logger.exception("JWT header parse failed fpr=%s err=%s", fpr, exc)
-        raise
-
+    # 1. Récupérer le kid depuis l'en-tête
+    unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header.get("kid")
-    alg = unverified_header.get("alg")
-    typ = unverified_header.get("typ")
 
     if not kid:
-        logger.error("Token header missing 'kid' fpr=%s header=%s", fpr, unverified_header)
         raise ValueError("Token header missing 'kid'")
-
-    # Log utile sans bruit (INFO)
-    logger.info(
-        "Verifying JWT fpr=%s kid=%s alg=%s typ=%s issuer_expected=%s audiences_expected=%s required_scope=%s",
-        fpr, kid, alg, typ, TOKEN_ISSUER, VALID_AUDIENCES, required_scope
-    )
 
     public_key = _get_public_key(kid)
 
-    # 2) Vérifier signature, issuer, audience, expiration
+    # 2. Vérifier signature, issuer, audience, expiration
     decode_kwargs = dict(
         algorithms=["ES256"],
         issuer=TOKEN_ISSUER,
@@ -169,29 +146,14 @@ def verify_token(token: str, required_scope: str | None = None) -> dict:
     else:
         decode_kwargs["options"]["verify_aud"] = False
 
-    try:
-        payload = jwt.decode(token, public_key, **decode_kwargs)
-    except jwt.ExpiredSignatureError as exc:
-        logger.warning("JWT expired fpr=%s kid=%s err=%s", fpr, kid, exc)
-        raise
-    except jwt.InvalidAudienceError as exc:
-        logger.warning("JWT invalid audience fpr=%s kid=%s expected=%s err=%s", fpr, kid, VALID_AUDIENCES, exc)
-        raise
-    except jwt.InvalidIssuerError as exc:
-        logger.warning("JWT invalid issuer fpr=%s kid=%s expected=%s err=%s", fpr, kid, TOKEN_ISSUER, exc)
-        raise
-    except jwt.PyJWTError as exc:
-        # Signature invalide, token mal formé, etc.
-        logger.exception("JWT decode failed fpr=%s kid=%s err_type=%s err=%s", fpr, kid, type(exc).__name__, exc)
-        raise
+    payload = jwt.decode(token, public_key, **decode_kwargs)
 
-    # 3) Vérifier le scope si demandé
+    # 3. Vérifier le scope si demandé
     if required_scope is not None:
         token_scopes = payload.get("scope", "").split()
         if required_scope not in token_scopes:
             logger.warning(
-                "Insufficient scope fpr=%s required=%s granted=%s sub=%s",
-                fpr,
+                "Insufficient scope: required=%s granted=%s sub=%s",
                 required_scope,
                 token_scopes,
                 payload.get("sub"),
@@ -200,14 +162,9 @@ def verify_token(token: str, required_scope: str | None = None) -> dict:
                 f"Required scope '{required_scope}' not granted (got: {token_scopes})"
             )
 
-    logger.info(
-        "JWT OK fpr=%s sub=%s aud=%s iss=%s scope=%s exp=%s",
-        fpr,
+    logger.debug(
+        "Token verified for sub=%s scope=%s",
         payload.get("sub"),
-        payload.get("aud"),
-        payload.get("iss"),
         payload.get("scope"),
-        payload.get("exp"),
     )
-
     return copy.deepcopy(payload)
