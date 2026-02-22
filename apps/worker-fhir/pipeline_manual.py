@@ -1,6 +1,6 @@
 import os
 from utils.manual_metrics import pipeline_metrics
-from libs.api_minio.minio_requests import get_object_list, get_object_json, move_object
+from libs.minio_requests import get_object_list, get_object_json, move_object
 import logging
 
 logger = logging.getLogger("Worker-fhir")

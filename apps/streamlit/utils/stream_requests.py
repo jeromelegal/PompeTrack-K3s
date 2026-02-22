@@ -6,6 +6,7 @@ import os
 import logging
 from utils.shaping_df import shaping_metrics
 import streamlit as st
+from libs.get_medplum_token import get_token
 
 logging.basicConfig(
     level=logging.INFO
@@ -32,7 +33,6 @@ logging.basicConfig(
 
 logger = logging.getLogger("Streamlit")
 
-TOKEN = os.getenv("TOKEN", "")
 MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
 
 def _date_today():
@@ -41,10 +41,10 @@ def _date_today():
 # Generic request
 def _stream_request(
     patient_id: str, 
-    token: str,
     payload: dict
     ):
     
+    token = get_token(["stream:fhir"])
     url = f"http://worker-stream/data/observation/{patient_id}"
     headers = {"Authorization": f"Bearer {token}"}
     resp = requests.post(url, headers=headers, json=payload, timeout=30)
@@ -71,7 +71,7 @@ def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
             "page_count": page_count
         }
     logger.info(f"Payload is : {payload}")
-    raw_data =  _stream_request(MEDPLUM_PATIENT_ID, TOKEN, payload)
+    raw_data =  _stream_request(MEDPLUM_PATIENT_ID, payload)
     if raw_data:
         logger.info(f"Data count retrieved : {len(raw_data)}")
         return raw_data.get("data")

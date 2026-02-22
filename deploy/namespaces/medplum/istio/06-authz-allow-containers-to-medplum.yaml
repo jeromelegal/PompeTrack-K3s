@@ -1,7 +1,7 @@
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-worker-fhir-to-medplum
+  name: allow-containers-to-medplum
   namespace: medplum
 spec:
   selector:
@@ -14,3 +14,6 @@ spec:
         principals:
         - cluster.local/ns/pompetrack-core/sa/worker-fhir
         - cluster.local/ns/pompetrack-core/sa/worker-stream
+        - cluster.local/ns/pompetrack-core/sa/worker-sqlite
+        - cluster.local/ns/pompetrack-core/sa/ingestion
+        - cluster.local/ns/pompetrack-core/sa/streamlit

@@ -4,11 +4,7 @@ set -euo pipefail
 # === Config ===
 MEDPLUM_NS="medplum"
 PROJECT_NAME="pompetrack"
-
-SVC_NAME="medplum-service"
-LOCAL_PORT="18080"
-
-# Output files
+CLIENT_NAME="worker-fhir"
 WORKER_FHIR_OUT_FILE="deploy/secrets/pompetrack-core/worker-fhir-medplum-client.env"
 WORKER_STREAM_OUT_FILE="deploy/secrets/pompetrack-core/worker-stream-medplum-client.env"
 WORKER_SQLITE_OUT_FILE="deploy/secrets/pompetrack-core/worker-sqlite-medplum-client.env"
@@ -17,16 +13,13 @@ INGESTION_OUT_FILE="deploy/secrets/pompetrack-core/ingestion-medplum-client.env"
 AIRFLOW_OUT_FILE="deploy/secrets/pompetrack-core/airflow-medplum-client.env"
 IDS_OUT_FILE="deploy/outputs/pompetrack-core/medplum-ids.env"
 
-# NEW: Global file containing all client_ids
-CLIENT_IDS_OUT_FILE="deploy/secrets/pompetrack-core/medplum-client-ids.env"
-
 # Patient
 PATIENT_IDENTIFIER_SYSTEM="https://pompetrack.phylcero.fr/identifiers/patient"
 PATIENT_IDENTIFIER_VALUE="garthcrow"
 PATIENT_GIVEN="Jérôme"
 PATIENT_FAMILY="LE GAL"
 PATIENT_BIRTHDATE="1980-01-09"
-PATIENT_GENDER="male"
+PATIENT_GENDER="male"  
 
 # Device
 DEVICE_IDENTIFIER_SYSTEM="https://pompetrack.phylcero.fr/identifiers/device"
@@ -40,40 +33,23 @@ need kubectl
 need curl
 need jq
 need openssl
-need python3
-
-# NEW: store all client IDs (by client name)
-declare -A CLIENT_IDS
-
-# NEW: normalize names into env keys
-to_env_key() {
-  # e.g. "worker-fhir" -> "WORKER_FHIR"
-  echo "$1" | tr '[:lower:]-' '[:upper:]_'
-}
-
-urlencode() {
-  python3 - <<'PY'
-import sys, urllib.parse
-print(urllib.parse.quote(sys.argv[1], safe=""))
-PY
-}
 
 echo "==> Wait Medplum pods Ready (namespace: $MEDPLUM_NS)"
+# On attend *ce qui est prêt* plutôt que de supposer un nom de Deployment.
 kubectl -n "$MEDPLUM_NS" wait --for=condition=Ready pod -l app.kubernetes.io/instance=medplum --timeout=300s 2>/dev/null \
   || kubectl -n "$MEDPLUM_NS" wait --for=condition=Ready pod --all --timeout=300s
 
 echo "==> Port-forward Medplum service locally"
-PF_LOG="$(mktemp -t medplum-portforward.XXXX.log)"
-kubectl -n "$MEDPLUM_NS" port-forward "svc/${SVC_NAME}" "${LOCAL_PORT}:80" >"$PF_LOG" 2>&1 &
-PF_PID=$!
+LOCAL_PORT="18080"
+SVC_NAME="medplum-service"
 
-cleanup() {
-  kill "$PF_PID" >/dev/null 2>&1 || true
-}
+kubectl -n "$MEDPLUM_NS" port-forward "svc/${SVC_NAME}" "${LOCAL_PORT}:80" >/tmp/medplum-portforward.log 2>&1 &
+PF_PID=$!
+cleanup() { kill "$PF_PID" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
-MEDPLUM_BASE=""
-for _ in $(seq 1 50); do
+# Wait for port-forward to be usable
+for i in $(seq 1 50); do
   if curl -fsS "http://127.0.0.1:${LOCAL_PORT}/healthcheck" >/dev/null 2>&1; then
     MEDPLUM_BASE="http://127.0.0.1:${LOCAL_PORT}"
     break
@@ -81,21 +57,21 @@ for _ in $(seq 1 50); do
   sleep 0.2
 done
 
-if [[ -z "${MEDPLUM_BASE}" ]]; then
+if [[ -z "${MEDPLUM_BASE:-}" ]]; then
   echo "ERROR: port-forward OK but /healthcheck not reachable" >&2
   echo "Port-forward logs:" >&2
-  tail -n 120 "$PF_LOG" >&2 || true
+  tail -n 80 /tmp/medplum-portforward.log >&2 || true
   exit 1
 fi
 
 echo "==> Using MEDPLUM_BASE=${MEDPLUM_BASE}"
 FHIR_BASE="${MEDPLUM_BASE}/fhir/R4"
 
-echo "==> Read superadmin credentials from Kubernetes"
+echo "==> Read superadmin credentials from Kubernetes secrets"
 SUPERADMIN_EMAIL="$(kubectl -n "$MEDPLUM_NS" get deploy -l app.kubernetes.io/instance=medplum -o json \
   | jq -r '.. | objects | select(.name?=="MEDPLUM_DEFAULT_SUPER_ADMIN_EMAIL") | .value' | head -n 1)"
 
-if [[ -z "${SUPERADMIN_EMAIL:-}" || "${SUPERADMIN_EMAIL}" == "null" ]]; then
+if [[ -z "${SUPERADMIN_EMAIL:-}" || "$SUPERADMIN_EMAIL" == "null" ]]; then
   echo "ERROR: could not read MEDPLUM_DEFAULT_SUPER_ADMIN_EMAIL from deployment env." >&2
   exit 1
 fi
@@ -119,6 +95,7 @@ LOGIN_JSON="$(curl -fsS -X POST "${MEDPLUM_BASE}/auth/login" \
 
 AUTH_CODE="$(echo "$LOGIN_JSON" | jq -r '.code // empty')"
 
+# Si pas de code, Medplum renvoie {login, memberships:[...]} => il faut choisir un profil via /auth/profile
 if [[ -z "${AUTH_CODE:-}" ]]; then
   LOGIN_ID="$(echo "$LOGIN_JSON" | jq -r '.login // empty')"
   if [[ -z "${LOGIN_ID:-}" ]]; then
@@ -127,6 +104,8 @@ if [[ -z "${AUTH_CODE:-}" ]]; then
     exit 1
   fi
 
+  # Essaie de sélectionner la membership correspondant au projet voulu (display == PROJECT_NAME).
+  # Fallback: si une seule membership, on la prend.
   MEMBERSHIP_ID="$(echo "$LOGIN_JSON" | jq -r --arg pn "$PROJECT_NAME" '
       ( .memberships // [] ) as $m
       | ( $m[]? | select(.project.display==$pn) | .id ) // empty
@@ -198,6 +177,14 @@ fi
 
 echo "==> Project ID: ${PROJECT_ID}"
 
+# === Clients (2 distincts) ===
+CLIENT_NAME_WORKER_FHIR="worker-fhir"
+CLIENT_NAME_WORKER_STREAM="worker-stream"
+CLIENT_NAME_STREAMLIT="streamlit"
+CLIENT_NAME_WORKER_SQLITE="worker-sqlite"
+CLIENT_NAME_INGESTION="ingestion"
+CLIENT_NAME_AIRFLOW="airflow"
+
 ensure_client() {
   local client_name="$1"
   local out_file="$2"
@@ -211,7 +198,10 @@ ensure_client() {
     -H "$AUTHZ_HEADER" -H 'Accept: application/fhir+json' \
     | jq -r '.entry[0].resource.id // empty')"
 
-  if [[ -z "${client_id:-}" ]]; then
+  if [[ -n "${client_id:-}" ]]; then
+    echo "==> Client exists (name=${client_name}, id=${client_id})."
+    echo "    Secret not readable => NOT overwriting ${out_file}."
+  else
     echo "==> Creating client '${client_name}' via /admin/projects/:projectId/client"
     local client_json
     client_json="$(curl -fsS "${MEDPLUM_BASE}/admin/projects/${PROJECT_ID}/client" \
@@ -241,15 +231,11 @@ MEDPLUM_CLIENT_SECRET=${client_secret}
 EOF
     chmod 600 "$out_file"
     echo "==> Wrote ${out_file}"
-  else
-    echo "==> Client exists (name=${client_name}, id=${client_id}). Secret not readable => not overwriting ${out_file}."
   fi
-
-  # NEW: store for the global client ids env file (even if the client already existed)
-  CLIENT_IDS["$client_name"]="$client_id"
 
   # --- Update scopes every run (Option 2) ---
   if [[ -n "${scopes_string:-}" ]]; then
+    # Accept "a b c" OR "a,b,c" OR "a, b, c"
     local scopes_json
     scopes_json="$(jq -n --arg s "$scopes_string" '
       $s
@@ -262,6 +248,7 @@ EOF
 
     echo "==> Upserting defaultScope on ClientApplication/${client_id}: $(echo "$scopes_json" | jq -c '.')"
 
+    # replace if exists, fallback to add
     curl -fsS -X PATCH "${FHIR_BASE}/ClientApplication/${client_id}" \
       -H "$AUTHZ_HEADER" \
       -H 'Content-Type: application/json-patch+json' \
@@ -276,50 +263,29 @@ EOF
       ')"
   fi
 
+  # --- Verification (prints what Medplum stored) ---
   echo "==> Verify stored defaultScope for ClientApplication/${client_id}"
   curl -fsS "${FHIR_BASE}/ClientApplication/${client_id}" \
     -H "$AUTHZ_HEADER" -H 'Accept: application/fhir+json' \
     | jq '{id, name, defaultScope}'
 }
 
-# === Clients ===
-ensure_client "worker-fhir"    "$WORKER_FHIR_OUT_FILE"    "PompeTrack worker-fhir (machine-to-machine)"    "ingest:fhir object:list download:json object:move"
-ensure_client "worker-stream"  "$WORKER_STREAM_OUT_FILE"  "PompeTrack worker-stream (machine-to-machine)"  "stream:fhir stream:generic"
-ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual ingest:generic download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite"
-ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sqlite (machine-to-machine)"  "object:list object:move object:delete download:object ingest:spirometer"
-ensure_client "ingestion"      "$INGESTION_OUT_FILE"      "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
-ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list worker:iphone worker:spirometer worker:manual"
 
-# Write one env file containing all client IDs + explicit TOKEN_AUDIENCE_* vars
-echo "==> Write global Client IDs file: ${CLIENT_IDS_OUT_FILE}"
-mkdir -p "$(dirname "$CLIENT_IDS_OUT_FILE")"
-{
-  echo "# Generated by generate-worker-fhir-medplum-client.sh (Client IDs + TOKEN_AUDIENCE)"
-  echo "MEDPLUM_BASE_URL=${MEDPLUM_BASE}"
-  echo "MEDPLUM_PROJECT_ID=${PROJECT_ID}"
-  #echo
-
-  for name in "${!CLIENT_IDS[@]}"; do
-    key="$(to_env_key "$name")"
-    client_id="${CLIENT_IDS[$name]}"
-
-    # Raw IDs
-    #echo "MEDPLUM_CLIENT_ID_${key}=${client_id}"
-    # Explicit audiences (for JWT aud / expected audience)
-    echo "TOKEN_AUDIENCE_${key}=${client_id}"
-    #echo
-  done | LC_ALL=C sort
-} > "$CLIENT_IDS_OUT_FILE"
-chmod 600 "$CLIENT_IDS_OUT_FILE"
-echo "==> Wrote ${CLIENT_IDS_OUT_FILE}"
+# Create/ensure both clients (independent)
+ensure_client "$CLIENT_NAME_WORKER_FHIR"  "$WORKER_FHIR_OUT_FILE"  "PompeTrack worker-fhir (machine-to-machine)" "ingest:fhir object:list download:json object:move"
+ensure_client "$CLIENT_NAME_WORKER_STREAM" "$WORKER_STREAM_OUT_FILE" "PompeTrack worker-stream (machine-to-machine)" "stream:fhir" 
+ensure_client "$CLIENT_NAME_STREAMLIT" "$STREAMLIT_OUT_FILE" "PompeTrack streamlit (machine-to-machine)" "ingest:manual download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite"
+ensure_client "$CLIENT_NAME_WORKER_SQLITE" "$WORKER_SQLITE_OUT_FILE" "PompeTrack worker-sqlite (machine-to-machine)" "object:list object:move object:delete download:object ingest:spirometer"
+ensure_client "$CLIENT_NAME_INGESTION" "$INGESTION_OUT_FILE" "PompeTrack ingestion (machine-to-machine)" "svc:ingestion"
+ensure_client "$CLIENT_NAME_AIRFLOW" "$AIRFLOW_OUT_FILE" "PompeTrack airflow (machine-to-machine)" "object:list worker:iphone worker:spirometer worker:manual"
 
 echo "==> Ensure Patient exists (identifier=${PATIENT_IDENTIFIER_VALUE})"
-PATIENT_Q="$(python3 - <<PY
+PATIENT_ID="$(curl -fsS \
+  "${FHIR_BASE}/Patient?identifier=$(python3 - <<'PY'
 import urllib.parse
-print(urllib.parse.quote("${PATIENT_IDENTIFIER_SYSTEM}|${PATIENT_IDENTIFIER_VALUE}", safe=""))
+print(urllib.parse.quote("https://pompetrack.phylcero.fr/identifiers/patient|garthcrow"))
 PY
-)"
-PATIENT_ID="$(curl -fsS "${FHIR_BASE}/Patient?identifier=${PATIENT_Q}&_count=1" \
+)&_count=1" \
   -H "$AUTHZ_HEADER" -H 'Accept: application/fhir+json' \
   | jq -r '.entry[0].resource.id // empty')"
 
@@ -350,15 +316,16 @@ if [[ -z "${PATIENT_ID:-}" ]]; then
   echo "ERROR: could not determine Patient ID" >&2
   exit 1
 fi
+
 echo "==> Patient ID: ${PATIENT_ID}"
 
 echo "==> Ensure Device exists (identifier=${DEVICE_IDENTIFIER_VALUE})"
-DEVICE_Q="$(python3 - <<PY
+DEVICE_ID="$(curl -fsS \
+  "${FHIR_BASE}/Device?identifier=$(python3 - <<'PY'
 import urllib.parse
-print(urllib.parse.quote("${DEVICE_IDENTIFIER_SYSTEM}|${DEVICE_IDENTIFIER_VALUE}", safe=""))
+print(urllib.parse.quote("https://pompetrack.phylcero.fr/identifiers/device|iphone-garth"))
 PY
-)"
-DEVICE_ID="$(curl -fsS "${FHIR_BASE}/Device?identifier=${DEVICE_Q}&_count=1" \
+)&_count=1" \
   -H "$AUTHZ_HEADER" -H 'Accept: application/fhir+json' \
   | jq -r '.entry[0].resource.id // empty')"
 
@@ -388,14 +355,18 @@ if [[ -z "${DEVICE_ID:-}" ]]; then
   echo "ERROR: could not determine Device ID" >&2
   exit 1
 fi
+
 echo "==> Device ID: ${DEVICE_ID}"
 
 mkdir -p "$(dirname "$IDS_OUT_FILE")"
+
+# --- Write non-secret IDs output ---
 cat > "$IDS_OUT_FILE" <<EOF
 # Generated by generate-worker-fhir-medplum-client.sh (IDs only)
 MEDPLUM_PROJECT_ID=${PROJECT_ID}
 MEDPLUM_PATIENT_ID=${PATIENT_ID}
 MEDPLUM_DEVICE_ID=${DEVICE_ID}
 EOF
+
 chmod 644 "$IDS_OUT_FILE"
 echo "==> Wrote ${IDS_OUT_FILE}"
