@@ -44,6 +44,22 @@ kubectl get all -n medplum
 kubectl get all -n pompetrack-core
 ```
 ---
+# DAGS Airflow :
+
+1. éditer les dags dans `apps/dags/`
+
+2. copie des fichiers dans le PVC par le scheduler :
+```bash
+kubectl -n airflow get pod -l component=scheduler \
+-o jsonpath='{.items[0].metadata.name}'
+```
+
+3. restart le scheduler :
+```bash
+kubectl -n airflow rollout restart deployment airflow-scheduler
+```
+
+---
 
 ## Verifs istio :
 

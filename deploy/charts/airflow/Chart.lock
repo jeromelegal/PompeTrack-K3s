@@ -1,4 +1,4 @@
-dependencies:
+cddependencies:
 - name: airflow
   repository: https://airflow.apache.org
   version: 1.19.0

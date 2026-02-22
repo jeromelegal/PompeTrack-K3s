@@ -1,8 +1,14 @@
 airflow:
-
   enabled: true
-
   executor: KubernetesExecutor
+  
+  dags:
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClassName: local-path
+      accessMode: ReadWriteOnce
+
 
   airflow:
     config:
