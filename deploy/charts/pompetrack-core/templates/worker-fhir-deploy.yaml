@@ -44,6 +44,9 @@ spec:
             - name: BASE_URL_MINIO_API
               value: "http://ingestion"
 
+            - name: TOKEN_AUDIENCE_AIRFLOW_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
+
           envFrom:
             - configMapRef:
                 name: medplum-ids
@@ -51,6 +54,9 @@ spec:
           volumeMounts:
             - name: medplum-creds
               mountPath: /var/run/secrets
+              readOnly: true
+            - name: medplum-client-ids
+              mountPath: /var/run/secrets/medplum-audiences
               readOnly: true
       volumes:
         - name: medplum-creds
@@ -62,4 +68,11 @@ spec:
                 path: MEDPLUM_CLIENT_ID
               - key: MEDPLUM_CLIENT_SECRET
                 path: MEDPLUM_CLIENT_SECRET
+        - name: medplum-client-ids
+          secret:
+            secretName: medplum-client-ids
+            defaultMode: 0400
+            items:
+              - key: TOKEN_AUDIENCE_AIRFLOW
+                path: TOKEN_AUDIENCE_AIRFLOW
 

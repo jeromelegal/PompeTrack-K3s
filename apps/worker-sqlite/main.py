@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 import os, subprocess
 from datetime import datetime, timezone 
+from libs.security import require_scopes
 
 SCOPES = "working:sqlite"
 
@@ -17,7 +18,9 @@ async def healthz():
     return {"status": "ok", "time": now_iso()}
  
 @app.get("/run/spirometer")
-def run_worker_sqlite():
+def run_worker_sqlite(
+    device: dict = Depends(require_scopes(["airflow:spirometer"])),
+):
     try:
         print(f"Lancement du worker pour {now_iso()}")
         result = subprocess.run(["python", "extract_spirometry.py"], capture_output=True, text=True)

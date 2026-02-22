@@ -11,3 +11,4 @@ pytest-mock
 pytest-asyncio
 httpx
 responses
+PyJWT[crypto]
