@@ -33,8 +33,10 @@ sudo systemctl start k3s
 ```bash
 helm -n pompetrack-core uninstall pompetrack-core || true
 helm -n medplum uninstall medplum || true
+helm -n airflow uninstall airflow || true
 kubectl delete namespace pompetrack-core
 kubectl delete namespace medplum
+kubectl delete namespace airflow
 
 ./deploy/apply.sh
 
