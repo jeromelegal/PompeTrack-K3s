@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: minio-allow-airflow
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: minio
+      release: pompetrack-core
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["airflow"]
+      to:
+        - operation:
+            ports: ["9000"]
