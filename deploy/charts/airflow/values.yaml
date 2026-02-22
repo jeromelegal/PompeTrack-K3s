@@ -1,65 +1,71 @@
-executor: KubernetesExecutor
+airflow:
 
-# -----------------------------
-# PostgreSQL embarqué
-# -----------------------------
-postgresql:
   enabled: true
-  auth:
-    existingSecret: airflow-postgresql-auth
-    username: airflow
-    database: airflow
 
-# -----------------------------
-# Webserver
-# -----------------------------
-webserver:
-  service:
-    type: ClusterIP
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
+  executor: KubernetesExecutor
 
-# -----------------------------
-# Scheduler
-# -----------------------------
-scheduler:
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
+  airflow:
+    config:
+      core:
+        executor: KubernetesExecutor
+        load_examples: "false"
 
-# -----------------------------
-# Triggerer
-# -----------------------------
-triggerer:
-  enabled: true
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
+      api:
+        base_url: "http://airflow.lan"
 
-# -----------------------------
-# Désactiver ingress
-# -----------------------------
-ingress:
-  enabled: false
+      webserver:
+        enable_proxy_fix: "True"
 
-# -----------------------------
-# Configuration Airflow
-# -----------------------------
-config:
-  core:
-    executor: KubernetesExecutor
-    load_examples: "false"
+  postgresql:
+    enabled: true
 
-# -----------------------------
-# Secrets existants
-# -----------------------------
-fernetKeySecretName: airflow-fernet-key
-webserverSecretKeySecretName: airflow-webserver-secret-key
-apiSecretKeySecretName: airflow-api-secret-key
+    auth:
+      existingSecret: airflow-postgresql-auth
+      username: airflow
+      database: airflow
 
-data:
-  metadataSecretName: airflow-metadata
+    primary:
+      resources:
+        requests:
+          cpu: 300m
+          memory: 512Mi
+        limits:
+          cpu: 800m
+          memory: 1Gi
+
+  redis:
+    enabled: false
+
+  flower:
+    enabled: false
+
+  webserver:
+    service:
+      type: ClusterIP
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+  scheduler:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+  triggerer:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+  ingress:
+    enabled: false
+
+  fernetKeySecretName: airflow-fernet-key
+  webserverSecretKeySecretName: airflow-webserver-secret-key
+  apiSecretKeySecretName: airflow-api-secret-key
+
+  data:
+    metadataSecretName: airflow-metadata

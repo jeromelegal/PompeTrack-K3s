@@ -109,8 +109,10 @@ helm upgrade --install airflow deploy/charts/airflow \
 echo "==> Ingress (Traefik objects - always reapplied)"
 apply_dir_ordered deploy/namespaces/medplum/ingress
 apply_dir_ordered deploy/namespaces/pompetrack-core/ingress
+apply_dir_ordered deploy/namespaces/airflow/ingress
 
 # Verify
 echo "==> Done"
 kubectl get pods -n medplum
 kubectl get pods -n pompetrack-core
+kubectl get pods -n airflow

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-db-init
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure 
+      containers:
+        - name: init-db
+          image: docker.io/bitnamilegacy/postgresql:16.1.0-debian-11-r15
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-postgresql-auth
+                  key: postgres-password
+          command:
+            - /bin/bash
+            - -c
+            - |
+              psql -h airflow-postgresql \
+                   -U postgres \
+                   -d postgres <<EOF
+              DO $$
+              BEGIN
+                 IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'airflow') THEN
+                    CREATE ROLE airflow WITH LOGIN PASSWORD '${AIRFLOW_DB_PASSWORD}';
+                 END IF;
+              END
+              $$;
+              EOF

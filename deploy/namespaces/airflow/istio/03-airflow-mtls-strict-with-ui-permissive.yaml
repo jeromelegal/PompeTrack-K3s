@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: airflow-mtls-strict-with-ui-permissive
+  namespace: airflow
+spec:
+  selector:
+    matchLabels:
+      component: api-server
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: PERMISSIVE
