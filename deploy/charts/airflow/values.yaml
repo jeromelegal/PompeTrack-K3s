@@ -1,0 +1,65 @@
+executor: KubernetesExecutor
+
+# -----------------------------
+# PostgreSQL embarqué
+# -----------------------------
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: airflow-postgresql-auth
+    username: airflow
+    database: airflow
+
+# -----------------------------
+# Webserver
+# -----------------------------
+webserver:
+  service:
+    type: ClusterIP
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# -----------------------------
+# Scheduler
+# -----------------------------
+scheduler:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# -----------------------------
+# Triggerer
+# -----------------------------
+triggerer:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# -----------------------------
+# Désactiver ingress
+# -----------------------------
+ingress:
+  enabled: false
+
+# -----------------------------
+# Configuration Airflow
+# -----------------------------
+config:
+  core:
+    executor: KubernetesExecutor
+    load_examples: "false"
+
+# -----------------------------
+# Secrets existants
+# -----------------------------
+fernetKeySecretName: airflow-fernet-key
+webserverSecretKeySecretName: airflow-webserver-secret-key
+apiSecretKeySecretName: airflow-api-secret-key
+
+data:
+  metadataSecretName: airflow-metadata

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-minio-api
+  namespace: airflow
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pompetrack-core
+          podSelector:
+            matchLabels:
+              app: minio
+              release: pompetrack-core
+      ports:
+        - protocol: TCP
+          port: 9000

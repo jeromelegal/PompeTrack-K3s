@@ -1,0 +1,38 @@
+# -------------------------------------------------------------------
+# PVC DAGs
+# -------------------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "airflow.name" . }}-dags
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "airflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dags
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ .Values.storage.dags.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.dags.size }}
+
+---
+# -------------------------------------------------------------------
+# PVC Logs
+# -------------------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "airflow.name" . }}-logs
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "airflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: logs
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ .Values.storage.logs.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.logs.size }}

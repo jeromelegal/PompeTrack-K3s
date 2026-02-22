@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: airflow
+  labels:
+    istio.io/rev: default

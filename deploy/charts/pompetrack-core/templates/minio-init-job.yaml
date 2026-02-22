@@ -64,6 +64,16 @@ spec:
                 secretKeyRef:
                   name: minio-console-creds
                   key: consoleSecretKey
+            - name: AIRFLOW_LOGS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-airflow-logs-creds
+                  key: airflowLogsAccessKey
+            - name: AIRFLOW_LOGS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-airflow-logs-creds
+                  key: airflowLogsSecretKey
 
           command: ["/bin/sh", "-lc"]
           args:
@@ -221,6 +231,49 @@ spec:
                 exit 1
               }
               mc admin policy attach local consoleAdmin --user "$CONSOLE_ACCESS_KEY"
+
+              echo "==> Ensure bucket airflow-logs exists"
+              mc mb --ignore-existing local/airflow-logs
+
+              echo "==> (Re)create policy airflow-logs-rw"
+              cat >/tmp/airflow-logs-policy.json <<'EOF'
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetBucketLocation",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::airflow-logs"
+                    ]
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:PutObject",
+                      "s3:DeleteObject"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::airflow-logs/*"
+                    ]
+                  }
+                ]
+              }
+              EOF
+
+              mc admin policy rm local airflow-logs-rw >/dev/null 2>&1 || true
+              mc admin policy create local airflow-logs-rw /tmp/airflow-logs-policy.json
+
+              echo "==> (Re)create user for airflow logs"
+              mc admin user remove local "$AIRFLOW_LOGS_ACCESS_KEY" >/dev/null 2>&1 || true
+              mc admin user add local "$AIRFLOW_LOGS_ACCESS_KEY" "$AIRFLOW_LOGS_SECRET_KEY"
+
+              echo "==> Attach policy airflow-logs-rw to user"
+              mc admin policy attach local airflow-logs-rw --user "$AIRFLOW_LOGS_ACCESS_KEY"
 
               echo "==> Sanity checks"
               mc admin policy entities local --policy pg-backup-policy || true

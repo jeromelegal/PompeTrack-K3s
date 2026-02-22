@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "airflow.name" . }}-scheduler
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "airflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "airflow.name" . }}
+      app.kubernetes.io/component: scheduler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "airflow.name" . }}
+        app.kubernetes.io/component: scheduler
+    spec:
+      serviceAccountName: {{ include "airflow.serviceAccountName" . }}
+      securityContext:
+        runAsUser: 50000
+        fsGroup: 50000
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z {{ include "airflow.name" . }}-postgresql 5432; do
+                echo "Waiting for PostgreSQL...";
+                sleep 3;
+              done
+        - name: db-migrate
+          image: {{ .Values.images.airflow.repository }}:{{ .Values.images.airflow.tag }}
+          imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
+          command: ["airflow", "db", "migrate"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "airflow.name" . }}-config
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-db-conn
+                  key: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-core
+                  key: AIRFLOW__CORE__FERNET_KEY
+      containers:
+        - name: scheduler
+          image: {{ .Values.images.airflow.repository }}:{{ .Values.images.airflow.tag }}
+          imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
+          command: ["airflow", "scheduler"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "airflow.name" . }}-config
+          env:
+            - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-db-conn
+                  key: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-core
+                  key: AIRFLOW__CORE__FERNET_KEY
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-core
+                  key: AIRFLOW__WEBSERVER__SECRET_KEY
+          resources:
+            requests:
+              cpu: {{ .Values.resources.scheduler.requests.cpu | quote }}
+              memory: {{ .Values.resources.scheduler.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.scheduler.limits.cpu | quote }}
+              memory: {{ .Values.resources.scheduler.limits.memory | quote }}
+          volumeMounts:
+            - name: dags
+              mountPath: /opt/airflow/dags
+            - name: logs
+              mountPath: /opt/airflow/logs
+            - name: config
+              mountPath: /opt/airflow/pod_template.yaml
+              subPath: pod_template.yaml
+          livenessProbe:
+            exec:
+              command:
+                - airflow
+                - jobs
+                - check
+                - --job-type
+                - SchedulerJob
+                - --local
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 5
+      volumes:
+        - name: dags
+          persistentVolumeClaim:
+            claimName: {{ include "airflow.name" . }}-dags
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ include "airflow.name" . }}-logs
+        - name: config
+          configMap:
+            name: {{ include "airflow.name" . }}-config

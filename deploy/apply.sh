@@ -28,10 +28,12 @@ apply_file_if_exists() {
 echo "==> Namespaces (must come first for Istio injection)"
 apply_file_if_exists deploy/namespaces/medplum/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/pompetrack-core/00-namespace.yaml
+apply_file_if_exists deploy/namespaces/airflow/00-namespace.yaml
 
 # Safety: ensure namespaces exist even if YAML missing
 kubectl get ns medplum >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/medplum/00-namespace.yaml
 kubectl get ns pompetrack-core >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/pompetrack-core/00-namespace.yaml
+kubectl get ns airflow >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/airflow/00-namespace.yaml
 
 # Medplum services
 echo "== Services medplum =="
@@ -41,6 +43,7 @@ kubectl apply -f deploy/namespaces/medplum/services/
 echo "==> Netpol (strict baseline + targeted allows)"
 apply_dir_ordered deploy/namespaces/medplum/netpol
 apply_dir_ordered deploy/namespaces/pompetrack-core/netpol
+apply_dir_ordered deploy/namespaces/airflow/netpol
 
 # Wait for Istio
 echo "==> Wait for istiod (validation webhook needs ready endpoints)"
@@ -52,6 +55,7 @@ kubectl -n istio-system get endpoints istiod
 echo "==> Istio policies (PeerAuth/Authz)"
 apply_dir_ordered deploy/namespaces/medplum/istio
 apply_dir_ordered deploy/namespaces/pompetrack-core/istio
+apply_dir_ordered deploy/namespaces/airflow/istio
 
 # Secrets scripts
 echo "==> Medplum secrets"
@@ -90,6 +94,16 @@ helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
   -f deploy/charts/pompetrack-core/values-minio.yaml \
   -n pompetrack-core \
   --post-renderer ./deploy/post-renderer/pompetrack-core/kustomize.sh
+
+# Secrets scripts
+echo "==> Airflow secrets"
+./deploy/secrets/airflow/init-secrets.sh
+
+## Helm umbrella Airflow namespace
+echo "==> Helm install/upgrade airflow"
+helm upgrade --install airflow deploy/charts/airflow \
+  -f deploy/charts/airflow/values.yaml \
+  -n airflow 
 
 # Ingress policies
 echo "==> Ingress (Traefik objects - always reapplied)"
