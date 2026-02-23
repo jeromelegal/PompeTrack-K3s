@@ -17,3 +17,4 @@ spec:
         - cluster.local/ns/pompetrack-core/sa/worker-sqlite
         - cluster.local/ns/pompetrack-core/sa/ingestion
         - cluster.local/ns/pompetrack-core/sa/streamlit
+        - cluster.local/ns/airflow/sa/airflow-worker

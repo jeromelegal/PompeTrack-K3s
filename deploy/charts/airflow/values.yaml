@@ -2,34 +2,32 @@ airflow:
   enabled: true
   executor: KubernetesExecutor
   
+  extraPipPackages:
+    - apache-airflow-providers-amazon
+
+  extraEnvVarsSecret: airflow-medplum-client
+
+  config:
+    core:
+      executor: KubernetesExecutor
+
+    api:
+      base_url: "http://airflow.lan"
+
+    webserver:
+      enable_proxy_fix: "True"
+
   dags:
     persistence:
       enabled: true
-      size: 1Gi
-      storageClassName: local-path
-      accessMode: ReadWriteOnce
-
-
-  airflow:
-    config:
-      core:
-        executor: KubernetesExecutor
-        load_examples: "false"
-
-      api:
-        base_url: "http://airflow.lan"
-
-      webserver:
-        enable_proxy_fix: "True"
+      existingClaim: airflow-dags-pvc
 
   postgresql:
     enabled: true
-
     auth:
       existingSecret: airflow-postgresql-auth
       username: airflow
       database: airflow
-
     primary:
       resources:
         requests:
@@ -52,12 +50,45 @@ airflow:
       requests:
         cpu: 200m
         memory: 512Mi
+    podAnnotations:
+      traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
+    env:
+      - name: PYTHONPATH
+        value: /opt/airflow/dags
+      - name: AIRFLOW_CONN_MINIO_LOGS
+        valueFrom:
+          secretKeyRef:
+            name: airflow-minio-conn
+            key: AIRFLOW_CONN_MINIO_LOGS
 
   scheduler:
     resources:
       requests:
         cpu: 200m
         memory: 512Mi
+    podAnnotations:
+      traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
+    env:
+      - name: PYTHONPATH
+        value: /opt/airflow/dags
+      - name: AIRFLOW_CONN_MINIO_LOGS
+        valueFrom:
+          secretKeyRef:
+            name: airflow-minio-conn
+            key: AIRFLOW_CONN_MINIO_LOGS
+
+  dagProcessor:
+    enabled: true
+    podAnnotations:
+      traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
+    env:
+      - name: PYTHONPATH
+        value: /opt/airflow/dags
+      - name: AIRFLOW_CONN_MINIO_LOGS
+        valueFrom:
+          secretKeyRef:
+            name: airflow-minio-conn
+            key: AIRFLOW_CONN_MINIO_LOGS
 
   triggerer:
     enabled: true
@@ -65,6 +96,14 @@ airflow:
       requests:
         cpu: 100m
         memory: 256Mi
+    podAnnotations:
+      traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
+    envFrom:
+      - name: AIRFLOW_CONN_MINIO_LOGS
+        valueFrom:
+          secretKeyRef:
+            name: airflow-minio-conn
+            key: AIRFLOW_CONN_MINIO_LOGS
 
   ingress:
     enabled: false
@@ -75,3 +114,15 @@ airflow:
 
   data:
     metadataSecretName: airflow-metadata
+
+  env: 
+    - name: AIRFLOW__LOGGING__REMOTE_LOGGING
+      value: "True"
+    - name: AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER
+      value: "s3://airflow-logs"
+    - name: AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID
+      value: "minio_logs"
+    - name: AIRFLOW__SECRETS__BACKENDS
+      value: airflow.secrets.environment_variables.EnvironmentVariablesBackend
+
+ 

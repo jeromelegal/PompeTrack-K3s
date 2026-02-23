@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: airflow-statsd
+  namespace: airflow
+spec:
+  podSelector:
+    matchLabels:
+      app: airflow-statsd
+
+  policyTypes:
+  - Ingress
+
+  ingress:
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: UDP
+      port: 8125

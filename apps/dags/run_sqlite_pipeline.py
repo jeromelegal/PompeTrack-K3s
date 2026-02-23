@@ -5,13 +5,12 @@ from datetime import datetime, timedelta, timezone
 from airflow import DAG
 from airflow.sdk import task
 from airflow.providers.http.operators.http import HttpOperator
+from airflow.operators.python import PythonOperator
+from libs.medplum_header_operator import MedplumHeaderOperator 
+from airflow.models.xcom_arg import XComArg
+
 
 BUCKET = "raw-db-spirometer"
-TOKEN = os.getenv("TOKEN", "")
-if not TOKEN:
-    raise RuntimeError("TOKEN absent des variables d'environnement")
-
-HEADERS = {"Authorization": f"Bearer {TOKEN}", "Accept": "application/json"}
 
 def extract_objects(response_text: str) -> list:
     try:
@@ -37,13 +36,18 @@ with DAG(
     },
     tags=["spirometer", "minio", "ingestion", "sqlite"],
 ) as dag:
+    
+    get_ingestion_headers_task = MedplumHeaderOperator(
+        task_id="get_ingestion_headers_task",
+        scope=["object:list"],
+    )
 
     list_objects = HttpOperator(
         task_id="list_objects",
         http_conn_id="ingestion_api",
         endpoint=f"/bucket/object-list/{BUCKET}",
         method="GET",
-        headers=HEADERS,
+        headers=XComArg(get_ingestion_headers_task),
         log_response=True,
         do_xcom_push=True,
     )
@@ -51,15 +55,20 @@ with DAG(
     @task.short_circuit()
     def has_files(response_text: str) -> bool:
         return len(extract_objects(response_text)) > 0
+    
+    get_worker_headers_task = MedplumHeaderOperator(
+        task_id="get_worker_headers_task",
+        scope=["airflow:spirometer"],
+    )
 
     run_worker = HttpOperator(
         task_id="run_worker_sqlite",
         http_conn_id="worker_sqlite",
         endpoint="/run/spirometer",
         method="GET",
-        headers=HEADERS,
+        headers=XComArg(get_worker_headers_task),
         log_response=True,
         # response_check=lambda r: r.ok and r.json().get("status") == "success",
     )
 
-    list_objects >> has_files(list_objects.output) >> run_worker
+    get_ingestion_headers_task >> list_objects >> has_files(list_objects.output) >> get_worker_headers_task >> run_worker

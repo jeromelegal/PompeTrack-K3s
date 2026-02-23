@@ -111,6 +111,12 @@ apply_dir_ordered deploy/namespaces/medplum/ingress
 apply_dir_ordered deploy/namespaces/pompetrack-core/ingress
 apply_dir_ordered deploy/namespaces/airflow/ingress
 
+# Copy DAGs to Airflow PVC
+echo "==> Copy DAGs to Airflow PVC"
+kubectl -n airflow wait --for=condition=Available deployment/airflow-dag-processor --timeout=120s
+POD=$(kubectl -n airflow get pod -l component=dag-processor -o jsonpath='{.items[0].metadata.name}')
+kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
+
 # Verify
 echo "==> Done"
 kubectl get pods -n medplum

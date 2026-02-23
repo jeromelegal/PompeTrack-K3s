@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-airflow-internal
+  namespace: airflow
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/airflow/sa/airflow-webserver
+        - cluster.local/ns/airflow/sa/airflow-scheduler
+        - cluster.local/ns/airflow/sa/airflow-worker
