@@ -40,6 +40,8 @@ kubectl delete namespace airflow
 
 ./deploy/apply.sh
 
+./deploy/apply_airflow.sh
+
 kubectl get all -n medplum
 kubectl get all -n pompetrack-core
 ```
@@ -48,15 +50,15 @@ kubectl get all -n pompetrack-core
 
 1. éditer les dags dans `apps/dags/`
 
-2. copie des fichiers dans le PVC par le scheduler :
+2. copie des fichiers dans le PVC par le dag-processor :
 ```bash
-kubectl -n airflow get pod -l component=scheduler \
--o jsonpath='{.items[0].metadata.name}'
+POD=$(kubectl -n airflow get pod -l component=dag-processor -o jsonpath='{.items[0].metadata.name}')
+kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
 ```
 
-3. restart le scheduler :
+3. restart le dag-processor :
 ```bash
-kubectl -n airflow rollout restart deployment airflow-scheduler
+kubectl -n airflow rollout restart deployment airflow-dag-processor
 ```
 
 ---
