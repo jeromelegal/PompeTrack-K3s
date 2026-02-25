@@ -9,13 +9,15 @@ spec:
       app: ingestion
   action: ALLOW
   rules:
-  # streamlit -> ingestion port 80 uniquement
+
   - from:
     - source:
         principals:
         - cluster.local/ns/pompetrack-core/sa/streamlit
         - cluster.local/ns/pompetrack-core/sa/worker-fhir
         - cluster.local/ns/pompetrack-core/sa/worker-sqlite
+        - cluster.local/ns/airflow/sa/airflow-dag-processor
+        - cluster.local/ns/airflow/sa/airflow-scheduler
     to:
     - operation:
         ports: ["80"]

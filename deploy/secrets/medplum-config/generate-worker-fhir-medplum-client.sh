@@ -14,7 +14,7 @@ WORKER_STREAM_OUT_FILE="deploy/secrets/pompetrack-core/worker-stream-medplum-cli
 WORKER_SQLITE_OUT_FILE="deploy/secrets/pompetrack-core/worker-sqlite-medplum-client.env"
 STREAMLIT_OUT_FILE="deploy/secrets/pompetrack-core/streamlit-medplum-client.env"
 INGESTION_OUT_FILE="deploy/secrets/pompetrack-core/ingestion-medplum-client.env"
-AIRFLOW_OUT_FILE="deploy/secrets/pompetrack-core/airflow-medplum-client.env"
+AIRFLOW_OUT_FILE="deploy/secrets/airflow/airflow-medplum-client.env"
 IDS_OUT_FILE="deploy/outputs/pompetrack-core/medplum-ids.env"
 
 # NEW: Global file containing all client_ids
@@ -288,7 +288,7 @@ ensure_client "worker-stream"  "$WORKER_STREAM_OUT_FILE"  "PompeTrack worker-str
 ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual ingest:generic download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite"
 ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sqlite (machine-to-machine)"  "object:list object:move object:delete download:object ingest:spirometer"
 ensure_client "ingestion"      "$INGESTION_OUT_FILE"      "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
-ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list worker:iphone worker:spirometer worker:manual"
+ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list airflow:iphone airflow:manual airflow:spirometer"
 
 # Write one env file containing all client IDs + explicit TOKEN_AUDIENCE_* vars
 echo "==> Write global Client IDs file: ${CLIENT_IDS_OUT_FILE}"

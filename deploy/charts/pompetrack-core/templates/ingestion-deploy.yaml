@@ -48,6 +48,8 @@ spec:
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_STREAMLIT
             - name: TOKEN_AUDIENCE_WORKER_SQLITE_FILE
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_WORKER_SQLITE
+            - name: TOKEN_AUDIENCE_AIRFLOW_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
 
           volumeMounts:
             - name: minio-creds
@@ -91,3 +93,5 @@ spec:
                 path: TOKEN_AUDIENCE_STREAMLIT
               - key: TOKEN_AUDIENCE_WORKER_SQLITE
                 path: TOKEN_AUDIENCE_WORKER_SQLITE
+              - key: TOKEN_AUDIENCE_AIRFLOW
+                path: TOKEN_AUDIENCE_AIRFLOW

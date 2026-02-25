@@ -33,14 +33,34 @@ sudo systemctl start k3s
 ```bash
 helm -n pompetrack-core uninstall pompetrack-core || true
 helm -n medplum uninstall medplum || true
+helm -n airflow uninstall airflow || true
 kubectl delete namespace pompetrack-core
 kubectl delete namespace medplum
+kubectl delete namespace airflow
 
 ./deploy/apply.sh
+
+./deploy/apply_airflow.sh
 
 kubectl get all -n medplum
 kubectl get all -n pompetrack-core
 ```
+---
+# DAGS Airflow :
+
+1. éditer les dags dans `apps/dags/`
+
+2. copie des fichiers dans le PVC par le dag-processor :
+```bash
+POD=$(kubectl -n airflow get pod -l component=dag-processor -o jsonpath='{.items[0].metadata.name}')
+kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
+```
+
+3. restart le dag-processor :
+```bash
+kubectl -n airflow rollout restart deployment airflow-dag-processor
+```
+
 ---
 
 ## Verifs istio :
