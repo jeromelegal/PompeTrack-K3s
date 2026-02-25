@@ -290,8 +290,6 @@ ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sql
 ensure_client "ingestion"      "$INGESTION_OUT_FILE"      "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
 ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list airflow:iphone airflow:manual airflow:spirometer"
 
-echo "Hello World!"  | tee -a abc.txt >/dev/null
-
 # Write one env file containing all client IDs + explicit TOKEN_AUDIENCE_* vars
 echo "==> Write global Client IDs file: ${CLIENT_IDS_OUT_FILE}"
 mkdir -p "$(dirname "$CLIENT_IDS_OUT_FILE")"
