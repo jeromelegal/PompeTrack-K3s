@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from airflow import DAG
 from airflow.sdk import task
 from airflow.providers.http.operators.http import HttpOperator
-from airflow.operators.python import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from libs.medplum_header_operator import MedplumHeaderOperator 
 from airflow.models.xcom_arg import XComArg
  
@@ -43,7 +43,7 @@ with DAG(
 
     list_objects = HttpOperator(
         task_id="list_objects",
-        http_conn_id="ingestion_api",
+        http_conn_id="ingestion",
         endpoint=f"/bucket/object-list/{BUCKET}",
         method="GET",
         headers=XComArg(get_ingestion_headers_task),
@@ -62,7 +62,7 @@ with DAG(
 
     run_worker = HttpOperator(
         task_id="run_worker_manual",
-        http_conn_id="worker_health",
+        http_conn_id="worker_fhir",
         endpoint="/run/manual",
         method="GET",
         headers=XComArg(get_worker_headers_task),

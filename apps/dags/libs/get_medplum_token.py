@@ -16,10 +16,7 @@ logger = logging.getLogger("get_medplum_token")
 CLIENT_ID = os.getenv("MEDPLUM_CLIENT_ID")
 CLIENT_SECRET = os.getenv("MEDPLUM_CLIENT_SECRET")
 
-BASE_URL = os.getenv(
-    "MEDPLUM_BASE_URL",
-    "http://medplum-mesh.medplum.svc.cluster.local:8103",
-).rstrip("/")
+BASE_URL = "http://medplum-mesh.medplum.svc.cluster.local:8103"
 
 TOKEN_ENDPOINT = os.getenv(
     "MEDPLUM_TOKEN_ENDPOINT",
