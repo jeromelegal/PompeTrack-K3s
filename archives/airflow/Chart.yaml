@@ -1,0 +1,11 @@
+apiVersion: v2
+name: airflow
+description: Apache Airflow umbrella chart (KubernetesExecutor)
+type: application
+version: 0.1.0
+appVersion: "3.0.0"
+
+dependencies:
+  - name: postgresql
+    version: "16.4.7"
+    repository: "https://charts.bitnami.com/bitnami"

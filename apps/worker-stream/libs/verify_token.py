@@ -4,6 +4,7 @@ import time
 import logging
 import urllib.request
 import json
+import copy
 from libs.secrets_utils import read_secret_from_file
 import jwt
 from jwt.algorithms import ECAlgorithm
@@ -166,4 +167,4 @@ def verify_token(token: str, required_scope: str | None = None) -> dict:
         payload.get("sub"),
         payload.get("scope"),
     )
-    return payload
+    return copy.deepcopy(payload)
