@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`grafana.lan`)
+      kind: Rule
+      middlewares:
+        - name: lan-only
+          namespace: monitoring 
+      services:
+        - name: grafana
+          port: 80

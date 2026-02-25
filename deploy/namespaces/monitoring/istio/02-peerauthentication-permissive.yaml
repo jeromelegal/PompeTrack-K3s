@@ -1,0 +1,62 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: medplum-metrics-permissive
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app: exporter
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9187:   # postgres-exporter
+      mode: PERMISSIVE
+    9121:   # redis-exporter
+      mode: PERMISSIVE
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: airflow-metrics-permissive
+  namespace: airflow
+spec:
+  selector:
+    matchLabels:
+      app: exporter
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9187:   # postgres-exporter
+      mode: PERMISSIVE
+    9125:   # statsd-exporter
+      mode: PERMISSIVE
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: pompetrack-core-metrics-permissive
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: exporter
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9000:   # minio metrics
+      mode: PERMISSIVE
+
+---
+# Monitoring namespace : PERMISSIVE global
+# Prometheus lui-même n'a pas besoin de mTLS pour être scrapé
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: monitoring-permissive
+  namespace: monitoring
+spec:
+  mtls:
+    mode: PERMISSIVE

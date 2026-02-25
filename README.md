@@ -296,3 +296,13 @@ Tools informations :
 * Istio :
 “Istio version: 1.28.3”
 “istioctl installé dans /usr/local/bin (symlink vers ~/tools/istio/istio-1.28.3/bin/istioctl)
+
+
+
+
+---
+# Config traefik pour envoi de metrics :
+
+```bash
+sudo cp traefik-config.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+```

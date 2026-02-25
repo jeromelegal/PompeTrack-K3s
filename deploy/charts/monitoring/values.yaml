@@ -1,0 +1,345 @@
+global:
+  domain: "grafana.lan"  # Pour l'ingress Grafana
+
+# 1. kube-prometheus-stack (Prometheus + Grafana + Alertmanager)
+kube-prometheus-stack:
+  enabled: true
+  fullnameOverride: "prometheus"
+  commonLabels:
+    monitoring: "true"
+
+  # ============================================================
+  # PROMETHEUS OPERATOR
+  # ============================================================    
+  prometheusOperator:
+    enabled: true
+    # Surveiller tous les namespaces
+    admissionWebhooks:
+      patch:
+        podAnnotations:
+          sidecar.istio.io/inject: "true"
+      createSecretJob:
+        podAnnotations:
+          sidecar.istio.io/inject: "true"
+    namespaces:
+      releaseNamespace: true
+      additional:
+        - medplum
+        - pompetrack-core
+        - airflow
+        - kube-system
+  # ============================================================
+  # PROMETHEUS
+  # ============================================================
+  prometheus:
+    prometheusSpec:
+      serviceMonitorSelectorNilUsesHelmValues: false  # Permet de scraper les ServiceMonitor externes
+      podMonitorSelectorNilUsesHelmValues: false      # Permet de scraper les PodMonitor externes
+      retention: 30d  
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 200m
+        limits:
+          memory: 2Gi
+          cpu: 1000m                                # Rétention des données
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: local-path
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+      additionalScrapeConfigs:
+        - job_name: 'proxmox'
+          static_configs:
+            - targets:
+              - '192.168.2.5:9221'
+          metrics_path: /pve
+          params:
+            module: [default]
+          relabel_configs:
+            - source_labels: [__address__]
+              target_label: __param_target
+            - source_labels: [__param_target]
+              target_label: instance
+            - target_label: __address__
+              replacement: '192.168.2.5:9221'
+
+        - job_name: 'traefik'
+          static_configs:
+            - targets:
+              # Traefik dans kube-system, port métriques 9100
+              - 'traefik.kube-system.svc.cluster.local:9100'
+                
+    # Configuration des règles d'alerte (optionnel)
+    additionalAlertManagerConfigs:
+      - name: alertmanager-config
+        # ... (config Slack/Email)
+
+  # ============================================================
+  # GRAFANA
+  # ============================================================
+  grafana:
+    enabled: true
+    fullnameOverride: "grafana"
+    admin:
+      existingSecret: "grafana-admin-secret"  # Nom du Secret créé précédemment
+      userKey: "admin-user"                   # Clé dans le Secret pour le nom d'utilisateur (optionnel, par défaut "admin-user")
+      passwordKey: "admin-password"           # Clé dans le Secret pour le mot de passe (optionnel, par défaut "admin-password")
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      hosts:
+        - grafana.lan
+        #cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Si tu utilises cert-manager
+    # Dashboards pré-configurés
+    defaultDashboardsEnabled: true
+
+    sidecar:
+      datasources:
+        enabled: true
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: 'default'
+            orgId: 1
+            folder: 'General'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/default
+          - name: 'kubernetes'
+            orgId: 1
+            folder: 'Kubernetes'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/kubernetes
+          - name: 'databases'
+            orgId: 1
+            folder: 'Databases'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/databases
+          - name: 'infrastructure'
+            orgId: 1
+            folder: 'Infrastructure'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/infrastructure
+    dashboards:
+      kubernetes:
+        # K8s Cluster Overview
+        k8s-cluster:
+          gnetId: 7249
+          revision: 1
+          datasource: Prometheus
+        # K8s Pod Resources
+        k8s-pods:
+          gnetId: 747
+          revision: 1
+          datasource: Prometheus
+        # Node Exporter Full
+        node-exporter:
+          gnetId: 1860
+          revision: 37
+          datasource: Prometheus
+      databases:
+        # PostgreSQL
+        postgresql:
+          gnetId: 9628
+          revision: 7
+          datasource: Prometheus
+        # Redis
+        redis:
+          gnetId: 11835
+          revision: 1
+          datasource: Prometheus
+      infrastructure:
+        # Proxmox
+        proxmox:
+          gnetId: 10347
+          revision: 5
+          datasource: Prometheus
+        # Traefik
+        traefik:
+          gnetId: 17346
+          revision: 9
+          datasource: Prometheus
+        # MinIO
+        minio:
+          gnetId: 13502
+          revision: 25
+          datasource: Prometheus
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    # Grafana.ini - config Telegram notifications
+    grafana.ini:
+      server:
+        root_url: "http://grafana.lan"
+      unified_alerting:
+        enabled: true
+
+  # ============================================================
+  # ALERTMANAGER
+  # ============================================================
+  alertmanager:
+    enabled: true
+
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: local-path
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 2Gi
+
+    config:
+      global:
+        resolve_timeout: 5m
+
+      route:
+        group_by: ['alertname', 'namespace']
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        receiver: 'telegram'
+        routes:
+          - match:
+              severity: critical
+            receiver: 'telegram'
+            repeat_interval: 1h
+          - match:
+              severity: warning
+            receiver: 'telegram'
+            repeat_interval: 4h
+
+      receivers:
+        - name: 'telegram'
+          telegram_configs:
+            - bot_token: 'TELEGRAM_BOT_TOKEN'    # Remplacer
+              chat_id: TELEGRAM_CHAT_ID           # Remplacer (number)
+              message: |
+                {{ range .Alerts }}
+                🚨 *{{ .Annotations.summary }}*
+                📋 Severity: {{ .Labels.severity }}
+                🏷️ Namespace: {{ .Labels.namespace }}
+                📝 {{ .Annotations.description }}
+                {{ end }}
+              parse_mode: 'Markdown'
+
+      inhibit_rules:
+        - source_match:
+            severity: 'critical'
+          target_match:
+            severity: 'warning'
+          equal: ['alertname', 'namespace']
+
+  # ============================================================
+  # NODE EXPORTER (DaemonSet sur chaque node)
+  # ============================================================
+  nodeExporter:
+    enabled: true
+
+  prometheus-node-exporter:
+    tolerations:
+      - operator: Exists
+
+    hostNetwork: false
+
+    containerPort: 9100
+    hostPort: null
+  # ============================================================
+  # KUBE STATE METRICS
+  # ============================================================
+  kubeStateMetrics:
+    enabled: true
+
+  # ============================================================
+  # COMPOSANTS K3s - ATTENTION spécificités K3s
+  # ============================================================
+
+  # K3s n'expose pas ces composants de la même façon que k8s vanilla
+  kubeApiServer:
+    enabled: true
+
+  kubeControllerManager:
+    enabled: false   # K3s : intégré, pas de service séparé
+
+  kubeScheduler:
+    enabled: false   # K3s : intégré
+
+  kubeProxy:
+    enabled: false   # K3s : utilise kube-router ou flannel intégré
+
+  kubeEtcd:
+    enabled: false   # K3s : utilise sqlite ou etcd intégré différemment
+
+  kubelet:
+    enabled: true
+    serviceMonitor:
+      # cAdvisor est intégré au kubelet dans K3s
+      cAdvisor: true
+      probesMetrics: true
+
+  # ============================================================
+  # DEFAULT RULES (alertes préconfigurées)
+  # ============================================================
+  defaultRules:
+    create: true
+    rules:
+      alertmanager: true
+      etcd: false          # K3s spécifique
+      configReloaders: true
+      general: true
+      k8s: true
+      kubeApiserverAvailability: true
+      kubeApiserverBurnrate: true
+      kubeApiserverHistogram: true
+      kubeApiserverSlos: true
+      kubeControllerManager: false  # K3s
+      kubelet: true
+      kubeProxy: false              # K3s
+      kubePrometheusGeneral: true
+      kubePrometheusNodeRecording: true
+      kubernetesApps: true
+      kubernetesResources: true
+      kubernetesStorage: true
+      kubernetesSystem: true
+      kubeSchedulerAlerting: false  # K3s
+      kubeSchedulerRecording: false # K3s
+      kubeStateMetrics: true
+      network: true
+      node: true
+      nodeExporterAlerting: true
+      nodeExporterRecording: true
+      prometheus: true
+      prometheusOperator: true
+
+postgres-exporter:
+  enabled: false  # Désactivé ici, car géré par namespace (voir ci-dessous)
+
+redis-exporter:
+  enabled: false  # Désactivé ici, car géré par namespace
+
+statsd-exporter:
+  enabled: false  # Désactivé ici, car géré par namespace
+
+# 3. Configuration des exporters par namespace (via templates/)
+# Voir section 5 ci-dessous.
