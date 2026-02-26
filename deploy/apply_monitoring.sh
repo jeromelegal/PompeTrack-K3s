@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-helm -n monitoring uninstall airflow || true
+helm -n monitoring uninstall monitoring || true
 kubectl delete namespace monitoring
 
 apply_dir_ordered() {

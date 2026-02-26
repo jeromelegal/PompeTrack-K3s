@@ -42,7 +42,7 @@ kube-prometheus-stack:
           cpu: 200m
         limits:
           memory: 2Gi
-          cpu: 1000m                                # Rétention des données
+          cpu: 1000m
       storageSpec:
         volumeClaimTemplate:
           spec:
@@ -54,18 +54,11 @@ kube-prometheus-stack:
       additionalScrapeConfigs:
         - job_name: 'proxmox'
           static_configs:
-            - targets:
-              - '192.168.2.5:9221'
-          metrics_path: /pve
+            - targets: ['192.168.2.5:9221']
+          metrics_path: /metrics
           params:
             module: [default]
-          relabel_configs:
-            - source_labels: [__address__]
-              target_label: __param_target
-            - source_labels: [__param_target]
-              target_label: instance
-            - target_label: __address__
-              replacement: '192.168.2.5:9221'
+            target: ['192.168.2.5']
 
         - job_name: 'traefik'
           static_configs:

@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: proxmox-external
+  namespace: monitoring
+spec:
+  hosts:
+    - proxmox.local
+  addresses:
+    - 192.168.2.5
+  ports:
+    - number: 9221
+      name: http
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: STATIC
+  endpoints:
+    - address: 192.168.2.5
