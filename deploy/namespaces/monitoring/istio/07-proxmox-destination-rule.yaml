@@ -1,0 +1,10 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: proxmox-disable-mtls
+  namespace: monitoring
+spec:
+  host: proxmox.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE

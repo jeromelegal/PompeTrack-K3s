@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-node-exporter-from-prometheus
+  namespace: monitoring
+spec:
+  podSelector: 
+    matchLabels:
+          app.kubernetes.io/name: prometheus-node-exporter
+  policyTypes: ["Ingress"]
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+
+    - protocol: TCP
+      port: 9100
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-node-exporter-to-prometheus
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes: ["Egress"]
+  egress:
+  - to:
+    - podSelector: 
+        matchLabels:
+          app.kubernetes.io/name: prometheus-node-exporter
+    ports:
+    - protocol: TCP
+      port: 9100
