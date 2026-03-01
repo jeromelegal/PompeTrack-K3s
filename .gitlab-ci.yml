@@ -65,3 +65,12 @@ build_worker_stream:
   rules:
     - changes:
         - apps/worker-stream/**
+
+build_minio-job-container:
+  extends: .build_app
+  variables:
+    APP_NAME: minio-job-container
+    APP_PATH: apps/minio-job-container
+  rules:
+    - changes:
+        - apps/minio-job-container/**
