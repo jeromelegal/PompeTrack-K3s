@@ -1,10 +1,20 @@
-FROM minio/mc:RELEASE.2025-08-13T08-35-41Z-cpuv1
+FROM alpine:3.19
 
-USER root
+# Installer dépendances
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    bash
 
-# Installer kubectl
-RUN curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl" \
-    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+# Installer kubectl (version stable automatiquement)
+RUN KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt) \
+    && curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
+    && install -m 0755 kubectl /usr/local/bin/kubectl \
     && rm kubectl
 
-USER 1000
+# Installer mc
+RUN curl -LO https://dl.min.io/client/mc/release/linux-amd64/mc \
+    && install -m 0755 mc /usr/local/bin/mc \
+    && rm mc
+
+ENTRYPOINT ["/bin/sh"]
