@@ -35,6 +35,11 @@ airflow:
           cpu: 800m
           memory: 1Gi
 
+  statsd:
+    enabled: true
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
   redis:
     enabled: false
 

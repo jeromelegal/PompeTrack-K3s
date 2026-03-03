@@ -1,22 +1,39 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-prometheus-scrape-airflow
+  name: allow-airflow-metrics-from-prometheus
   namespace: airflow
 spec:
   podSelector: {}
-  policyTypes:
-    - Ingress
+  policyTypes: ["Ingress"]
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: prometheus
-      ports:
-        - protocol: TCP
-          port: 9187   # postgres-exporter
-        - protocol: TCP
-          port: 9125   # statsd-exporter
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+      - protocol: TCP
+        port: 9102   # statsd-exporter
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-airflow-metrics-to-prometheus
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes: ["Egress"]
+  egress:
+  - to:
+    - namespaceSelector: {}     # tous namespaces
+      podSelector: {}
+    ports:
+      - protocol: TCP
+        port: 9102   # statsd-exporte

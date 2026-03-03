@@ -28,9 +28,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    9187:   # postgres-exporter
-      mode: PERMISSIVE
-    9125:   # statsd-exporter
+    9102:   # postgres-exporter
       mode: PERMISSIVE
 
 ---

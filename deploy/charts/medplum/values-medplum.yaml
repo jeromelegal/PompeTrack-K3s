@@ -100,3 +100,23 @@ redis:
   auth:
     enabled: false
   architecture: standalone
+
+
+postgres-exporter:
+  enabled: true
+  fullnameOverride: "postgres-exporter"
+  config:
+    datasource:
+      host: "postgres.medplum.svc.cluster.local"
+      user: "medplum"
+      existingSecret: pompetrack-postgres-auth
+      secretKeys:
+        userPasswordKey: password
+      port: "5432"
+      database: "medplum"
+      sslmode: "disable"
+
+redis-exporter:
+  enabled: true
+  fullnameOverride: "redis-exporter"
+  redisAddress: "redis://redis.medplum.svc.cluster.local:6379"
