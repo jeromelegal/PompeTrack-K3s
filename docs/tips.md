@@ -47,6 +47,11 @@ kubectl delete namespace monitoring
 kubectl get all -n medplum
 kubectl get all -n pompetrack-core
 ```
+
+```bash
+helm upgrade monitoring prometheus-community/kube-prometheus-stack   -n monitoring   -f deploy/charts/monitoring/values.yaml
+```
+
 ---
 # DAGS Airflow :
 
@@ -61,6 +66,14 @@ kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
 3. restart le dag-processor :
 ```bash
 kubectl -n airflow rollout restart deployment airflow-dag-processor
+```
+
+---
+# Commande **magique** pour trouver les configs par défaut des charts helm :
+
+Exemple pour Airflow
+```bash
+helm show values apache-airflow/airflow > default-values.yaml
 ```
 
 ---

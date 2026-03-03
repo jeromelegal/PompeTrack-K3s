@@ -15,4 +15,5 @@ spec:
         - "8080"    # kube-state-metrics, alertmanager, prometheus
         - "9090"    # Prometheus
         - "9093"    # Alertmanager
-        - "9100"    # node-exporter
+        - "9100"
+        - "10250"

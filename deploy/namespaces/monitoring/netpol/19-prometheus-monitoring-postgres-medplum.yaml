@@ -1,12 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-traefik-metrics-from-prometheus
-  namespace: kube-system
+  name: allow-pg-medplum-metrics-from-prometheus
+  namespace: medplum
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: traefik
+      app.kubernetes.io/name: prometheus-postgres-exporter
   policyTypes: ["Ingress"]
   ingress:
   - from:
@@ -18,14 +18,14 @@ spec:
           app.kubernetes.io/name: prometheus
     ports:
     - protocol: TCP
-      port: 8082
+      port: 9187
 
 ---
 
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-traefik-metrics-to-prometheus
+  name: allow-pg-medplum-metrics-to-prometheus
   namespace: monitoring
 spec:
   podSelector:
@@ -37,7 +37,7 @@ spec:
     - namespaceSelector: {}     # tous namespaces
       podSelector:
         matchLabels:
-          app.kubernetes.io/name: traefik
+          app.kubernetes.io/name: prometheus-postgres-exporter
     ports:
     - protocol: TCP
-      port: 8082
+      port: 9187

@@ -1,12 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-traefik-metrics-from-prometheus
+  name: allow-coredns-metrics-from-prometheus
   namespace: kube-system
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: traefik
+      k8s-app: kube-dns
   policyTypes: ["Ingress"]
   ingress:
   - from:
@@ -18,14 +18,14 @@ spec:
           app.kubernetes.io/name: prometheus
     ports:
     - protocol: TCP
-      port: 8082
+      port: 9153
 
 ---
 
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-traefik-metrics-to-prometheus
+  name: allow-coredns-metrics-to-prometheus
   namespace: monitoring
 spec:
   podSelector:
@@ -37,7 +37,7 @@ spec:
     - namespaceSelector: {}     # tous namespaces
       podSelector:
         matchLabels:
-          app.kubernetes.io/name: traefik
+          k8s-app: kube-dns
     ports:
     - protocol: TCP
-      port: 8082
+      port: 9153

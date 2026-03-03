@@ -13,5 +13,5 @@ spec:
         - name: lan-only
           namespace: monitoring 
       services:
-        - name: grafana
+        - name: monitoring-grafana
           port: 80
