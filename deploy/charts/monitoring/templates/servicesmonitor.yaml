@@ -4,6 +4,8 @@ kind: ServiceMonitor
 metadata:
   name: postgres-exporter-medplum
   namespace: monitoring
+  labels:
+    release: monitoring
 spec:
   selector:
     matchLabels:
@@ -15,16 +17,15 @@ spec:
     - port: http
       interval: 30s
       path: /metrics
-      relabelings:
-        - sourceLabels: [__meta_kubernetes_service_name]
-          targetLabel: __address__
-          replacement: medplum-prometheus-postgres-exporter.medplum.svc.cluster.local:9187
+
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: redis-exporter-medplum
   namespace: monitoring
+  labels:
+    release: monitoring
 spec:
   selector:
     matchLabels:
@@ -36,10 +37,6 @@ spec:
     - port: http
       interval: 30s
       path: /metrics
-      relabelings:
-        - sourceLabels: [__meta_kubernetes_service_name]
-          targetLabel: __address__
-          replacement: medplum-prometheus-redis-exporter.medplum.svc.cluster.local:9121
 ---
 # apiVersion: monitoring.coreos.com/v1
 # kind: ServiceMonitor
@@ -112,6 +109,8 @@ kind: ServiceMonitor
 metadata:
   name: minio
   namespace: monitoring
+  labels:
+    release: monitoring
 spec:
   selector:
     matchLabels:
@@ -130,14 +129,13 @@ spec:
           replacement: pompetrack-core-minio.pompetrack-core.svc.cluster.local:9000
 
 ---
-
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: statsd-exporter-airflow
   namespace: monitoring
   labels:
-    release: kube-prometheus-stack
+    release: monitoring
 spec:
   selector:
     matchLabels:
