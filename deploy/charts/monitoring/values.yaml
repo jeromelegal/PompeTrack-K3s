@@ -1,0 +1,221 @@
+kube-prometheus-stack:
+
+  fullnameOverride: prometheus
+
+  ## ---------------------------
+  ## GLOBAL
+  ## ---------------------------
+  global:
+    rbac:
+      create: true
+
+  ## ---------------------------
+  ## PROMETHEUS
+  ## ---------------------------
+  prometheus:
+    prometheusSpec:
+      replicas: 1
+
+      retention: 10d
+
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: "local-path"
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 200m
+        limits:
+          memory: 2Gi
+          cpu: 1000m
+
+      serviceMonitorSelector: {}
+      serviceMonitorNamespaceSelector: {}
+      podMonitorSelector: {}
+      podMonitorNamespaceSelector: {}
+
+      additionalScrapeConfigs:
+        - job_name: 'proxmox'
+          static_configs:
+            - targets: ['192.168.2.5:9221']
+          metrics_path: /metrics
+          params:
+            module: [default]
+            target: ['192.168.2.5']
+
+        - job_name: 'traefik'
+          static_configs:
+            - targets:
+              # Traefik dans kube-system, port métriques 8082
+              - 'traefik.kube-system.svc.cluster.local:8082'
+
+      podMetadata:
+        annotations:
+          traffic.sidecar.istio.io/excludeOutboundPorts: "9100"
+
+  ## ---------------------------
+  ## ALERTMANAGER
+  ## ---------------------------
+  alertmanager:
+    alertmanagerSpec:
+      replicas: 1
+
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: "local-path"
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 2Gi
+
+  ## ---------------------------
+  ## GRAFANA
+  ## ---------------------------
+  grafana:
+    enabled: true
+
+    # adminUser: admin
+    # adminPassword: admin
+    admin:
+      existingSecret: "grafana-admin-secret"  # Nom du Secret créé précédemment
+      userKey: "admin-user"                   # Clé dans le Secret pour le nom d'utilisateur (optionnel, par défaut "admin-user")
+      passwordKey: "admin-password"
+
+    persistence:
+      enabled: true
+      storageClassName: "local-path"
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
+
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+
+    service:
+      type: NodePort
+      nodePort: 30007
+
+    defaultDashboardsEnabled: true
+    sidecar:
+      datasources:
+        enabled: true
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: 'default'
+            orgId: 1
+            folder: 'General'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/default
+          - name: 'kubernetes'
+            orgId: 1
+            folder: 'Kubernetes'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/kubernetes
+          - name: 'databases'
+            orgId: 1
+            folder: 'Databases'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/databases
+          - name: 'infrastructure'
+            orgId: 1
+            folder: 'Infrastructure'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/infrastructure
+    dashboards:
+      kubernetes:
+        # K8s Cluster Overview
+        k8s-cluster:
+          gnetId: 7249
+          revision: 1
+          datasource: Prometheus
+        # K8s Pod Resources
+        k8s-pods:
+          gnetId: 747
+          revision: 1
+          datasource: Prometheus
+        # Node Exporter Full
+        node-exporter:
+          gnetId: 1860
+          revision: 37
+          datasource: Prometheus
+      databases:
+        # PostgreSQL
+        postgresql:
+          gnetId: 9628
+          revision: 7
+          datasource: Prometheus
+        # Redis
+        redis:
+          gnetId: 11835
+          revision: 1
+          datasource: Prometheus
+      infrastructure:
+        # Proxmox
+        proxmox:
+          gnetId: 10347
+          revision: 5
+          datasource: Prometheus
+        # Traefik
+        traefik:
+          gnetId: 17346
+          revision: 9
+          datasource: Prometheus
+        # MinIO
+        minio:
+          gnetId: 13502
+          revision: 25
+          datasource: Prometheus
+
+  ## ---------------------------
+  ## NODE EXPORTER
+  ## ---------------------------
+  nodeExporter:
+    enabled: true
+    hostNetwork: false
+
+  ## ---------------------------
+  ## KUBE STATE METRICS
+  ## ---------------------------
+  kubeStateMetrics:
+    enabled: true
+
+  ## ---------------------------
+  ## COMPONENTS K3s CLEANUP
+  ## ---------------------------
+  kubeControllerManager:
+    enabled: false
+
+  kubeScheduler:
+    enabled: false
+
+  kubeProxy:
+    enabled: false
+
+  kubeEtcd:
+    enabled: false

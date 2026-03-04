@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: node-exporter-direct
+  namespace: monitoring
+spec:
+  hosts:
+  - node-exporter.local
+  ports:
+  - number: 9100
+    name: http
+    protocol: HTTP
+  resolution: STATIC
+  location: MESH_EXTERNAL
+  endpoints:
+  - address: 192.168.2.88

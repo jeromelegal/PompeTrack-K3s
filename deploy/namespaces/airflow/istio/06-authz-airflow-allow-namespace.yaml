@@ -1,10 +1,14 @@
+# airflow-allow-namespace-patch.yaml
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: airflow-allow-namespace
   namespace: airflow
 spec:
+  action: ALLOW
   rules:
   - from:
     - source:
-        namespaces: ["airflow"]
+        namespaces:
+        - airflow
+        - monitoring

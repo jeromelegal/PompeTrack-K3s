@@ -213,3 +213,4 @@ istio-*/
 *.env
 .env
 .env.*
+archives/

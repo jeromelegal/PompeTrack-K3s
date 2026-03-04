@@ -1,0 +1,110 @@
+# monitoring/templates/servicemonitors.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-exporter-medplum
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-postgres-exporter
+  namespaceSelector:
+    matchNames:
+      - medplum
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-exporter-medplum
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-redis-exporter
+  namespaceSelector:
+    matchNames:
+      - medplum
+  endpoints:
+    - port: redis-exporter
+      interval: 30s
+      path: /metrics
+      
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: minio
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  namespaceSelector:
+    matchNames:
+      - pompetrack-core
+  endpoints:
+    - port: http
+      scheme: http
+      path: /minio/v2/metrics/cluster
+      interval: 30s
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: __address__
+          replacement: pompetrack-core-minio.pompetrack-core.svc.cluster.local:9000
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: statsd-exporter-airflow
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      component: statsd
+      release: airflow
+      tier: airflow
+  namespaceSelector:
+    matchNames:
+      - airflow
+  endpoints:
+    - port: statsd-scrape
+      interval: 30s
+      path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-exporter-airflow
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-postgres-exporter
+  namespaceSelector:
+    matchNames:
+      - airflow
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: __address__
+          replacement: airflow-postgres-exporter.airflow.svc.cluster.local

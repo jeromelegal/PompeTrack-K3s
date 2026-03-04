@@ -1,0 +1,37 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  annotations:
+    objectset.rio.cattle.io/applied: H4sIAAAAAAAA/4SRvW4qMRCFX8WaeuFeSPizlCKiiZQmVao0Y3uWddY7s7JniRDi3aMVQQoFoTzHOp8/y0fAPr5TLlEYLDSUuqlH1UTTKP/2M6igjRzAwgulbttg1q1wHXdQQUeKARXBHgGZRVGjcBmjuE/yWkinOcovYBxJUN08ly+mPNntW7DQPpQrlcq8Rg5PzyEI30UwdgQWNCPVsZ34i/P9VenRj9N2cDQph6LUwamChI7Sn29rsDRgAd16tfAU6hmu1nP673G5WfoNbtxiVrv5KmCNNT2GEXptCefihkDpyY/X7zENVLbCSqxgx1/I0Rf7wcb0WTrShoZzNIYYXaJgjeaBLpXmw5tEVmt+tnA6fQcAAP//dvj3aQgCAAA
+    objectset.rio.cattle.io/id: ""
+    objectset.rio.cattle.io/owner-gvk: k3s.cattle.io/v1, Kind=Addon
+    objectset.rio.cattle.io/owner-name: traefik-config
+    objectset.rio.cattle.io/owner-namespace: kube-system
+  creationTimestamp: "2026-02-25T10:46:29Z"
+  generation: 4
+  labels:
+    objectset.rio.cattle.io/hash: ab875cedf1a782e0ca696c9a9b51fb27dafafe4d
+  name: traefik
+  namespace: kube-system
+  resourceVersion: "2170027"
+  uid: 35b62fe2-a841-4b56-926e-a2644e38e477
+spec:
+  failurePolicy: reinstall
+  valuesContent: |-
+    metrics:
+      prometheus:
+        enabled: true
+        entryPoint: metrics
+
+    ports:
+      web:
+        hostPort: 80
+      websecure:
+        hostPort: 443
+      metrics:
+        port: 8082
+        expose:
+          default: true
+        exposedPort: 8082
+        protocol: TCP
+

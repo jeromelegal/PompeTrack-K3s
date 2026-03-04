@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-airflow-metrics-from-prometheus
+  namespace: airflow
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress"]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+      - protocol: TCP
+        port: 9102   # statsd-exporter
+      - protocol: TCP
+        port: 9187   
+      - protocol: TCP
+        port: 80        
+
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-airflow-metrics-to-prometheus
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes: ["Egress"]
+  egress:
+  - to:
+    - namespaceSelector: {}     # tous namespaces
+      podSelector: {}
+    ports:
+      - protocol: TCP
+        port: 9102   # statsd-exporte
+      - protocol: TCP
+        port: 9187
+      - protocol: TCP
+        port: 80
