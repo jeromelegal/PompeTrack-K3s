@@ -6,29 +6,43 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: exporter
+      app.kubernetes.io/name: prometheus-postgres-exporter
   mtls:
     mode: STRICT
   portLevelMtls:
     9187:   # postgres-exporter
-      mode: PERMISSIVE
-    9121:   # redis-exporter
       mode: PERMISSIVE
 
 ---
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
-  name: airflow-metrics-permissive
+  name: medplum-redis-metrics-permissive
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-redis-exporter
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9121:   # redis-exporter
+      mode: PERMISSIVE
+      
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: airflow-postgres-exporter-permissive
   namespace: airflow
 spec:
   selector:
     matchLabels:
-      app: exporter
+      app.kubernetes.io/name: prometheus-postgres-exporter
   mtls:
     mode: STRICT
   portLevelMtls:
-    9102:   # postgres-exporter
+    9187:   # postgres-exporter
       mode: PERMISSIVE
 
 ---

@@ -12,3 +12,4 @@ spec:
         - cluster.local/ns/airflow/sa/airflow-webserver
         - cluster.local/ns/airflow/sa/airflow-scheduler
         - cluster.local/ns/airflow/sa/airflow-worker
+        - cluster.local/ns/monitoring/sa/prometheus-prometheus
