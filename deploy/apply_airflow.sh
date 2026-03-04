@@ -44,11 +44,7 @@ apply_dir_ordered deploy/namespaces/airflow/istio
 
 # Helm update
 echo "==> Helm deps"
-helm dependency update deploy/charts/medplum || true
-
-# Ids medplum create
-echo "==> Medplum bootstrap (project + worker-fhir client)"
-./deploy/secrets/medplum-config/generate-worker-fhir-medplum-client.sh
+helm dependency update deploy/charts/airflow || true
 
 # Secrets scripts
 echo "==> Airflow secrets"

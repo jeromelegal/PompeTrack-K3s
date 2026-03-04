@@ -1,10 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-airflow-metrics-from-prometheus
-  namespace: airflow
+  name: allow-redis-metrics-from-prometheus
+  namespace: medplum
 spec:
-  podSelector: {}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-redis-exporter
   policyTypes: ["Ingress"]
   ingress:
   - from:
@@ -15,20 +17,15 @@ spec:
         matchLabels:
           app.kubernetes.io/name: prometheus
     ports:
-      - protocol: TCP
-        port: 9102   # statsd-exporter
-      - protocol: TCP
-        port: 9187   
-      - protocol: TCP
-        port: 80        
-
+    - protocol: TCP
+      port: 9121
 
 ---
 
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-airflow-metrics-to-prometheus
+  name: allow-redis-metrics-to-prometheus
   namespace: monitoring
 spec:
   podSelector:
@@ -37,12 +34,12 @@ spec:
   policyTypes: ["Egress"]
   egress:
   - to:
-    - namespaceSelector: {}     # tous namespaces
-      podSelector: {}
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: medplum
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus-redis-exporter
     ports:
-      - protocol: TCP
-        port: 9102   # statsd-exporte
-      - protocol: TCP
-        port: 9187
-      - protocol: TCP
-        port: 80
+    - protocol: TCP
+      port: 9121
