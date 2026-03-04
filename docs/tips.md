@@ -298,3 +298,14 @@ Si ton nouveau pod est dans `medplum` (ou un ns dédié), alors tes netpols doiv
 * [ ] (Optionnel recommandé) AuthorizationPolicy sur ingestion autorisant le SA caller
 
 ---
+
+# Postgres :
+
+```bash
+# Info
+kubectl -n medplum exec -it $(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}') -- psql -U medplum -d medplum -c "\conninfo"
+
+
+# Liste des roles
+kubectl -n medplum exec -it $(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}') -- psql -U medplum -c "\du"
+```
