@@ -16,6 +16,7 @@ spec:
         - cluster.local/ns/pompetrack-core/sa/ingestion
         - cluster.local/ns/pompetrack-core/sa/minio-sa
         - cluster.local/ns/pompetrack-core/sa/minio-init
+        - cluster.local/ns/monitoring/sa/prometheus-prometheus
     to:
     - operation:
         ports: ["9000"]

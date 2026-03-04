@@ -1,6 +1,9 @@
-cddependencies:
+dependencies:
 - name: airflow
   repository: https://airflow.apache.org
   version: 1.19.0
-digest: sha256:b2f9af317a4f2282b01e35bd8097e82523f44c470764841ec3addfefbb273959
-generated: "2026-02-21T19:23:26.202573429Z"
+# - name: prometheus-postgres-exporter
+#   repository: https://prometheus-community.github.io/helm-charts
+#   version: 7.5.0
+digest: sha256:b5dea547b58e43e2aacce0035c0dad63518196e54df8651c04402a77bc47daf4
+generated: "2026-02-26T17:34:42.934387261Z"

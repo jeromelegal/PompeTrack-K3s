@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: monitoring-prometheus-admission-patch-permissive
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: kube-prometheus-stack-admission-patch
+  mtls:
+    mode: PERMISSIVE

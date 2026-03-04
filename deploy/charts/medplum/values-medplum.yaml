@@ -87,6 +87,7 @@ postgresql:
     existingSecret: pompetrack-postgres-auth
     secretKeys:
       userPasswordKey: password
+      adminPasswordKey: postgres-password
   primary:
     persistence:
       enabled: true
@@ -100,3 +101,23 @@ redis:
   auth:
     enabled: false
   architecture: standalone
+
+
+prometheus-postgres-exporter:
+  enabled: true
+  fullnameOverride: "medplum-postgres-exporter"
+  config:
+    datasource:
+      host: "medplum-postgresql.medplum.svc.cluster.local"
+      user: "postgres"
+      passwordSecret:
+        name: pompetrack-postgres-auth
+        key: postgres-password
+      port: "5432"
+      database: "medplum"
+      sslmode: disable
+
+redis-exporter:
+  enabled: true
+  fullnameOverride: "redis-exporter"
+  redisAddress: "redis://medplum-redis-master.medplum.svc.cluster.local:6379"

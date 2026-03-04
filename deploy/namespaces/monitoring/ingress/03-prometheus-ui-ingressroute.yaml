@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`prometheus.lan`)
+      kind: Rule
+      middlewares:
+        - name: lan-only
+          namespace: monitoring 
+      services:
+        - name: prometheus-prometheus
+          port: 9090

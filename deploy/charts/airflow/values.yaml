@@ -35,6 +35,11 @@ airflow:
           cpu: 800m
           memory: 1Gi
 
+  statsd:
+    enabled: true
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
   redis:
     enabled: false
 
@@ -117,3 +122,17 @@ airflow:
 
   podAnnotations:
     traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
+
+prometheus-postgres-exporter:
+  enabled: true
+  fullnameOverride: "airflow-postgres-exporter"
+  config:
+    datasource:
+      host: "airflow-postgresql.airflow.svc.cluster.local"
+      user: "postgres"
+      passwordSecret:
+        name: airflow-postgresql-auth
+        key: postgres-password
+      port: "5432"
+      database: "airflow"
+      sslmode: disable

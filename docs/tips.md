@@ -34,9 +34,11 @@ sudo systemctl start k3s
 helm -n pompetrack-core uninstall pompetrack-core || true
 helm -n medplum uninstall medplum || true
 helm -n airflow uninstall airflow || true
+helm -n monitoring uninstall monitoring || true
 kubectl delete namespace pompetrack-core
 kubectl delete namespace medplum
 kubectl delete namespace airflow
+kubectl delete namespace monitoring
 
 ./deploy/apply.sh
 
@@ -45,6 +47,11 @@ kubectl delete namespace airflow
 kubectl get all -n medplum
 kubectl get all -n pompetrack-core
 ```
+
+```bash
+helm upgrade monitoring prometheus-community/kube-prometheus-stack   -n monitoring   -f deploy/charts/monitoring/values.yaml
+```
+
 ---
 # DAGS Airflow :
 
@@ -59,6 +66,14 @@ kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
 3. restart le dag-processor :
 ```bash
 kubectl -n airflow rollout restart deployment airflow-dag-processor
+```
+
+---
+# Commande **magique** pour trouver les configs par défaut des charts helm :
+
+Exemple pour Airflow
+```bash
+helm show values apache-airflow/airflow > default-values.yaml
 ```
 
 ---
@@ -283,3 +298,14 @@ Si ton nouveau pod est dans `medplum` (ou un ns dédié), alors tes netpols doiv
 * [ ] (Optionnel recommandé) AuthorizationPolicy sur ingestion autorisant le SA caller
 
 ---
+
+# Postgres :
+
+```bash
+# Info
+kubectl -n medplum exec -it $(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}') -- psql -U medplum -d medplum -c "\conninfo"
+
+
+# Liste des roles
+kubectl -n medplum exec -it $(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}') -- psql -U medplum -c "\du"
+```
