@@ -25,7 +25,7 @@ appVersion: "0.1.0"
 
 dependencies:
   - name: medplum
-    version: "5.0.14"
+    version: "5.1.1"
     repository: "https://charts.medplum.com"
   - name: postgresql
     version: "18.2.4"

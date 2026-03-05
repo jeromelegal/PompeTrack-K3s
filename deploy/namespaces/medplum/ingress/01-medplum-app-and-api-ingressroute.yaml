@@ -18,7 +18,7 @@ spec:
     - web
   routes:
     # API: /api -> medplum-service:80 (targetPort 8103)
-    - match: Host(`app.phylcero.fr`) && PathPrefix(`/api`)
+    - match: Host(`medplum.phylcero.fr`) && PathPrefix(`/api`)
       kind: Rule
       middlewares:
         - name: strip-api-prefix
@@ -27,7 +27,7 @@ spec:
           port: 80
 
     # UI: / -> medplum-app:3000
-    - match: Host(`app.phylcero.fr`)
+    - match: Host(`medplum.phylcero.fr`)
       kind: Rule
       services:
         - name: medplum-app
