@@ -15,6 +15,11 @@ airflow:
     webserver:
       enable_proxy_fix: "True"
 
+    logging:
+      remote_logging: "True"
+      remote_base_log_folder: "s3://airflow-logs"
+      remote_log_conn_id: "minio_logs"
+
   dags:
     persistence:
       enabled: true
@@ -88,11 +93,6 @@ airflow:
     - name: AIRFLOW_CONN_WORKER_SQLITE
       value: http://worker-sqlite.pompetrack-core.svc.cluster.local
 
-  logging:
-    remote_logging: "True"
-    remote_base_log_folder: "s3://airflow-logs"
-    remote_log_conn_id: "minio_logs"
-
   extraEnv: |
     - name: MEDPLUM_CLIENT_ID
       valueFrom:
@@ -114,11 +114,26 @@ airflow:
         secretKeyRef:
           name: airflow-medplum-client
           key: MEDPLUM_PROJECT_ID
-    - name: AIRFLOW_CONN_MINIO_LOGS
+    - name: AWS_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
-          name: airflow-minio-conn
-          key: AIRFLOW_CONN_MINIO_LOGS
+          name: minio-airflow-logs-creds
+          key: airflowLogsAccessKey
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio-airflow-logs-creds
+          key: airflowLogsSecretKey
+    - name: AIRFLOW_CONN_MINIO_LOGS
+      value: |
+        {
+          "conn_type": "aws",
+          "extra": {
+            "endpoint_url": "http://pompetrack-core-minio.pompetrack-core.svc.cluster.local:9000",
+            "region_name": "us-east-1",
+            "verify": false
+          }
+        }
 
   podAnnotations:
     traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
