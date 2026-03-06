@@ -2,246 +2,312 @@
 # PompeTrack-K3S
 Personal Pompe disease tracking application
 
-
+(originaly recorded on my self-hosted Gitlab)
 ---
 ---
-## Prérequis :
+## Requirements :
 
-* VM Ubuntu-server 24.04
-If necessery delete K3S : *sudo /usr/local/bin/k3s-uninstall.sh*
-* Installation de K3S avec Flannel désactivé
-```
+### 1 - Global system :
+* VM Ubuntu-server 24.04 (dedicated)
+* Using K3s **without Flannel** :
+    - If necessery delete K3S : *sudo /usr/local/bin/k3s-uninstall.sh*
+    - K3s install without Flannel :
+
+```bash
 curl -sfL https://get.k3s.io | sh -s - server \
   --flannel-backend=none \
   --disable-network-policy
 ```
-* Si problème de droits sur *k3s.yaml*
-```
+
+* If you've Permission issue on : *k3s.yaml*
+```bash
 sudo nano /etc/rancher/k3s/config.yaml
 ```
-Ecrire :
-```
+
+Write :
+```bash
 write-kubeconfig-mode: "0644"
 ```
-Redémarrer K3S
-```
+Record, and close.
+
+Restart K3S
+```bash
 sudo systemctl restart k3s
 ```
-* Installer un kubeconfig utilisateur :
-```
+
+* Install a user on kubeconfig :
+```bash
 mkdir -p ~/.kube
 sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 sudo chown "$USER":"$USER" ~/.kube/config
 chmod 600 ~/.kube/config
 ```
 
-* Vérifications :
-```
+* Verify :
+```bash
 kubectl get nodes -o wide
 ip link | egrep -i 'flannel|cali|vxlan|cilium' || true
 ```
-* Installation de Calico (Helm)
-```
+
+* Calico install (Helm)
+```bash
 helm repo add projectcalico https://docs.tigera.io/calico/charts
 helm repo update
 helm install calico projectcalico/tigera-operator --namespace tigera-operator --create-namespace
 ```
-* Varifications :
-```
+
+* Verify :
+```bash
 kubectl get pods -n tigera-operator
 kubectl get pods -n calico-system
 ```
+---
+### 2 - Specific settings :
 
+* Container registry 
+In `apps/` folder you can found *specific* containers code that need to be built.
+I use my personal Gitlab Registry to build and expose Docker images.
+Gitlab CI file is : `.gitlab-ci.yml`
+
+* Yunohot Domain :
+My domain name `https://medplum.phylcero.fr` is managed by my personal **Yunohost** with tls management too.
 
 ---
 ---
 
-## A - Installation base : Medplum + Redis + PosgreSQL + Minio + Traefik
-### 1. Création du namespace *medplum*  :
+## Architecture :
 
-```
-cd ~/pompetrack-health/PompeTrack-K3S
-kubectl create namespace medplum
-```
----
-### 2. Création des secrets contenant les reCAPTCHA (dans secrets.env) :
+### 1. Description :
 
-commande :
-```
-./deploy/secrets/medplum/init-secrets.sh
-```
----
-### 3. Update dependency helm :
+Four namespaces :
+* mepdlum : installed by `helm umbrella` (official repo)
+    - medplum-server
+    - medplum-app (server UI)
+    - postgresql 
+    - redis
+    - postgresql_exporter (added for monitoring)
+    - redis_exporter (added for monitoring)
 
-```
-helm dependency update deploy/charts/medplum
-```
----
-### 4. Install de *Meplum* par umbrella helm :
+* pompetrack-core : includes specific containers from *registry*
+    - minio (+ minio-init job)
+    - ingestion -> custom Minio-api 
+    - streamlit -> recording manual values and pains / data tracking graphs
+    - worker-fhir -> transform raw data to fhir for medplum
+    - worker-sqlite -> specific worker for spirometer device
+    - worker-stream -> retrieve datas for streamlit graphs
 
-```
-helm install medplum deploy/charts/medplum -f deploy/charts/medplum/values-medplum.yaml -n medplum
-```
-Vérification :
-**!!! Possible restart/crash de medplum, tant que postgres et redis ne sont pas démarrés !!!**
-```
-kubectl get pods -n medplum
-kubectl get svc -n medplum
-kubectl get ingress -n medplum
-```
+* airflow : installed by `helm umbrella`
+    - orchestrator : detects if data are uploaded on minio and processes them
+    - 4 DAGS
+    - postgresql -> dedicated postgresql
+    - statsd -> airflow monitoring
+    - postgresql_exporter (monitoring)
 
----
-### 5. Installation "pompetrack-core" (helm) :
-
-* Création du namespace *pompetrack-core* :
-
-```
-cd ~/pompetrack-health/PompeTrack-K3S
-kubectl create namespace pompetrack-core
-```
----
-* Création des secrets :
-
-```
-./deploy/secrets/pompetrack-core/init-secrets.sh
-```
-
-* Update helm et install umbrella
-```
-helm repo add pompetrack-core https://charts.min.io
-helm repo update
-
-helm install pompetrack-core deploy/charts/pompetrack-core \
-  -f deploy/charts/pompetrack-core/values-minio.yaml -n pompetrack-core
-```
-
-**Vérification :**
-
-```
-kubectl get pods -n pompetrack-core
-kubectl get svc -n pompetrack-core
-```
-
----
-
-* Option console Minio sur le LAN intégrée :
-http://minio.lan/login
-
----
-### 8. Etat final :
-
-```
-kubectl get pods -A
-kubectl get ingress -A
-```
-
----
----
-## B. Sécurités :
-
-### 1. Configuration Calico :
-
-```
-# DNS d’abord
-kubectl apply -f deploy/infra/netpol/02-allow-dns-egress-medplum.yaml
-kubectl apply -f deploy/infra/netpol/02-allow-dns-egress-minio.yaml
-
-# DENY ALL
-kubectl apply -f deploy/infra/netpol/01-medplum-deny-all.yaml
-kubectl apply -f deploy/infra/netpol/01-minio-deny-all.yaml
-
-# Traefik -> apps
-kubectl apply -f deploy/infra/netpol/03-allow-traefik-to-medplum-app.yaml
-kubectl apply -f deploy/infra/netpol/03-allow-traefik-to-medplum-server.yaml
-kubectl apply -f deploy/infra/netpol/06-allow-traefik-to-minio-console.yaml
-
-# DB/Redis
-kubectl apply -f deploy/infra/netpol/04-allow-medplum-egress-to-postgres-redis.yaml
-kubectl apply -f deploy/infra/netpol/04-allow-postgres-redis-ingress-from-medplum.yaml
-
-# Minio API
-kubectl apply -f deploy/infra/netpol/05-allow-medplum-egress-to-minio-api.yaml
-kubectl apply -f deploy/infra/netpol/05-allow-minio-api-ingress.yaml
-
-```
-
----
-### 2. Installation ISTIO minimal :
-* Installation CLI :
-```
-curl -L https://istio.io/downloadIstio | sh -
-cd istio-*
-export PATH=$PWD/bin:$PATH
-istioctl version
-```
-* Créer le namespace :
-```
-kubectl create namespace istio-system
-```
-* Installation de Istio minimal :
-```
-istioctl install -y --set profile=minimal
-```
-**Si Warning : detected Calico CNI with 'bpfConnectTimeLoadBalancing=TCP'; this must be set to 'bpfConnectTimeLoadBalancing=Disabled' in the Calico configuration**
-* Fix recommandé par Calico :
-```
-kubectl patch felixconfiguration default --type merge -p '{"spec":{"bpfConnectTimeLoadBalancing":"Disabled"}}'
-```
-
----
-### 3. Mesher un namespace :
+* monitoring : installed by `helm umbrella`
+    - kube-prometheus-stack (official repo) :
+      * alertmanager
+      * grafana
+      * prometheus
+      * prometheus operator
 
 
+> Global architecture graph :
+[Archi_Cluster](docs/Archi_Cluster.md)
 
 
 
 ---
-## Partie Registry :
+### 2. Network :
+Here are specific network descriptions (AI realized)
+- [Global architecture](docs/Archi_flux_1.md)
+- [Network Policies](docs/Archi_flux_2.md)
+- [Istio security](docs/Archi_flux_3.md)
+- [Routage](docs/routage_TO_IMPROVE.md)
 
-* 2. Créer répertoire 'ingestion' dans `apps` :
+---
+### 3. Folders structure :
 
-Copier les fichiers requis :
-- Dockerfile
-- requirements.tx
-- entrypoint.sh
-- divers scripts
-- ...
+* `apps/` :
+Like i said before, it contains specific containers.
 
-**Registry** : registry créé en local sur Gitlab
-* 3. Commit / push sur projet gitlab :
+* `deploy`:
+We can found 3 main folders : 
+  - charts -> contains helm umbrellas for each namespaces 
+  - namespaces -> contains **rules** (ingress, istio and netpol)
+  - secrets -> order by namespaces
 
-Projet créer sur Gitlab local : https://git.phylcero.fr/garth/pompetrack
-
-- Gestion automatique des images des conteneurs par **CI** (fichier à la racine : *.gitlab-ci.yml)
-- Création des images sur modification dans le dossier approprié
-- Règle de création du tag "latest" pour la dernière image créée
-
-* 4. Appel des images du registry local sur K3s :
-
-Exemple pour *ingestion*
-```bash
-registry.phylcero.fr/garth/pompetrack/ingestion:latest
-```
-
-* Pull images de registry par le CI :
-
-Dans la CI on se loggue au registry :
-- docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-
-Les variables sont attendues par Gitlab, au préalable il faut créer des creds par *token* côté gitlab, puis les enregistrer dans K3s :
-
-Create secrets on K3s :
+Others folders :
+  - outputs -> only one file `medplum-ids.env`, contains containers medplum IDs which are required for OAUTh between each pods
+  - post-renderer -> contains specific scripts to improve deployment
 
 ```bash
-kubectl -n pompetrack-core create secret docker-registry gitlab-registry-creds \
-  --docker-server=registry.phylcero.fr \
-  --docker-username='gitlab+deploy-token-2' \
-  --docker-password='gldt-*************' \
-  --docker-email='root@phylcero.fr'
+.
+├── apps
+│   └── *containers*
+├── deploy
+│   ├── apply.sh
+│   ├── charts
+│   │   ├── airflow
+│   │   │   ├── Chart.lock
+│   │   │   ├── charts
+│   │   │   │   └── **
+│   │   │   ├── Chart.yaml
+│   │   │   ├── templates
+│   │   │   │   └── **
+│   │   │   └── values.yaml
+│   │   ├── medplum
+│   │   │   ├── Chart.lock
+│   │   │   ├── charts
+│   │   │   │   └── **
+│   │   │   ├── Chart.yaml
+│   │   │   ├── templates
+│   │   │   │   └── **
+│   │   │   └── values.yaml
+│   │   ├── monitoring
+│   │   │   ├── Chart.lock
+│   │   │   ├── charts
+│   │   │   │   └── **
+│   │   │   ├── Chart.yaml
+│   │   │   ├── templates
+│   │   │   │   └── **
+│   │   │   └── values.yaml
+│   │   └── pompetrack-core
+│   │       ├── charts
+│   │       │   └── **
+│   │       ├── Chart.yaml
+│   │       ├── templates
+│   │       │   └── **
+│   │       └── values.yaml
+│   ├── namespaces
+│   │   ├── airflow
+│   │   │   ├── 00-namespace.yaml
+│   │   │   ├── ingress
+│   │   │   │   └── **
+│   │   │   ├── istio
+│   │   │   │   └── **
+│   │   │   └── netpol
+│   │   │       └── **
+│   │   ├── medplum
+│   │   │   ├── 00-namespace.yaml
+│   │   │   ├── ingress
+│   │   │   │   └── **
+│   │   │   ├── istio
+│   │   │   │   └── **
+│   │   │   ├── netpol
+│   │   │   │   └── **
+│   │   │   └── services
+│   │   │       └── **
+│   │   ├── monitoring
+│   │   │   ├── 00-namespace.yaml
+│   │   │   ├── ingress
+│   │   │   │   └── **
+│   │   │   ├── istio
+│   │   │   │   └── **
+│   │   │   └── netpol
+│   │   │       └── **
+│   │   └── pompetrack-core
+│   │       ├── 00-namespace.yaml
+│   │       ├── ingress
+│   │       │   └── **
+│   │       ├── istio
+│   │       │   └── **
+│   │       └── netpol
+│   │           └── **
+│   ├── outputs
+│   │   └── pompetrack-core
+│   │       └── **
+│   ├── post-renderer
+│   │   ├── medplum
+│   │   │   └── **
+│   │   └── pompetrack-core
+│   │       └── **
+│   └── secrets
+│       ├── airflow
+│       │   └── **
+│       ├── medplum
+│       │   └── **
+│       ├── medplum-config
+│       │   └── **
+│       ├── monitoring
+│       │   └── **
+│       ├── pompetrack-core
+│       │   └── **
+│       └── registry
+│           └── **
+├── docs
+│   └── **
+├── LICENSE
+└── README.md
 ```
-Lier au ServiceAccount `ingestion`:
+
+---
+---
+## Deployment :
+
+I wanted an automatic and idempotent deployment, so i make a deployment script : `deploy/apply.sh`
+It deploys all cluster in order, per namespace :
+  - create namespace
+  - applies netpol rules
+  - applies istio rules
+  - creates secrets
+  - install helm umbrella
+
+
+* Secrets specificities :
+each namespace secrets are initialy `*.env` file, the script automaticaly transform them in *Kubernetes* secrets
+here are what we need :
 
 ```bash
-kubectl -n pompetrack-core patch serviceaccount ingestion \
-  -p '{"imagePullSecrets":[{"name":"gitlab-registry-creds"}]}'
+deploy/secrets/
+├── airflow
+│   ├── airflow-admin.env
+│   ├── airflow-api-secret-key.env
+│   ├── airflow-connections.env
+│   ├── airflow-fernet-key.env
+│   ├── airflow-git-https.env
+│   ├── airflow-medplum-client.env
+│   ├── airflow-metadata.env
+│   ├── airflow-postgresql-auth.env
+│   ├── airflow-webserver-secret-key.env
+│   ├── init-secrets.sh
+│   └── minio-airflow-logs-creds.env
+├── medplum
+│   ├── init-secrets.sh
+│   ├── medplum-superadmin.env
+│   ├── pompetrack-postgres-auth.env
+│   ├── recaptcha-secret-key.env
+│   └── recaptcha-site-key.env
+├── medplum-config
+│   └── generate-worker-fhir-medplum-client.sh
+├── monitoring
+│   ├── grafana-admin-secret.env
+│   ├── init-secrets.sh
+│   └── minio-prom-credentials.env
+├── pompetrack-core
+│   ├── ingestion-medplum-client.env
+│   ├── init-secrets.sh
+│   ├── medplum-client-ids.env
+│   ├── minio-airflow-logs-creds.env
+│   ├── minio-app-creds.env
+│   ├── minio-console-creds.env
+│   ├── minio-pg-creds.env
+│   ├── minio-prom-credentials.env
+│   ├── minio-root.env
+│   ├── streamlit-medplum-client.env
+│   ├── worker-fhir-medplum-client.env
+│   ├── worker-sqlite-medplum-client.env
+│   └── worker-stream-medplum-client.env
+└── registry
+    ├── init-secrets.sh
+    └── registry-token.env
 ```
+
+
+
+
+
+
+
+
+
+

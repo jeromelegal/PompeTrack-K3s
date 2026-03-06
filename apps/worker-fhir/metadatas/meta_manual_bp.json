@@ -1,0 +1,22 @@
+  {
+    "name": "meta_manual_bp",
+    "template": "bp.json",
+    "constants": 
+      {
+        "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "cat_code": "vital-signs",
+        "cat_display": "Vital Signs",
+        "code_system": "http://loinc.org",
+        "code_code": "85354-9",
+        "code_display": "Blood pressure panel",
+        "code_text": "Pression artérielle",
+        "code_system[0]": "http://loinc.org",
+        "code_code[0]": "8480-6",
+        "code_display[0]": "Systolic blood pressure",
+        "code_system[1]": "http://loinc.org",
+        "code_code[1]": "8462-4",
+        "code_display[1]": "Diastolic blood pressure",
+        "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+        "tag_code": "manual_weekly"
+      }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "fev1",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "vital-signs",
+    "cat_display": "Vital Signs",
+    "code_system": "http://loinc.org",
+    "code_code": "20150-9",
+    "code_display": "FEV1",
+    "code_text": "Volume expiratoire forcé en une seconde",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "spirometer"
+  }
+}

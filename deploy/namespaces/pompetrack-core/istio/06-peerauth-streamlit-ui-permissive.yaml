@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: streamlit-mtls-permissive
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: streamlit
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8501:
+      mode: PERMISSIVE

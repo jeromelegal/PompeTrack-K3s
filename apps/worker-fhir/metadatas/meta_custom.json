@@ -1,0 +1,16 @@
+{
+    "name": "custom",
+    "template": "simple_measure.json",
+    "constants": 
+      {
+        "cat_system": "cat_system",
+        "cat_code": "vital-signs",
+        "cat_display": "Vital Signs",
+        "code_system": "http://loinc.org",
+        "code_code": "8867-4",
+        "code_display": "Heart rate --resting",
+        "code_text": "Battements coeurs/min au repos",
+        "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+        "tag_code": "metrics"
+      }
+  }

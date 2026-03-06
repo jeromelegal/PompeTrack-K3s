@@ -1,0 +1,15 @@
+{
+  "name": "walking_double_support_percentage",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "https://medplum.phylcero.fr/run",
+    "cat_code": "Gait",
+    "cat_display": "Gait",
+    "code_system": "https://medplum.phylcero.fr/run",
+    "code_code": "walking_double_support_percentage",
+    "code_display": "Walking Double Support Percentage",
+    "code_text": "Stabilité de la marche",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "metrics"
+  }
+}

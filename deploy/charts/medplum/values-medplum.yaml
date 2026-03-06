@@ -8,7 +8,7 @@ medplum:
     replicaCount: 1
     image:
       repository: medplum/medplum-server
-      tag: "5.0.14"
+      tag: "5.1.1"
 
     resources:
       requests:
@@ -23,13 +23,13 @@ medplum:
 
     env:
       - name: MEDPLUM_BASE_URL
-        value: "https://api.phylcero.fr"
+        value: "https://medplum.phylcero.fr/api"
       - name: MEDPLUM_PORT
         value: "8103"
       - name: MEDPLUM_APP_BASE_URL
-        value: "https://app.phylcero.fr"
+        value: "https://medplum.phylcero.fr"
       - name: MEDPLUM_ALLOWED_ORIGINS
-        value: "https://app.phylcero.fr"
+        value: "https://medplum.phylcero.fr"
       - name: MEDPLUM_DATABASE_HOST
         value: "medplum-postgresql"
       - name: MEDPLUM_DATABASE_PORT
@@ -85,6 +85,9 @@ postgresql:
     username: medplum
     database: medplum
     existingSecret: pompetrack-postgres-auth
+    secretKeys:
+      userPasswordKey: password
+      adminPasswordKey: postgres-password
   primary:
     persistence:
       enabled: true
@@ -98,3 +101,23 @@ redis:
   auth:
     enabled: false
   architecture: standalone
+
+
+prometheus-postgres-exporter:
+  enabled: true
+  fullnameOverride: "medplum-postgres-exporter"
+  config:
+    datasource:
+      host: "medplum-postgresql.medplum.svc.cluster.local"
+      user: "postgres"
+      passwordSecret:
+        name: pompetrack-postgres-auth
+        key: postgres-password
+      port: "5432"
+      database: "medplum"
+      sslmode: disable
+
+redis-exporter:
+  enabled: true
+  fullnameOverride: "redis-exporter"
+  redisAddress: "redis://medplum-redis-master.medplum.svc.cluster.local:6379"

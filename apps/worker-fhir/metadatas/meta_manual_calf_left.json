@@ -1,0 +1,15 @@
+{
+  "name": "manual_calf_left",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "survey",
+    "cat_display": "Survey",
+    "code_system": "http://phylcero.fr",
+    "code_code": "left_calf_circum",
+    "code_display": "Circumference left calf",
+    "code_text": "Diamètre mollet gauche",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "manual_monthly"
+  }
+}

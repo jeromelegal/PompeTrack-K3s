@@ -22,3 +22,7 @@ minio:
 
   consoleService:
     type: ClusterIP
+
+  # extraEnvVars:
+  #   - name: MINIO_PROMETHEUS_AUTH_TYPE
+  #     value: "public"

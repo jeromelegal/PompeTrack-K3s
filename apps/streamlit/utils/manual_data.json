@@ -1,0 +1,236 @@
+{
+  "data" : {
+    "metrics" : [
+      {
+        "name" : "weight",
+        "type" : "weekly",
+        "data" : [
+          {
+            "qty" : 77,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "kg"
+      },
+      {
+        "name" : "heart_rate",
+        "type" : "weekly",
+        "data" : [
+          {
+            "qty" : 77,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "bpm"
+      },
+      {
+        "name" : "bp",
+        "type" : "weekly",
+        "data" : [
+          {
+            "measure" : "systolic",
+            "qty" : 120,
+            "date" : "2025-09-09 00:00:00 +0200"
+          },
+          {
+            "measure" : "diastolic",
+            "qty" : 80,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "mmHg"
+      },
+      {
+        "name" : "pain",
+        "type" : "weekly",
+        "data" : [
+          {
+            "note" : "Douleurs",
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ]
+      },
+      {
+        "name" : "symptoms",
+        "type" : "weekly",
+        "data" : [
+          {
+            "note" : "Symptomes à décrire",
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
+
+{
+  "data" : {
+    "metrics" : [
+      {
+        "name" : "calf_left",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 35,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+      {
+        "name" : "calf_right",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 35,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+            {
+        "name" : "thigh_right",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 55,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+            {
+        "name" : "thigh_right",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 55,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+            {
+        "name" : "waist",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 35,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+            {
+        "name" : "hips",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 35,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+            {
+        "name" : "neck",
+        "type" : "monthly",
+        "data" : [
+          {
+            "qty" : 35,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ],
+        "units" : "cm"
+      },
+      {
+        "name" : "comments",
+        "type" : "monthly",
+        "data" : [
+          {
+            "note" : "Commentaires",
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
+{
+  "data" : {
+    "metrics" : [
+      {
+        "name" : "quadriceps_left",
+        "mode" : "push",
+        "data" : [
+          {
+            "qty" : 20,
+            "date" : "2025-09-09 00:00:00 +0200",
+            "fatigue_index" : 0
+          }
+        ],
+        "units" : "N"
+      },
+      {
+        "name" : "quadriceps_right",
+        "mode" : "push",
+        "data" : [
+          {
+            "qty" : 20,
+            "date" : "2025-09-09 00:00:00 +0200",
+            "fatigue_index" : 0
+          }
+        ],
+        "units" : "N"
+      },
+      {
+        "name" : "grip_right",
+        "mode" : "push",
+        "data" : [
+          {
+            "qty" : 20,
+            "date" : "2025-09-09 00:00:00 +0200",
+            "fatigue_index" : 0
+          }
+        ],
+        "units" : "N"
+      },
+      {
+        "name" : "grip_left",
+        "mode" : "push",
+        "data" : [
+          {
+            "qty" : 20,
+            "date" : "2025-09-09 00:00:00 +0200",
+            "fatigue_index" : 0
+          }
+        ],
+        "units" : "N"
+      },
+      {
+        "name" : "rpe",
+        "data" : [
+          {
+            "qty" : 5,
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ]
+      },
+      {
+        "name" : "monthly_comments",
+        "type" : "force_session",
+        "data" : [
+          {
+            "note" : "Commentaires",
+            "date" : "2025-09-09 00:00:00 +0200"
+          }
+        ]
+      }
+    ]
+}
+}

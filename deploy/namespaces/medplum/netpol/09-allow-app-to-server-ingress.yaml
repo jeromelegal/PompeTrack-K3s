@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-app-to-server-ingress
+  namespace: medplum
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: medplum
+      app.kubernetes.io/name: medplum
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: medplum-app
+      ports:
+        - protocol: TCP
+          port: 8103

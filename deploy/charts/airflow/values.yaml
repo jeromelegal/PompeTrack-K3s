@@ -1,0 +1,153 @@
+airflow:
+  enabled: true
+  executor: LocalExecutor
+
+  extraPipPackages:
+    - apache-airflow-providers-amazon
+
+  config:
+    core:
+      executor: LocalExecutor
+
+    api:
+      base_url: "http://airflow.lan"
+
+    webserver:
+      enable_proxy_fix: "True"
+
+    logging:
+      remote_logging: "True"
+      remote_base_log_folder: "s3://airflow-logs"
+      remote_log_conn_id: "minio_logs"
+
+  dags:
+    persistence:
+      enabled: true
+      existingClaim: airflow-dags-pvc
+
+  postgresql:
+    enabled: true
+    auth:
+      existingSecret: airflow-postgresql-auth
+      username: airflow
+      database: airflow
+    primary:
+      resources:
+        requests:
+          cpu: 300m
+          memory: 512Mi
+        limits:
+          cpu: 800m
+          memory: 1Gi
+
+  statsd:
+    enabled: true
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
+  redis:
+    enabled: false
+
+  flower:
+    enabled: false
+
+  webserver:
+    service:
+      type: ClusterIP
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+  scheduler:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+  # --- Composants optionnels désactivés ---
+  dagProcessor:
+    enabled: true
+
+  triggerer:
+    enabled: false  # <-- Optionnel, désactivé pour simplifier
+
+  ingress:
+    enabled: false
+
+  # --- Secrets et configurations inchangés ---
+  fernetKeySecretName: airflow-fernet-key
+  webserverSecretKeySecretName: airflow-webserver-secret-key
+  apiSecretKeySecretName: airflow-api-secret-key
+  data:
+    metadataSecretName: airflow-metadata
+
+  # --- Variables d'environnement inchangées ---
+  env:
+    - name: PYTHONPATH
+      value: /opt/airflow/dags
+    - name: AIRFLOW_CONN_INGESTION
+      value: http://ingestion.pompetrack-core.svc.cluster.local
+    - name: AIRFLOW_CONN_WORKER_FHIR
+      value: http://worker-fhir.pompetrack-core.svc.cluster.local
+    - name: AIRFLOW_CONN_WORKER_SQLITE
+      value: http://worker-sqlite.pompetrack-core.svc.cluster.local
+
+  extraEnv: |
+    - name: MEDPLUM_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: airflow-medplum-client
+          key: MEDPLUM_CLIENT_ID
+    - name: MEDPLUM_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: airflow-medplum-client
+          key: MEDPLUM_CLIENT_SECRET
+    - name: MEDPLUM_BASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: airflow-medplum-client
+          key: MEDPLUM_BASE_URL
+    - name: MEDPLUM_PROJECT_ID
+      valueFrom:
+        secretKeyRef:
+          name: airflow-medplum-client
+          key: MEDPLUM_PROJECT_ID
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: minio-airflow-logs-creds
+          key: airflowLogsAccessKey
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: minio-airflow-logs-creds
+          key: airflowLogsSecretKey
+    - name: AIRFLOW_CONN_MINIO_LOGS
+      value: |
+        {
+          "conn_type": "aws",
+          "extra": {
+            "endpoint_url": "http://pompetrack-core-minio.pompetrack-core.svc.cluster.local:9000",
+            "region_name": "us-east-1",
+            "verify": false
+          }
+        }
+
+  podAnnotations:
+    traffic.sidecar.istio.io/excludeOutboundIPRanges: "10.43.0.1/32"
+
+prometheus-postgres-exporter:
+  enabled: true
+  fullnameOverride: "airflow-postgres-exporter"
+  config:
+    datasource:
+      host: "airflow-postgresql.airflow.svc.cluster.local"
+      user: "postgres"
+      passwordSecret:
+        name: airflow-postgresql-auth
+        key: postgres-password
+      port: "5432"
+      database: "airflow"
+      sslmode: disable

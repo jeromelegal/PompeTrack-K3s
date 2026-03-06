@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-sqlite
+  namespace: pompetrack-core
+  labels:
+    app: worker-sqlite
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-sqlite
+  template:
+    metadata:
+      labels:
+        app: worker-sqlite
+    spec:
+      serviceAccountName: worker-sqlite
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: worker-sqlite
+          image: registry.phylcero.fr/garth/pompetrack/worker-sqlite:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: BASE_URL_MINIO_API
+              value: "http://ingestion"
+
+            # config JWT
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+
+            - name: TOKEN_AUDIENCE_AIRFLOW_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
+
+          volumeMounts:
+            - name: medplum-creds-worker-sqlite
+              mountPath: /var/run/secrets
+              readOnly: true
+            - name: medplum-client-ids
+              mountPath: /var/run/secrets/medplum-audiences
+              readOnly: true
+      volumes:
+        - name: medplum-creds-worker-sqlite
+          secret:
+            secretName: worker-sqlite-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET
+        - name: medplum-client-ids
+          secret:
+            secretName: medplum-client-ids
+            defaultMode: 0400
+            items:
+              - key: TOKEN_AUDIENCE_AIRFLOW
+                path: TOKEN_AUDIENCE_AIRFLOW
+

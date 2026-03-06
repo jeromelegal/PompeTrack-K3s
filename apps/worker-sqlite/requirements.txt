@@ -1,0 +1,6 @@
+pysqlite3
+requests
+fastapi
+uvicorn
+pytest
+PyJWT[crypto]

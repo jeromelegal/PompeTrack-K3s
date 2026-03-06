@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-to-exporter
+  namespace: medplum
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  policyTypes: ["Ingress"]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: medplum
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus-postgres-exporter
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-exporter-to-postgres
+  namespace: medplum
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-postgres-exporter
+  policyTypes: ["Egress"]
+  egress:
+  - to:
+    - namespaceSelector: {}     # tous namespaces
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgresql
+    ports:
+    - protocol: TCP
+      port: 5432

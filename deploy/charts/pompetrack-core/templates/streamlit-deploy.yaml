@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit
+  namespace: pompetrack-core
+  labels:
+    app: streamlit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit
+  template:
+    metadata:
+      labels:
+        app: streamlit
+    spec:
+      serviceAccountName: streamlit
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: streamlit
+          image: registry.phylcero.fr/garth/pompetrack/streamlit:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8501
+              name: http
+
+          env:
+            # config JWT
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+
+          envFrom:
+            - configMapRef:
+                name: medplum-ids
+    
+          volumeMounts:
+            - name: medplum-creds-streamlit
+              mountPath: /var/run/secrets
+              readOnly: true
+      volumes:
+        - name: medplum-creds-streamlit
+          secret:
+            secretName: streamlit-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET

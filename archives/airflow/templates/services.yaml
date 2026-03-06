@@ -1,0 +1,46 @@
+# -------------------------------------------------------------------
+# Service API Server (accessible via Ingress)
+# -------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-api-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: airflow
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: api-server
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: airflow
+    app.kubernetes.io/component: api-server
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+---
+# -------------------------------------------------------------------
+# Service PostgreSQL (interne)
+# -------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-postgresql
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: airflow
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: postgresql
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: airflow
+    app.kubernetes.io/component: postgresql
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: airflow-egress-medplum
+  namespace: airflow
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: medplum
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 8103

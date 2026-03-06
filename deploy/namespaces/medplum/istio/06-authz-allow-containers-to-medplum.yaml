@@ -1,0 +1,20 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-containers-to-medplum
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: medplum
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/pompetrack-core/sa/worker-fhir
+        - cluster.local/ns/pompetrack-core/sa/worker-stream
+        - cluster.local/ns/pompetrack-core/sa/worker-sqlite
+        - cluster.local/ns/pompetrack-core/sa/ingestion
+        - cluster.local/ns/pompetrack-core/sa/streamlit
+        - cluster.local/ns/airflow/sa/airflow-worker

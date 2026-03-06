@@ -1,0 +1,19 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-monitoring-internal
+  namespace: monitoring
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        ports:
+        - "80"      # Grafana
+        - "3000"    # Grafana (container)
+        - "443"     # prometheus-operator
+        - "8080"    # kube-state-metrics, alertmanager, prometheus
+        - "9090"    # Prometheus
+        - "9093"    # Alertmanager
+        - "9100"
+        - "10250"

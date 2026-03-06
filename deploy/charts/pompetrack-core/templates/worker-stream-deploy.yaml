@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-stream
+  namespace: pompetrack-core
+  labels:
+    app: worker-stream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-stream
+  template:
+    metadata:
+      labels:
+        app: worker-stream
+    spec:
+      serviceAccountName: worker-stream
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: worker-stream
+          image: registry.phylcero.fr/garth/pompetrack/worker-stream:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            # Secrets via fichiers (compatibles avec ton entrypoint)
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+
+            # config Medplum api
+            - name: MEDPLUM_BASE_URL
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
+            - name: MEDPLUM_TOKEN_ENDPOINT
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
+            - name: MEDPLUM_SCOPE
+              value: "system/*.*"
+            - name: FHIR_BASE
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+
+            - name: TOKEN_AUDIENCE_STREAMLIT_FILE
+              value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_STREAMLIT
+            - name: GUNICORN_CMD_ARGS
+              value: "--access-logfile - --error-logfile - --log-level info"
+
+          envFrom:
+            - configMapRef:
+                name: medplum-ids
+
+          volumeMounts:
+            - name: medplum-creds
+              mountPath: /var/run/secrets
+              readOnly: true
+            - name: medplum-client-ids
+              mountPath: /var/run/secrets/medplum-audiences
+              readOnly: true
+      volumes:
+        - name: medplum-creds
+          secret:
+            secretName: worker-stream-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET
+        - name: medplum-client-ids
+          secret:
+            secretName: medplum-client-ids
+            defaultMode: 0400
+            items:
+              - key: TOKEN_AUDIENCE_STREAMLIT
+                path: TOKEN_AUDIENCE_STREAMLIT
+

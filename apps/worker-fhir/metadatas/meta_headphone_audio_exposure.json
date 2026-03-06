@@ -1,0 +1,15 @@
+{
+  "name": "headphone_audio_exposure",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "social-history",
+    "cat_display": "Social History",
+    "code_system": "https://medplum.phylcero.fr/run",
+    "code_code": "headphone_audio_exposure",
+    "code_display": "Headphone Audio Exposure",
+    "code_text": "Exposition sonore",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "metrics"
+  }
+}
