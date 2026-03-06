@@ -214,8 +214,4 @@ istio-*/
 .env
 .env.*
 archives/
-deploy/charts/airflow/charts/
-deploy/charts/medplum/charts/
-deploy/charts/monitoring/charts/
-deploy/charts/pompetrack-core/charts/
 *.tgz
