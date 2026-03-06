@@ -2,7 +2,7 @@
 # PompeTrack-K3S
 Personal Pompe disease tracking application
 
-(originaly recorded on my personal Gitlab)
+(originaly recorded on my self-hosted Gitlab)
 ---
 ---
 ## Requirements :
