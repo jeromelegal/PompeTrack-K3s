@@ -1,10 +1,10 @@
 # Plan de routage bout en bout
 
-## A) Medplum public — Host `app.phylcero.fr`
+## A) Medplum public — Host `medplum.phylcero.fr`
 
 ### A1) UI / assets
 
-**Entrée :** `https://app.phylcero.fr/` (et `/assets/*`)
+**Entrée :** `https://medplum.phylcero.fr/` (et `/assets/*`)
 
 1. **Client (navigateur)**
 2. **Yunohost / nginx**
@@ -29,14 +29,14 @@
 
 ### A2) API
 
-**Entrée :** `https://app.phylcero.fr/api/...` (ex: `/api/healthcheck`)
+**Entrée :** `https://medplum.phylcero.fr/api/...` (ex: `/api/healthcheck`)
 
 1. **Client**
 2. **Yunohost / nginx** (TLS + SSO) → reverse proxy vers Traefik
 3. **Traefik** (`web` / NodePort 31725)
 4. **IngressRoute** `medplum/medplum-app`, route prioritaire :
 
-   * match : `Host(\`app.phylcero.fr`) && PathPrefix(`/api`)`
+   * match : `Host(\`medplum.phylcero.fr`) && PathPrefix(`/api`)`
    * middleware : `strip-api-prefix`
 
      * config : `stripPrefix.prefixes: ["/api"]`
