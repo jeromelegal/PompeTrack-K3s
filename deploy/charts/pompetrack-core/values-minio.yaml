@@ -26,3 +26,28 @@ minio:
   # extraEnvVars:
   #   - name: MINIO_PROMETHEUS_AUTH_TYPE
   #     value: "public"
+
+postgresql:
+  auth:
+    username: myuser
+    password: mypassword
+    database: mydb
+
+  primary:
+    persistence:
+      enabled: true
+      size: 4Gi
+
+prometheus-postgres-exporter:
+  enabled: true
+  fullnameOverride: "pompetrack-core-postgres-exporter"
+  config:
+    datasource:
+      host: "airflow-postgresql.airflow.svc.cluster.local"
+      user: "postgres"
+      passwordSecret:
+        name: airflow-postgresql-auth
+        key: postgres-password
+      port: "5432"
+      database: "airflow"
+      sslmode: disable
