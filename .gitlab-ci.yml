@@ -35,6 +35,8 @@ build_streamlit:
   variables:
     APP_NAME: streamlit
     APP_PATH: apps/streamlit
+  before_script:
+    - echo "$GOOGLE_CREDENTIALS_JSON" > apps/streamlit/credentials.json
   rules:
     - changes:
         - apps/streamlit/**
