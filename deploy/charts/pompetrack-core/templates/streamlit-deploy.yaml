@@ -32,6 +32,23 @@ spec:
               value: /var/run/secrets/MEDPLUM_CLIENT_ID
             - name: CLIENT_SECRET_FILE
               value: /var/run/secrets/MEDPLUM_CLIENT_SECRET
+            # config postgresql
+            - name: DB_HOST
+              value: pompetrack-core-postgresql
+            - name: DB_PORT
+              value: 5432
+            - name: DB_NAME
+              value: pomptrack
+            - name: DB_USER
+              value: pompetrack-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-auth
+                  key: password
+            # google redirection
+            - name: REDIRECT_URI
+              value: http://192.168.2.88.nip.io:8501/calendar
 
           envFrom:
             - configMapRef:

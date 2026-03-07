@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.postgresql.fullnameOverride }}
+spec:
+  serviceName: {{ .Values.postgresql.fullnameOverride }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.postgresql.fullnameOverride }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.postgresql.fullnameOverride }}
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgresql.image.registry }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          ports:
+            - containerPort: 5432
+
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.auth.database }}
+
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.auth.username }}
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.auth.existingSecret }}
+                  key: password
+
+          resources:
+{{ toYaml .Values.postgresql.primary.resources | indent 12 }}
+
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.primary.persistence.size }}

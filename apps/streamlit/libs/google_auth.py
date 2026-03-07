@@ -13,8 +13,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
-REDIRECT_URI = "http://localhost:8501/calendar"
-# REDIRECT_URI = "http://192.168.2.88.nip.io:8501/calendar"
+REDIRECT_URI = os.getenv("REDIRECT_URI", "http://192.168.2.88.nip.io:8501/calendar")
 
 CREDENTIALS_FILE = "credentials.json"
 
