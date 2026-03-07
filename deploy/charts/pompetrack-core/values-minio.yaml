@@ -36,7 +36,7 @@ postgresql:
   auth:
       existingSecret: postgresql-auth
       username: pompetrack-user
-      database: pomptrack
+      database: pompetrack
   primary:
     resources:
       requests:
@@ -54,11 +54,11 @@ prometheus-postgres-exporter:
   fullnameOverride: "pompetrack-core-postgres-exporter"
   config:
     datasource:
-      host: "airflow-postgresql.pompetrack-core.svc.cluster.local"
+      host: "pompetrack-core-postgresql.pompetrack-core.svc.cluster.local"
       user: "postgres"
       passwordSecret:
         name: postgresql-auth
         key: postgres-password
       port: "5432"
-      database: "pomptrack"
+      database: "pompetrack"
       sslmode: disable

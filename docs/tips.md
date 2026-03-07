@@ -43,7 +43,7 @@ kubectl delete namespace monitoring
 ./deploy/apply.sh
 
 ./deploy/apply_airflow.sh
-
+kub 
 kubectl get all -n medplum
 kubectl get all -n pompetrack-core
 ```

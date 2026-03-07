@@ -6,7 +6,7 @@ from datetime import datetime
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "pompetrack-core-postgresql"),
     "port": os.getenv("DB_PORT", "5432"),
-    "database": os.getenv("DB_NAME", "pomptrack"),
+    "database": os.getenv("DB_NAME", "pompetrack"),
     "user": os.getenv("DB_USER", "pompetrack-user"),
     "password": os.getenv("DB_PASSWORD"),
 }

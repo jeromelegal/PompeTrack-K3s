@@ -108,3 +108,27 @@ spec:
         - sourceLabels: [__meta_kubernetes_service_name]
           targetLabel: __address__
           replacement: airflow-postgres-exporter.airflow.svc.cluster.local
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-exporter-pompetrack-core
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-postgres-exporter
+  namespaceSelector:
+    matchNames:
+      - pompetrack-core
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: __address__
+          replacement: pompetrack-core-postgres-exporter.pompetrack-core.svc.cluster.local
