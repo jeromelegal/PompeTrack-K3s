@@ -28,12 +28,19 @@ minio:
   #     value: "public"
 
 postgresql:
+  fullnameOverride: pompetrack-core-postgresql
   auth:
-    username: myuser
-    password: mypassword
-    database: mydb
-
+      existingSecret: postgresql-auth
+      username: pompetrack-user
+      database: pomptrack
   primary:
+    resources:
+      requests:
+        cpu: 300m
+        memory: 512Mi
+      limits:
+        cpu: 800m
+        memory: 1Gi
     persistence:
       enabled: true
       size: 4Gi
@@ -43,11 +50,11 @@ prometheus-postgres-exporter:
   fullnameOverride: "pompetrack-core-postgres-exporter"
   config:
     datasource:
-      host: "airflow-postgresql.airflow.svc.cluster.local"
+      host: "airflow-postgresql.pompetrack-core.svc.cluster.local"
       user: "postgres"
       passwordSecret:
-        name: airflow-postgresql-auth
+        name: postgresql-auth
         key: postgres-password
       port: "5432"
-      database: "airflow"
+      database: "pomptrack"
       sslmode: disable

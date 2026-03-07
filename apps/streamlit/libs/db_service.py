@@ -4,11 +4,11 @@ from datetime import datetime
 
 # Configuration de la connexion PostgreSQL
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
+    "host": os.getenv("DB_HOST", "pompetrack-core-postgresql"),
     "port": os.getenv("DB_PORT", "5432"),
-    "database": os.getenv("DB_NAME", "cal_db"),
-    "user": os.getenv("DB_USER", "cal_user"),
-    "password": os.getenv("DB_PASSWORD", "cal_password"),
+    "database": os.getenv("DB_NAME", "pomptrack"),
+    "user": os.getenv("DB_USER", "pompetrack-user"),
+    "password": os.getenv("DB_PASSWORD"),
 }
 
 

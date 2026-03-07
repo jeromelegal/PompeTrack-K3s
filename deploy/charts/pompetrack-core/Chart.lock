@@ -1,0 +1,12 @@
+dependencies:
+- name: minio
+  repository: https://charts.min.io
+  version: 5.4.0
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.1.0
+- name: prometheus-postgres-exporter
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 7.5.0
+digest: sha256:8106717449f586de878141c301109158582fb032b5c448f3f2d4c7db61437d1a
+generated: "2026-03-07T11:34:34.433102917Z"

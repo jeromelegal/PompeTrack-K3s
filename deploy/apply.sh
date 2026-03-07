@@ -92,6 +92,10 @@ kubectl -n pompetrack-core create configmap medplum-ids \
   -o yaml --dry-run=client \
 | kubectl apply -f -
 
+# Helm update
+echo "==> Helm deps"
+helm dependency update deploy/charts/pompetrack-core || true
+
 ### Helm umbrella Pompetrack-core namespace
 echo "==> Helm install/upgrade pompetrack-core (with post-renderer patches)"
 helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
@@ -103,6 +107,10 @@ helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
 echo "==> Airflow secrets"
 ./deploy/secrets/airflow/init-secrets.sh
 
+# Helm update
+echo "==> Helm deps"
+helm dependency update deploy/charts/airflow || true
+
 ## Helm umbrella Airflow namespace
 echo "==> Helm install/upgrade airflow"
 helm upgrade --install airflow deploy/charts/airflow \
@@ -113,7 +121,11 @@ helm upgrade --install airflow deploy/charts/airflow \
 echo "==> Monitoring secrets"
 ./deploy/secrets/monitoring/init-secrets.sh
 
-# ## Helm umbrella Airflow namespace
+# Helm update
+echo "==> Helm deps"
+helm dependency update deploy/charts/monitoring || true
+
+# ## Helm umbrella monitoring namespace
 echo "==> Helm install/upgrade monitoring"
 helm upgrade --install monitoring deploy/charts/monitoring \
   -f deploy/charts/monitoring/values.yaml \
