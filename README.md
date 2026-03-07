@@ -2,7 +2,25 @@
 # PompeTrack-K3S
 Personal Pompe disease tracking application
 
+<<<<<<< HEAD
 (originaly recorded on my personal Gitlab)
+=======
+(originaly recorded on my self-hosted Gitlab)
+
+> Why doing that ?
+I found the medical monitoring not really efficient, i mean it's light, and i can't track the disease progression.
+So i make this app, and i will add several metrics from my body and my strenght to track in time.
+
+> What will i track ?
+I want to add "official" metrics from the hospital, body measures (to reveal muscles reduction), body strenght (legs and arms for my disease) with a custom device, vital-signs, and all "Health" metrics from my *iPhone 12 mini*.
+
+> How is the monitoring ?
+By searching for heath softwares, i found "FHIR" format which is an interoperability format, and finally found [Medplum](https://www.medplum.com/) which is the perfect "health-core" to record all data efficiently.
+
+> What in that project ?
+So i use [Medplum](https://www.medplum.com/) to have a serious health data format, Streamlit to ingest data in the app and Streamlit to realize tracking by graphs.
+
+>>>>>>> b7d551f (Implement calendar page)
 ---
 ---
 ## Requirements :
