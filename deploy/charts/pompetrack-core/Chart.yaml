@@ -28,7 +28,7 @@ dependencies:
     version: "5.4.0"
     repository: "https://charts.min.io"
   - name: postgresql
-    version: 16.1.0
+    version: 16.4.2
     repository: https://charts.bitnami.com/bitnami
   - name: prometheus-postgres-exporter
     version: "7.5.0"
