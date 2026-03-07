@@ -30,7 +30,7 @@ minio:
 postgresql:
   fullnameOverride: pompetrack-core-postgresql
   image:
-    tag: "16.1.0"
+    tag: "16"
   auth:
       existingSecret: postgresql-auth
       username: pompetrack-user

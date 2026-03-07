@@ -2,9 +2,6 @@
 # PompeTrack-K3S
 Personal Pompe disease tracking application
 
-<<<<<<< HEAD
-(originaly recorded on my personal Gitlab)
-=======
 (originaly recorded on my self-hosted Gitlab)
 
 > Why doing that ?
@@ -20,7 +17,6 @@ By searching for heath softwares, i found "FHIR" format which is an interoperabi
 > What in that project ?
 So i use [Medplum](https://www.medplum.com/) to have a serious health data format, Streamlit to ingest data in the app and Streamlit to realize tracking by graphs.
 
->>>>>>> b7d551f (Implement calendar page)
 ---
 ---
 ## Requirements :
