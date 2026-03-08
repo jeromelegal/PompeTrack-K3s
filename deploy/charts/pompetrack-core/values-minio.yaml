@@ -55,10 +55,10 @@ prometheus-postgres-exporter:
   config:
     datasource:
       host: "pompetrack-core-postgresql.pompetrack-core.svc.cluster.local"
-      user: "postgres"
+      user: "pompetrack-user"
       passwordSecret:
         name: postgresql-auth
-        key: postgres-password
+        key: password
       port: "5432"
       database: "pompetrack"
       sslmode: disable
