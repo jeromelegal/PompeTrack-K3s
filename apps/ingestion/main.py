@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import json
 import uuid
 import logging
-from libs.security import require_scopes
+from libs.security import require_scopes, require_scopes_light
 from utils.api_minio import upload_file, get_object_json, bucket_create, bucket_list_objects, move_object, get_raw_object, object_delete
 
 # Configuration
@@ -69,6 +69,13 @@ async def ingest_manual(
     device: dict = Depends(require_scopes(["ingest:manual"])),
 ):
     return _ingest_json(payload, BUCKET_RAW_MANUAL, device)
+
+@app.post("/ingest/strenght")
+async def ingest_strenght(
+    payload: dict = Body(...),
+    device: dict = Depends(require_scopes_light(["ingest:strenght"])),
+):
+    return _ingest_json(payload, BUCKET_RAW_STRENGHT, device)
 
 @app.post("/ingest/spirometer")
 async def ingest_spirometer(

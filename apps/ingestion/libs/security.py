@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 bearer = HTTPBearer(auto_error=False)
 
+LIGHT_JWT_SECRET = os.getenv("LIGHT_JWT_SECRET")
+if not LIGHT_JWT_SECRET:
+    raise RuntimeError("LIGHT_JWT_SECRET is not set")
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _extract_scopes(payload: Dict[str, Any]) -> List[str]:
@@ -104,6 +108,60 @@ def require_scopes(required: List[str]) -> Callable:
             "scopes": sorted(token_scopes),
             "sub":    payload.get("sub"),
             "payload": payload,  # accès complet si besoin
+        }
+
+    return _dep
+
+def require_scopes_light(required: List[str]) -> Callable:
+    """
+    Version light de require_scopes pour devices sans mTLS.
+    Utilise un JWT fixe signé HS256 avec un secret partagé.
+    Pas d'expiration, mais signature et scopes vérifiés.
+    """
+    def _dep(
+        creds: HTTPAuthorizationCredentials = Depends(bearer),
+    ) -> Dict[str, Any]:
+
+        # 1. Vérifier la présence du token
+        if creds is None or creds.scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+        token = creds.credentials
+
+        # 2. Vérifier la signature avec le secret partagé
+        try:
+            payload = jwt.decode(
+                token,
+                LIGHT_JWT_SECRET,      # lu depuis variable d'env
+                algorithms=["HS256"],
+                options={
+                    "verify_exp": False,   # pas d'expiration
+                },
+            )
+        except jwt.InvalidSignatureError:
+            raise HTTPException(status_code=401, detail="Invalid token signature")
+        except jwt.PyJWTError as exc:
+            logger.warning("Light token verification failed: %s", exc)
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        # 3. Vérifier les scopes
+        token_scopes = set(payload.get("scopes", []))
+        missing = [s for s in required if s not in token_scopes]
+        if missing:
+            logger.warning(
+                "Light - Missing scopes: required=%s granted=%s device=%s",
+                required,
+                sorted(token_scopes),
+                payload.get("sub", "unknown"),
+            )
+            raise HTTPException(status_code=403, detail=f"Missing scopes: {missing}")
+
+        # 4. Retourner le contexte enrichi
+        return {
+            "device": payload.get("sub", "unknown"),
+            "scopes": sorted(token_scopes),
+            "sub":    payload.get("sub"),
+            "payload": payload,
         }
 
     return _dep

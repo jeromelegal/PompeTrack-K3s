@@ -50,6 +50,11 @@ spec:
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_WORKER_SQLITE
             - name: TOKEN_AUDIENCE_AIRFLOW_FILE
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
+            - name: LIGHT_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: light-jwt-secret
+                  key: LIGHT_JWT_SECRET
 
           volumeMounts:
             - name: minio-creds
