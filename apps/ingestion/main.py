@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Body, Depends, Form, Query, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 import json
 import uuid
@@ -20,6 +21,12 @@ BUCKET_RAW_STRENGTH = "raw-strength"
 SQLITE_HEADER               = b"SQLite format 3\x00"
 
 app = FastAPI(title="Health Ingest")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
