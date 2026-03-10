@@ -70,10 +70,10 @@ async def ingest_manual(
 ):
     return _ingest_json(payload, BUCKET_RAW_MANUAL, device)
 
-@app.post("/ingest/strenght")
+@app.post("/ingest/strength")
 async def ingest_strenght(
     payload: dict = Body(...),
-    device: dict = Depends(require_scopes_light(["ingest:strenght"])),
+    device: dict = Depends(require_scopes_light(["ingest:strength"])),
 ):
     return _ingest_json(payload, BUCKET_RAW_STRENGHT, device)
 

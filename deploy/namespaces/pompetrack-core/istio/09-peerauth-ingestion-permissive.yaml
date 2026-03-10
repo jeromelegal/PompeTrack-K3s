@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: ingestion-mtls-permissive
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: ingestion
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    80:
+      mode: PERMISSIVE
