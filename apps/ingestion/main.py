@@ -16,6 +16,7 @@ BUCKET_RAW_SPIROMETER       = "raw-spirometer"
 BUCKET_PROCESSED_FHIR       = "processed-fhir"
 BUCKET_PROCESSED_DF         = "processed-df"
 BUCKET_SQLITE_RAW_SPIROMETER = "raw-db-spirometer"
+BUCKET_RAW_STRENGTH = "raw-strength"
 SQLITE_HEADER               = b"SQLite format 3\x00"
 
 app = FastAPI(title="Health Ingest")
@@ -75,7 +76,7 @@ async def ingest_strenght(
     payload: dict = Body(...),
     device: dict = Depends(require_scopes_light(["ingest:strength"])),
 ):
-    return _ingest_json(payload, BUCKET_RAW_STRENGHT, device)
+    return _ingest_json(payload, BUCKET_RAW_STRENGTH, device)
 
 @app.post("/ingest/spirometer")
 async def ingest_spirometer(

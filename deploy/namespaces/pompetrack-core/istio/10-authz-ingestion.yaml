@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: authz-ingestion-allow
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: ingestion
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        ports: ["80"]

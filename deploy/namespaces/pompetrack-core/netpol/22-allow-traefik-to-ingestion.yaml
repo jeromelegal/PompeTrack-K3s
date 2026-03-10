@@ -6,8 +6,9 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      service.istio.io/canonical-name: ingestion
-  policyTypes: ["Ingress"]
+      app: ingestion
+  policyTypes:
+  - Ingress
   ingress:
   - from:
     - namespaceSelector:

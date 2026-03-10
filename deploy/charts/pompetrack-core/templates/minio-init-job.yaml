@@ -116,7 +116,7 @@ spec:
               mc mb --ignore-existing local/processed-db
               mc mb --ignore-existing local/blood-test
               mc mb --ignore-existing local/reports
-              mc mb --ignore-existing local/raw-strenght
+              mc mb --ignore-existing local/raw-strength
 
               echo "==> Enable versioning on selected buckets (ignore errors if already enabled)"
               mc version enable local/pg-backups || true
@@ -196,7 +196,7 @@ spec:
                       "arn:aws:s3:::processed-db",
                       "arn:aws:s3:::blood-test",
                       "arn:aws:s3:::reports",
-                      "arn:aws:s3:::raw-strenght"
+                      "arn:aws:s3:::raw-strength"
                     ]
                   },
                   {
@@ -215,7 +215,7 @@ spec:
                       "arn:aws:s3:::processed-db/*",
                       "arn:aws:s3:::blood-test/*",
                       "arn:aws:s3:::reports/*",
-                      "arn:aws:s3:::raw-strenght/*"
+                      "arn:aws:s3:::raw-strength/*"
                     ]
                   }
                 ]
