@@ -1,0 +1,88 @@
+{
+    "metrics": [
+        {
+            "type": "force",
+            "name": "manual_quadriceps_right",
+            "data": [
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 21.6
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 14.6
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 19.3
+                }
+            ]
+        },
+        {
+            "type": "force",
+            "name": "manual_quadriceps_left",
+            "data": [
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 18.9
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 18.4
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 19.8
+                }
+            ]
+        },
+        {
+            "type": "force",
+            "name": "manual_arm_right",
+            "data": [
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 6.8
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 7
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 10
+                }
+            ]
+        },
+        {
+            "type": "force",
+            "name": "manual_arm_left",
+            "data": [
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 7.9
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 17.5
+                },
+                {
+                    "units": "N",
+                    "date": "2026-03-10T18:58:12.806Z",
+                    "qty": 10.6
+                }
+            ]
+        }
+    ]
+}
