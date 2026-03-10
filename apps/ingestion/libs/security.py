@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Callable, List, Dict, Any
 import logging
+import os
 
 import jwt
 
