@@ -214,13 +214,5 @@ istio-*/
 .env
 .env.*
 archives/
-<<<<<<< HEAD
-deploy/charts/airflow/charts/
-deploy/charts/medplum/charts/
-deploy/charts/monitoring/charts/
-deploy/charts/pompetrack-core/charts/
-*.tgz
-=======
 *.tgz
 apps/streamlit/credentials.json
->>>>>>> b7d551f (Implement calendar page)
