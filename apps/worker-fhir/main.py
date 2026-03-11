@@ -54,3 +54,16 @@ def run_worker_spirometer(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.get("/run/strength")
+def run_worker_strength(
+    device: dict = Depends(require_scopes(["airflow:strength"])),
+):
+    try:
+        print(f"Lancement du worker pour {now_iso()}")
+        result = subprocess.run(["python", "/app/pipeline_strength.py"], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=result.stderr)
+        return {"status": "success", "output": result.stdout}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
