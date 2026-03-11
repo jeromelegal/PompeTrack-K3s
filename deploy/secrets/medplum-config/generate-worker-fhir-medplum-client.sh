@@ -15,6 +15,7 @@ WORKER_SQLITE_OUT_FILE="deploy/secrets/pompetrack-core/worker-sqlite-medplum-cli
 STREAMLIT_OUT_FILE="deploy/secrets/pompetrack-core/streamlit-medplum-client.env"
 INGESTION_OUT_FILE="deploy/secrets/pompetrack-core/ingestion-medplum-client.env"
 AIRFLOW_OUT_FILE="deploy/secrets/airflow/airflow-medplum-client.env"
+PROVIDER_OUT_FILE="deploy/secrets/medplum/provider-medplum-client.env"
 IDS_OUT_FILE="deploy/outputs/pompetrack-core/medplum-ids.env"
 
 # NEW: Global file containing all client_ids
@@ -289,6 +290,7 @@ ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit 
 ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sqlite (machine-to-machine)"  "object:list object:move object:delete download:object ingest:spirometer"
 ensure_client "ingestion"      "$INGESTION_OUT_FILE"      "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
 ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list airflow:iphone airflow:manual airflow:spirometer airflow:strength"
+ensure_client "provider"       "$PROVIDER_OUT_FILE"       "Medplum porvider (machine-tomachine)            "medplum:base"
 
 # Write one env file containing all client IDs + explicit TOKEN_AUDIENCE_* vars
 echo "==> Write global Client IDs file: ${CLIENT_IDS_OUT_FILE}"

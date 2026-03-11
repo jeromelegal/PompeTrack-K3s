@@ -69,3 +69,12 @@ build_worker_stream:
   rules:
     - changes:
         - apps/worker-stream/**
+
+build_medplum_provider:
+  extends: .build_app
+  variables:
+    APP_NAME: medplum-provider
+    APP_PATH: apps/medplum-provider
+  rules:
+    - changes:
+        - apps/medplum-provider/**
