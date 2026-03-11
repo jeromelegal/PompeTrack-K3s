@@ -1,4 +1,3 @@
-=======
 # PompeTrack-K3S
 Personal Pompe disease tracking application
 
