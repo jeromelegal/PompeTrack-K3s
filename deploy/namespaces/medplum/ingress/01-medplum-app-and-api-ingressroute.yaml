@@ -37,4 +37,4 @@ spec:
       kind: Rule
       services:
         - name: medplum-provider
-          port: 3020
+          port: 80
