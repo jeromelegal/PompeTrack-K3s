@@ -212,7 +212,7 @@ istio-*/
 *.key
 *.env
 .env
-.env.*
+.env
 archives/
 *.tgz
 apps/streamlit/credentials.json
