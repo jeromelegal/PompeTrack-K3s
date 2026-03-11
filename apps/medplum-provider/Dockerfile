@@ -1,7 +1,7 @@
 # ---------- BUILD ----------
 FROM node:24-slim AS builder
 
-WORKDIR /src
+WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     build-essential \
