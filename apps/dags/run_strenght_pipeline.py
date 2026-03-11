@@ -24,7 +24,7 @@ def extract_objects(response_text: str) -> list:
     return []
 
 with DAG(
-    dag_id="manual_minio_watch_and_run",
+    dag_id="strength_minio_watch_and_run",
     start_date=datetime(2026, 1, 27, tzinfo=timezone.utc),
     schedule="*/5 * * * *",
     catchup=False,
@@ -33,7 +33,7 @@ with DAG(
         "retries": 1,
         "retry_delay": timedelta(minutes=1),
     },
-    tags=["manual", "minio", "ingestion"],
+    tags=["minio", "ingestion", "strength"],
 ) as dag:
     
     get_ingestion_headers_task = MedplumHeaderOperator(
@@ -57,13 +57,13 @@ with DAG(
 
     get_worker_headers_task = MedplumHeaderOperator(
         task_id="get_worker_headers_task",
-        scope=["airflow:manual"],
+        scope=["airflow:strength"],
     )
 
     run_worker = HttpOperator(
-        task_id="run_worker_manual",
+        task_id="run_worker_strength",
         http_conn_id="worker_fhir",
-        endpoint="/run/manual",
+        endpoint="/run/strength",
         method="GET",
         headers=XComArg(get_worker_headers_task),
         log_response=True,
