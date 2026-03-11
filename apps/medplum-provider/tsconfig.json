@@ -15,5 +15,11 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "exclude": ["dist"]
+  "exclude": [
+  "dist",
+  "node_modules",
+  "**/*.test.ts",
+  "**/*.test.tsx",
+  "src/test.setup.ts"
+]
 }

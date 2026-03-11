@@ -32,3 +32,9 @@ spec:
       services:
         - name: medplum-app
           port: 3000
+
+    - match: Host(`provider.lan`)
+      kind: Rule
+      services:
+        - name: medplum-provider
+          port: 3020

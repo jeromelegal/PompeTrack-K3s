@@ -14,7 +14,7 @@ spec:
       annotations:
         checksum/recaptcha-site-key: {{ include "pompetrack.secretChecksum" (list "recaptcha-site-key" .) | quote }}
     spec:
-      serviceAccountName: streamlit
+      serviceAccountName: medplum-provider
       imagePullSecrets:
         - name: gitlab-regcred
       containers:

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import react from '@vitejs/plugin-react';
 import dns from 'dns';
-import { existsSync } from 'fs';
+import { existsSync, copyFileSync } from 'fs';
 import path from 'path';
 import type { UserConfig } from 'vite';
 import { defineConfig } from 'vitest/config';
