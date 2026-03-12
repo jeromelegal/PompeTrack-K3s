@@ -14,8 +14,8 @@ import { RouterProvider, createBrowserRouter } from 'react-router';
 import { App } from './App';
 
 const medplum = new MedplumClient({
-  baseUrl: import.meta.env.VITE_MEDPLUM_BASE_URL,
-  clientId: import.meta.env.VITE_MEDPLUM_CLIENT_ID,
+  baseUrl: window.__APP_CONFIG__.MEDPLUM_BASE_URL,
+  clientId: window.__APP_CONFIG__.MEDPLUM_CLIENT_ID,
   onUnauthenticated: () => (window.location.href = '/'),
   cacheTime: 60000,
   autoBatchTime: 100,
