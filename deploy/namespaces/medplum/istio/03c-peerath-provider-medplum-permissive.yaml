@@ -6,6 +6,6 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: provider-medplum
+      app: medplum-provider
   mtls:
     mode: PERMISSIVE

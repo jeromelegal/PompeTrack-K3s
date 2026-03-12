@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: medplum-provider
+  namespace: medplum
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`provider.lan`)
+      kind: Rule
+      services:
+        - name: medplum-provider
+          port: 80

@@ -22,7 +22,7 @@ spec:
           image: registry.phylcero.fr/garth/pompetrack/medplum-provider:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 3020
+            - containerPort: 80
           env:
             # - name: MEDPLUM_BASE_URL
             #   value: "https://medplum.phylcero.fr/api"
@@ -31,11 +31,10 @@ spec:
                 secretKeyRef:
                   name: recaptcha-site-key
                   key: siteKey
-            - name: MEDPLUM_BASE_URL
-              value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
-            - name: MEDPLUM_TOKEN_ENDPOINT
-              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
-            - name: MEDPLUM_CLIENT_ID
+            - name: VITE_MEDPLUM_BASE_URL
+              value: "https://medplum.phylcero.fr/api"
+              
+            - name: VITE_MEDPLUM_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   name: provider-medplum-client
@@ -43,13 +42,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /
-              port: 3020
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
-              port: 3020
+              port: 80
             initialDelaySeconds: 15
             periodSeconds: 20
 ---
@@ -62,6 +61,6 @@ spec:
     app: medplum-provider
   ports:
     - name: http
-      port: 3020
-      targetPort: 3020
+      port: 80
+      targetPort: 80
   type: ClusterIP
