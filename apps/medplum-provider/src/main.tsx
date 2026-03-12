@@ -14,8 +14,9 @@ import { RouterProvider, createBrowserRouter } from 'react-router';
 import { App } from './App';
 
 const medplum = new MedplumClient({
+  baseUrl: import.meta.env.VITE_MEDPLUM_BASE_URL,
+  clientId: import.meta.env.VITE_MEDPLUM_CLIENT_ID,
   onUnauthenticated: () => (window.location.href = '/'),
-  // baseUrl: 'http://localhost:8103/', // Uncomment this to run against the server on your localhost
   cacheTime: 60000,
   autoBatchTime: 100,
 });
