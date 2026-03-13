@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: provider-permissive
+  namespace: medplum
+spec:
+  selector:
+    matchLabels:
+      app: medplum-provider
+  mtls:
+    mode: PERMISSIVE
