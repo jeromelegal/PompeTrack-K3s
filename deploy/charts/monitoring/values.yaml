@@ -21,8 +21,8 @@ kube-prometheus-stack:
       storageSpec:
         volumeClaimTemplate:
           spec:
-            storageClassName: "local-path"
-            accessModes: ["ReadWriteOnce"]
+            storageClassName: "nfs-client"
+            accessModes: ["ReadWriteMany"]
             resources:
               requests:
                 storage: 10Gi
@@ -69,8 +69,8 @@ kube-prometheus-stack:
       storage:
         volumeClaimTemplate:
           spec:
-            storageClassName: "local-path"
-            accessModes: ["ReadWriteOnce"]
+            storageClassName: "nfs-client"
+            accessModes: ["ReadWriteMany"]
             resources:
               requests:
                 storage: 2Gi
@@ -90,9 +90,9 @@ kube-prometheus-stack:
 
     persistence:
       enabled: true
-      storageClassName: "local-path"
+      storageClassName: "nfs-client"
       accessModes:
-        - ReadWriteOnce
+        - ReadWriteMany
       size: 5Gi
 
     resources:

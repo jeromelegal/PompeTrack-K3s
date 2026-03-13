@@ -39,6 +39,9 @@ airflow:
         limits:
           cpu: 800m
           memory: 1Gi
+      persistence:
+        enabled: true
+        storageClass: nfs-client
 
   statsd:
     enabled: true

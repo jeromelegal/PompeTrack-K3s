@@ -8,7 +8,7 @@ minio:
   persistence:
     enabled: true
     size: 20Gi
-    storageClass: local-path
+    storageClass: nfs-client
 
   resources:
     requests:
@@ -22,10 +22,6 @@ minio:
 
   consoleService:
     type: ClusterIP
-
-  # extraEnvVars:
-  #   - name: MINIO_PROMETHEUS_AUTH_TYPE
-  #     value: "public"
 
 postgresql:
   fullnameOverride: pompetrack-core-postgresql
@@ -48,6 +44,7 @@ postgresql:
     persistence:
       enabled: true
       size: 4Gi
+      storageClass: nfs-client
 
 prometheus-postgres-exporter:
   enabled: true

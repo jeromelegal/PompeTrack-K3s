@@ -91,6 +91,7 @@ postgresql:
   primary:
     persistence:
       enabled: true
+      storageClass: nfs-client
   resources:
     requests:
       memory: "1Gi"
