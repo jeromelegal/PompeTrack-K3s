@@ -81,6 +81,16 @@ helm upgrade --install medplum deploy/charts/medplum \
 echo "==> Medplum bootstrap (project + worker-fhir client)"
 ./deploy/secrets/medplum-config/generate-worker-fhir-medplum-client.sh
 
+# Resync secret provider + redeploy
+echo "==> Resync secret provider post-bootstrap"
+kubectl -n medplum create secret generic provider-medplum-client \
+  --from-env-file=deploy/secrets/medplum/provider-medplum-client.env \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+echo "==> Rollout restart provider"
+kubectl -n medplum rollout restart deployment medplum-provider
+kubectl -n medplum rollout status deployment medplum-provider --timeout=120s
+
 # Secrets scripts
 echo "==> Pompetrack-core secrets"
 ./deploy/secrets/pompetrack-core/init-secrets.sh

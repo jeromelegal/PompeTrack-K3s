@@ -9,6 +9,28 @@ spec:
       - /api
 ---
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cors
+  namespace: medplum
+spec:
+  headers:
+    accessControlAllowOriginList:
+      - http://provider.lan
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    accessControlAllowHeaders:
+      - Authorization
+      - Content-Type
+      - X-Medplum
+    accessControlAllowCredentials: true
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: medplum-app
@@ -17,16 +39,54 @@ spec:
   entryPoints:
     - web
   routes:
-    # API: /api -> medplum-service:80 (targetPort 8103)
+
+    # API via /api
     - match: Host(`medplum.phylcero.fr`) && PathPrefix(`/api`)
       kind: Rule
       middlewares:
+        - name: cors
         - name: strip-api-prefix
       services:
         - name: medplum-service
           port: 80
 
-    # UI: / -> medplum-app:3000
+    # Auth endpoints
+    - match: Host(`medplum.phylcero.fr`) && PathPrefix(`/auth`)
+      kind: Rule
+      middlewares:
+        - name: cors
+      services:
+        - name: medplum-service
+          port: 80
+
+    # OAuth endpoints
+    - match: Host(`medplum.phylcero.fr`) && PathPrefix(`/oauth2`)
+      kind: Rule
+      middlewares:
+        - name: cors
+      services:
+        - name: medplum-service
+          port: 80
+
+    # Well-known endpoints
+    - match: Host(`medplum.phylcero.fr`) && PathPrefix(`/.well-known`)
+      kind: Rule
+      middlewares:
+        - name: cors
+      services:
+        - name: medplum-service
+          port: 80
+
+    # FHIR endpoints
+    - match: Host(`medplum.phylcero.fr`) && PathPrefix(`/fhir`)
+      kind: Rule
+      middlewares:
+        - name: cors
+      services:
+        - name: medplum-service
+          port: 80
+
+    # UI
     - match: Host(`medplum.phylcero.fr`)
       kind: Rule
       services:
