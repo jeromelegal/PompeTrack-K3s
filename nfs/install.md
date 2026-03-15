@@ -17,7 +17,7 @@ helm repo update
 helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
   --namespace nfs-provisioner \
   --set nfs.server=192.168.2.26 \
-  --set nfs.path=/export/pompetrack-data \
+  --set nfs.path=/pompetrack-data \
   --set storageClass.name=nfs-client \
   --set storageClass.archiveOnDelete=false 
 ```
@@ -27,4 +27,10 @@ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs
 ```bash
 kubectl get pods -n nfs-provisioner  
 kubectl get storageclass      
+```
+
+## Delete :
+
+```bash
+helm uninstall nfs-subdir-external-provisioner -n nfs-provisioner
 ```

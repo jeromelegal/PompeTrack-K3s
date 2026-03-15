@@ -24,8 +24,6 @@ spec:
           ports:
             - containerPort: 80
           env:
-            # - name: MEDPLUM_BASE_URL
-            #   value: "https://medplum.phylcero.fr/api"
             - name: RECAPTCHA_SITE_KEY
               valueFrom:
                 secretKeyRef:
