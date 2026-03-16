@@ -41,7 +41,7 @@ airflow:
           memory: 1Gi
       persistence:
         enabled: true
-        storageClass: nfs-client
+        storageClass: local-path
 
   statsd:
     enabled: true

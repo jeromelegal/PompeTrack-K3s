@@ -44,7 +44,7 @@ postgresql:
     persistence:
       enabled: true
       size: 4Gi
-      storageClass: nfs-client
+      storageClass: local-path
 
 prometheus-postgres-exporter:
   enabled: true

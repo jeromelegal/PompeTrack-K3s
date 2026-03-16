@@ -105,7 +105,7 @@ redis:
   master:
     persistence:
       enabled: true
-      storageClass: nfs-client
+      storageClass: local-path
 
 
 prometheus-postgres-exporter:
