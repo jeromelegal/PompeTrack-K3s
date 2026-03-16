@@ -91,6 +91,7 @@ postgresql:
   primary:
     persistence:
       enabled: true
+      storageClass: local-path
   resources:
     requests:
       memory: "1Gi"
@@ -101,6 +102,10 @@ redis:
   auth:
     enabled: false
   architecture: standalone
+  master:
+    persistence:
+      enabled: true
+      storageClass: local-path
 
 
 prometheus-postgres-exporter:
