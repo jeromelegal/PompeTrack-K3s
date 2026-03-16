@@ -1,5 +1,5 @@
 # Dockerfile
-FROM postgres:16-alpine
+FROM postgres:18-alpine
 
 RUN apk add --no-cache curl bash \
   && curl -sSL https://dl.min.io/client/mc/release/linux-amd64/mc \
