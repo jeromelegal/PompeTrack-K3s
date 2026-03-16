@@ -39,6 +39,7 @@ kubectl delete namespace pompetrack-core
 kubectl delete namespace medplum
 kubectl delete namespace airflow
 kubectl delete namespace monitoring
+kubectl delete namespace pg-backups
 
 ./deploy/apply.sh
 

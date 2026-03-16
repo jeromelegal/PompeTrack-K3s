@@ -1,0 +1,81 @@
+# configmap-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-script
+  namespace: pg-backups
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -e
+
+    # ── Variables passées en env depuis le CronJob ──────────────────────────
+    # DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+    # MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET
+    # DB_LABEL (ex: db1, db2, db3) pour organiser les dossiers MinIO
+
+    echo "======================================"
+    echo " Début backup : ${DB_LABEL} - ${DB_NAME}"
+    echo " Timestamp    : $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "======================================"
+
+    # ── Nom du fichier de backup ─────────────────────────────────────────────
+    TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+    BACKUP_FILE="/tmp/${DB_LABEL}_${DB_NAME}_${TIMESTAMP}.sql.gz"
+
+    # ── pg_dump ──────────────────────────────────────────────────────────────
+    echo "[1/4] Dump PostgreSQL en cours..."
+    export PGPASSWORD="${DB_PASSWORD}"
+    pg_dump \
+      -h "${DB_HOST}" \
+      -p "${DB_PORT}" \
+      -U "${DB_USER}" \
+      -d "${DB_NAME}" \
+      --no-password \
+      --format=plain \
+      --clean \
+      --if-exists \
+    | gzip > "${BACKUP_FILE}"
+
+    if [ $? -ne 0 ]; then
+      echo "[ERREUR] pg_dump a échoué !"
+      exit 1
+    fi
+
+    BACKUP_SIZE=$(du -sh "${BACKUP_FILE}" | cut -f1)
+    echo "[1/4] Dump terminé - Taille : ${BACKUP_SIZE}"
+
+    # ── Configuration mc (MinIO Client) ─────────────────────────────────────
+    echo "[2/4] Configuration MinIO Client..."
+    mc alias set minio "${MINIO_ENDPOINT}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" --insecure
+
+    # ── Création du bucket si inexistant ────────────────────────────────────
+    # mc mb --ignore-existing minio/"${MINIO_BUCKET}" --insecure
+
+    # ── Upload vers MinIO ────────────────────────────────────────────────────
+    echo "[3/4] Upload vers MinIO : ${MINIO_BUCKET}/${DB_LABEL}/"
+    mc cp "${BACKUP_FILE}" minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ --insecure
+
+    if [ $? -ne 0 ]; then
+      echo "[ERREUR] Upload MinIO a échoué !"
+      exit 1
+    fi
+    echo "[3/4] Upload terminé avec succès"
+
+    # ── Nettoyage des anciens backups (rétention 7 jours) ───────────────────
+    echo "[4/4] Nettoyage des backups > 7 jours..."
+    mc find minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ \
+      --older-than 168h \
+      --insecure | while read -r old_file; do
+        echo "  Suppression : ${old_file}"
+        mc rm "${old_file}" --insecure
+    done
+    echo "[4/4] Nettoyage terminé"
+
+    # ── Nettoyage local ──────────────────────────────────────────────────────
+    rm -f "${BACKUP_FILE}"
+
+    echo "======================================"
+    echo " Backup ${DB_LABEL} terminé avec succès"
+    echo " Fichier : ${DB_LABEL}/${DB_LABEL}_${DB_NAME}_${TIMESTAMP}.sql.gz"
+    echo "======================================"

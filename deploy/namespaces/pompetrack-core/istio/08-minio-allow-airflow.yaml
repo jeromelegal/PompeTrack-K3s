@@ -12,7 +12,7 @@ spec:
   rules:
     - from:
         - source:
-            namespaces: ["airflow"]
+            namespaces: ["airflow","pg-backups"]
       to:
         - operation:
             ports: ["9000"]
