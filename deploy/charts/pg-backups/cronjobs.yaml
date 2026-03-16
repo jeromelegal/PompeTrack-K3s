@@ -1,0 +1,255 @@
+# cronjobs.yaml
+
+# ─────────────────────────────────────────────
+# CronJob DB1
+# ─────────────────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-db1
+  namespace: pg-backups
+spec:
+  schedule: "0 */4 * * *"        # toutes les 4h
+  concurrencyPolicy: Forbid       # pas de job concurrent
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2             # 2 tentatives en cas d'échec
+      template:
+        spec:
+          serviceAccountName: pg-backup-sa
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: gitlab-regcred
+          containers:
+            - name: pg-backup
+              image: registry.phylcero.fr/garth/pompetrack/pg-backup:latest
+              imagePullPolicy: Always
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              env:
+                - name: DB_LABEL
+                  value: "db1"
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB1_HOST
+                - name: DB_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB1_PORT
+                - name: DB_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB1_NAME
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB1_USER
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB1_PASSWORD
+                - name: MINIO_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_ENDPOINT
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_ACCESS_KEY
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_SECRET_KEY
+                - name: MINIO_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_BUCKET
+              volumeMounts:
+                - name: backup-script
+                  mountPath: /scripts
+          volumes:
+            - name: backup-script
+              configMap:
+                name: backup-script
+                defaultMode: 0755
+
+---
+# ─────────────────────────────────────────────
+# CronJob DB2
+# ─────────────────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-db2
+  namespace: pg-backups
+spec:
+  schedule: "20 */4 * * *"       # décalé de 20min pour éviter la surcharge
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: pg-backup-sa
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: gitlab-regcred
+          containers:
+            - name: pg-backup
+              image: registry.phylcero.fr/garth/pompetrack/pg-backup:latest
+              imagePullPolicy: Always
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              env:
+                - name: DB_LABEL
+                  value: "db2"
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB2_HOST
+                - name: DB_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB2_PORT
+                - name: DB_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB2_NAME
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB2_USER
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB2_PASSWORD
+                - name: MINIO_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_ENDPOINT
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_ACCESS_KEY
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_SECRET_KEY
+                - name: MINIO_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_BUCKET
+              volumeMounts:
+                - name: backup-script
+                  mountPath: /scripts
+          volumes:
+            - name: backup-script
+              configMap:
+                name: backup-script
+                defaultMode: 0755
+
+---
+# ─────────────────────────────────────────────
+# CronJob DB3
+# ─────────────────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-db3
+  namespace: pg-backups
+spec:
+  schedule: "40 */4 * * *"       # décalé de 40min
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: pg-backup-sa
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: gitlab-regcred
+          containers:
+            - name: pg-backup
+              image: registry.phylcero.fr/garth/pompetrack/pg-backup:latest
+              imagePullPolicy: Always
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              env:
+                - name: DB_LABEL
+                  value: "db3"
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB3_HOST
+                - name: DB_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB3_PORT
+                - name: DB_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB3_NAME
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB3_USER
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: DB3_PASSWORD
+                - name: MINIO_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_ENDPOINT
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_ACCESS_KEY
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_SECRET_KEY
+                - name: MINIO_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-credentials
+                      key: MINIO_BUCKET
+              volumeMounts:
+                - name: backup-script
+                  mountPath: /scripts
+          volumes:
+            - name: backup-script
+              configMap:
+                name: backup-script
+                defaultMode: 0755

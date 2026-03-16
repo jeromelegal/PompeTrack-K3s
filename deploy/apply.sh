@@ -30,12 +30,16 @@ apply_file_if_exists deploy/namespaces/medplum/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/pompetrack-core/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/airflow/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/monitoring/00-namespace.yaml
+apply_file_if_exists deploy/namespaces/pg-backups/00-namespace.yaml
+# apply rbac for pg-backups
+apply_file_if_exists deploy/charts/pg-backups/00-rbac.yaml
 
 # Safety: ensure namespaces exist even if YAML missing
 kubectl get ns medplum >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/medplum/00-namespace.yaml
 kubectl get ns pompetrack-core >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/pompetrack-core/00-namespace.yaml
 kubectl get ns airflow >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/airflow/00-namespace.yaml
 kubectl get ns monitoring >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/monitoring/00-namespace.yaml
+kubectl get ns pg-backups >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/pg-backups/00-namespace.yaml
 
 # Medplum services
 echo "== Services medplum =="
@@ -47,6 +51,7 @@ apply_dir_ordered deploy/namespaces/medplum/netpol
 apply_dir_ordered deploy/namespaces/pompetrack-core/netpol
 apply_dir_ordered deploy/namespaces/airflow/netpol
 apply_dir_ordered deploy/namespaces/monitoring/netpol
+apply_dir_ordered deploy/namespaces/pg-backups/netpol
 
 # Wait for Istio
 echo "==> Wait for istiod (validation webhook needs ready endpoints)"
@@ -60,6 +65,7 @@ apply_dir_ordered deploy/namespaces/medplum/istio
 apply_dir_ordered deploy/namespaces/pompetrack-core/istio
 apply_dir_ordered deploy/namespaces/airflow/istio
 apply_dir_ordered deploy/namespaces/monitoring/istio
+apply_dir_ordered deploy/namespaces/pg-backups/istio
 
 # Secrets scripts
 echo "==> Medplum secrets"
@@ -154,9 +160,18 @@ kubectl -n airflow wait --for=condition=Available deployment/airflow-dag-process
 POD=$(kubectl -n airflow get pod -l component=dag-processor -o jsonpath='{.items[0].metadata.name}')
 kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
 
+# PG-BACKUPS
+echo "==> Apply pg-backups secrets"
+kubectl apply -f deploy/secrets/pg-backups/secret.yaml
+echo "==> Apply pg-backups configmap-script"
+kubectl apply -f deploy/charts/pg-backups/configmap-script.yaml
+echo "==> Apply pg-backups cronjobs"
+kubectl apply -f deploy/charts/pg-backups/cronjobs.yaml
+
 # Verify
 echo "==> Done"
 kubectl get pods -n medplum
 kubectl get pods -n pompetrack-core
 kubectl get pods -n airflow
 kubectl get pods -n monitoring
+kubectl -n pg-backups get cronjob
