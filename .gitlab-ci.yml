@@ -78,3 +78,12 @@ build_medplum_provider:
   rules:
     - changes:
         - apps/medplum-provider/**
+
+build_pg_backup:
+  extends: .build_app
+  variables:
+    APP_NAME: pg-backup
+    APP_PATH: apps/pg-backup
+  rules:
+    - changes:
+        - apps/pg-backup/**
