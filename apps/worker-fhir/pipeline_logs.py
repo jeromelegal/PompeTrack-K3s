@@ -22,7 +22,7 @@ def transfert_logs_pipeline():
         
     if not error_json:
         logger.warning(f"[WARN] Nothing to process in object : error_report.json")
-            raise
+        raise
 
     try:
         logger.info(f"Upload file :")
