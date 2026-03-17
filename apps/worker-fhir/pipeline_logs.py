@@ -16,17 +16,16 @@ def transfert_logs_pipeline():
     logger.info("Début du pipeline transfert_logs")
 
     success = False
-
-    with open("error_report.json", "r") as f:
-        error_json = json.load(f)
         
     if not error_json:
         logger.warning(f"[WARN] Nothing to process in object : error_report.json")
         raise
 
+    file_path = os.path.join("app", "error_report.json")
+
     try:
         logger.info(f"Upload file :")
-        result = upload_object_into_bucket(file_path=error_json,
+        result = upload_object_into_bucket(file_path=file_path,
                                            bucket=BUCKET_LOGS,
                                            scope="fhir:logs")
         success = True
