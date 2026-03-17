@@ -17,10 +17,6 @@ def transfert_logs_pipeline():
 
     success = False
         
-    if not error_json:
-        logger.warning(f"[WARN] Nothing to process in object : error_report.json")
-        raise
-
     file_path = os.path.join("app", "error_report.json")
 
     try:
