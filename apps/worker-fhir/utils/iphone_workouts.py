@@ -7,15 +7,28 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fhir_processor.log'),
+        logging.StreamHandler()
+    ]
+)
 
 def process_global_workouts(workouts: Union[List, str]) -> Dict[str, Any]:
     obs_list = []
+    error_report = []
     standard_bundle_created = 0
     transaction_bundle_created = 0
     for i, workout in enumerate(workouts):
         if not isinstance(workout, dict):
             logger.error(f"Error on reading dict : {workout}.")
+            error_report.append({
+                "type": "dict",
+                "message": "Error on reading dict.",
+                "data": str(workout)
+            })
             return False
 
         # Instance CreatePreFHIR_workouts
@@ -26,6 +39,11 @@ def process_global_workouts(workouts: Union[List, str]) -> Dict[str, Any]:
             # print(json.dumps(resource, indent=2, sort_keys=False))
         except Exception as e:
             logger.error(f"Fail to create PreFHIR for {i}.")
+            error_report.append({
+                "type": "PreFHIR",
+                "message": "Fail to create PreFHIR",
+                "data": str(workout)
+            })
             return False
         
         # Formating to FHIR 
@@ -42,6 +60,11 @@ def process_global_workouts(workouts: Union[List, str]) -> Dict[str, Any]:
                 transaction_bundle_created += 1
             except Exception as e:
                 logger.error(f"Fail to upload transaction bundle : {i}.")
+                error_report.append({
+                "type": "FHIR",
+                "message": "Fail to format FHIR",
+                "data": str(workout)
+                })
                 return False
         
         else:
@@ -61,7 +84,17 @@ def process_global_workouts(workouts: Union[List, str]) -> Dict[str, Any]:
                 standard_bundle_created += 1
             except Exception as e:
                 logger.error(f"Fail to upload bundle : {i}.")
+                error_report.append({
+                "type": "FHIR",
+                "message": "Fail to upload bundle",
+                "data": str(workout)
+                })
                 return False
+            
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     logger.info(f"Total standard bundle uploaded : {standard_bundle_created}")
     logger.info(f"Total transaction bundle uploaded : {transaction_bundle_created}")

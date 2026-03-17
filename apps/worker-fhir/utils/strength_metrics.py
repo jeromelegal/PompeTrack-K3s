@@ -6,9 +6,14 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
-
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fhir_processor.log'),
+        logging.StreamHandler()
+    ]
+)
 
 def average_strenght_results(strengths: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
@@ -37,12 +42,23 @@ def average_strenght_results(strengths: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 # For a complete strengths file (not too large !! else use process_strengths_by_cats)
 def process_global_strengths(strengths: Union[List, str]) -> Dict[str, Any]:
+    error_report = []
     if not isinstance(strengths, dict):
         logger.error(f"Error on reading dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error on reading dict.",
+            "data": str(strengths)
+        })
         return
    
     if not strengths.get("metrics"):
         logger.error(f"Error, not 'metrics' in file.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error, not 'metrics' in file.",
+            "data": str(strengths)
+        })
         return
     
     metrics = strengths["metrics"]
@@ -51,6 +67,11 @@ def process_global_strengths(strengths: Union[List, str]) -> Dict[str, Any]:
     for i, strength in enumerate(metrics):
         if not isinstance(strength, dict):
             logger.warning(f"Error on reading dict : {strength}.")
+            error_report.append({
+                "type": "dict",
+                "message": "Error on reading dict.",
+                "data": str(strength)
+            })
             continue
 
         # Instance CreatePreFHIR
@@ -61,6 +82,11 @@ def process_global_strengths(strengths: Union[List, str]) -> Dict[str, Any]:
             # print(json.dumps(resource, indent=2, sort_keys=False))
         except Exception as e:
             logger.error(f"Fail to create PreFHIR for {i}.")
+            error_report.append({
+                "type": "PreFHIR",
+                "message": "Fail to create PreFHIR",
+                "data": str(strength)
+            })
             raise
         
         # Formating to FHIR 
@@ -70,9 +96,19 @@ def process_global_strengths(strengths: Union[List, str]) -> Dict[str, Any]:
             obs_list = obs_list + obs
         except Exception as e:
             logger.error(f"Fail to format FHIR for {i}.")
+            error_report.append({
+                "type": "FHIR",
+                "message": "Fail to format FHIR",
+                "data": str(strength)
+            })
             raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")
@@ -90,13 +126,24 @@ def process_global_strengths(strengths: Union[List, str]) -> Dict[str, Any]:
 def process_strengths_by_cats(i: int, strength: Union[dict, str]) -> Dict[str, Any]:
 
     obs_list = []
+    error_report = []
     total_created = 0
     if not isinstance(strength, dict):
         logger.error(f"Error - not a dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error - not a dict.",
+            "data": str(strength)
+        })
         return
     
     if not strength:
         logger.error(f"Error empty dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error empty dict.",
+            "data": str(strength)
+        })
         return
 
     # Instance CreatePreFHIR
@@ -107,6 +154,11 @@ def process_strengths_by_cats(i: int, strength: Union[dict, str]) -> Dict[str, A
         # print(json.dumps(resource, indent=2, sort_keys=False))
     except Exception as e:
         logger.error(f"Fail to create PreFHIR for {i}.")
+        error_report.append({
+            "type": "PreFHIR",
+            "message": "Fail to create PreFHIR",
+            "data": str(strength)
+        })
         raise
     
     # Formating to FHIR 
@@ -116,9 +168,19 @@ def process_strengths_by_cats(i: int, strength: Union[dict, str]) -> Dict[str, A
         obs_list = obs_list + obs
     except Exception as e:
         logger.error(f"Fail to format FHIR for {i}.")
+        error_report.append({
+            "type": "FHIR",
+            "message": "Fail to format FHIR",
+            "data": str(strength)
+        })
         raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")

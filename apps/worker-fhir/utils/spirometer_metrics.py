@@ -6,34 +6,62 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fhir_processor.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # For a complete spirometer file (not too large !! else use process_spirometer_by_cats)
 def process_global_spirometer(spirometer: Union[List, str]) -> Dict[str, Any]:
+    error_report = []
     if not isinstance(spirometer, dict):
         logger.error(f"Error on reading dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error on reading dict.",
+            "data": str(spirometer)
+        })
         return
    
     if not spirometer.get("metrics"):
         logger.error(f"Error, not 'metrics' in file.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error, not 'metrics' in file.",
+            "data": str(spirometer)
+        })
         return
     
     metrics = spirometer["metrics"]
     obs_list = []
     total_created = 0
-    for i, manual in enumerate(metrics):
-        if not isinstance(manual, dict):
-            logger.warning(f"Error on reading dict : {manual}.")
+    for i, metric in enumerate(metrics):
+        if not isinstance(metric, dict):
+            logger.warning(f"Error on reading dict : {metric}.")
+            error_report.append({
+                "type": "dict",
+                "message": "Error on reading dict.",
+                "data": str(metric)
+            })
             continue
 
         # Instance CreatePreFHIR
         try: 
             logger.info(f"Creating PreFHIR for {i}.")
-            creator = CreatePreFHIR(manual, round_digits=1)
+            creator = CreatePreFHIR(metric, round_digits=1)
             resource = creator.render()
             # print(json.dumps(resource, indent=2, sort_keys=False))
         except Exception as e:
             logger.error(f"Fail to create PreFHIR for {i}.")
+            error_report.append({
+                "type": "PreFHIR",
+                "message": "Fail to create PreFHIR",
+                "data": str(metric)
+            })
             raise
         
         # Formating to FHIR 
@@ -43,9 +71,19 @@ def process_global_spirometer(spirometer: Union[List, str]) -> Dict[str, Any]:
             obs_list = obs_list + obs
         except Exception as e:
             logger.error(f"Fail to format FHIR for {i}.")
+            error_report.append({
+                "type": "FHIR",
+                "message": "Fail to format FHIR",
+                "data": str(resource)
+            })
             raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")
@@ -60,26 +98,42 @@ def process_global_spirometer(spirometer: Union[List, str]) -> Dict[str, Any]:
         return bundle_json
     
 # For a complete spirometer file (not too large !! else use process_spirometer_by_cats)
-def process_spirometer_by_cats(i: int, manual: Union[dict, str]) -> Dict[str, Any]:
+def process_spirometer_by_cats(i: int, metric: Union[dict, str]) -> Dict[str, Any]:
 
     obs_list = []
+    error_report = []
     total_created = 0
-    if not isinstance(manual, dict):
+    if not isinstance(metric, dict):
         logger.error(f"Error - not a dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error - not a dict.",
+            "data": str(metric)
+        })
         return
     
-    if not manual:
+    if not metric:
         logger.error(f"Error empty dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error empty dict.",
+            "data": str(metric)
+        })
         return
 
     # Instance CreatePreFHIR
     try: 
         #logger.info(f"Creating PreFHIR for {i}.")
-        creator = CreatePreFHIR(manual, round_digits=1)
+        creator = CreatePreFHIR(metric, round_digits=1)
         resource = creator.render()
         # print(json.dumps(resource, indent=2, sort_keys=False))
     except Exception as e:
         logger.error(f"Fail to create PreFHIR for {i}.")
+        error_report.append({
+            "type": "PreFHIR",
+            "message": "Fail to create PreFHIR",
+            "data": str(metric)
+        })
         raise
     
     # Formating to FHIR 
@@ -89,9 +143,19 @@ def process_spirometer_by_cats(i: int, manual: Union[dict, str]) -> Dict[str, An
         obs_list = obs_list + obs
     except Exception as e:
         logger.error(f"Fail to format FHIR for {i}.")
+        error_report.append({
+            "type": "FHIR",
+            "message": "Fail to format FHIR",
+            "data": str(metric)
+        })
         raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")

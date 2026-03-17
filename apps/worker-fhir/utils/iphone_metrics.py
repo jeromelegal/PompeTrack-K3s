@@ -6,7 +6,14 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fhir_processor.log'),
+        logging.StreamHandler()
+    ]
+)
 
 def split_json(json_file):
     for k in json_file["data"].keys():
@@ -23,11 +30,16 @@ def split_json(json_file):
 # For a complete metrics file (not too large !! else use process_metrics_by_cats)
 def process_global_metrics(metrics: Union[List, str]) -> Dict[str, Any]:
     obs_list = []
-    
+    error_report = []
     total_created = 0
     for i, metric in enumerate(metrics):
         if not isinstance(metric, dict):
             logger.error(f"Error on reading dict.")
+            error_report.append({
+                "type": "dict",
+                "message": "Error on reading dict.",
+                "data": str(metric)
+            })
             return
 
         # Instance CreatePreFHIR
@@ -38,6 +50,11 @@ def process_global_metrics(metrics: Union[List, str]) -> Dict[str, Any]:
             # print(json.dumps(resource, indent=2, sort_keys=False))
         except Exception as e:
             logger.error(f"Fail to create PreFHIR for {i}.")
+            error_report.append({
+                "type": "PreFHIR",
+                "message": "Fail to create PreFHIR",
+                "data": str(metric)
+            })
             raise
         
         # Formating to FHIR 
@@ -47,10 +64,19 @@ def process_global_metrics(metrics: Union[List, str]) -> Dict[str, Any]:
             obs_list = obs_list + obs
         except Exception as e:
             logger.error(f"Fail to format FHIR for {i}.")
-
+            error_report.append({
+                "type": "FHIR",
+                "message": "Fail to format FHIR",
+                "data": str(metric)
+            })
             raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
     
     if not obs_list:
         logger.error("Fail to build bundle.")
@@ -67,9 +93,15 @@ def process_global_metrics(metrics: Union[List, str]) -> Dict[str, Any]:
 # For a complete metrics file (not too large !! else use process_metrics_by_cats)
 def process_metrics_by_cats(i: int, metric: Union[dict, str]) -> Dict[str, Any]:
     obs_list = []
+    error_report = []
     total_created = 0
     if not isinstance(metric, dict):
         logger.error(f"Error on reading dict.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error on reading dict.",
+            "data": str(metric)
+        })
         return
 
     # Instance CreatePreFHIR
@@ -80,6 +112,11 @@ def process_metrics_by_cats(i: int, metric: Union[dict, str]) -> Dict[str, Any]:
         # print(json.dumps(resource, indent=2, sort_keys=False))
     except Exception as e:
         logger.error(f"Fail to create PreFHIR for {i}.")
+        error_report.append({
+            "type": "PreFHIR",
+            "message": "Fail to create PreFHIR",
+            "data": str(metric)
+        })
         raise
     
     # Formating to FHIR 
@@ -89,9 +126,19 @@ def process_metrics_by_cats(i: int, metric: Union[dict, str]) -> Dict[str, Any]:
         obs_list = obs_list + obs
     except Exception as e:
         logger.error(f"Fail to format FHIR for {i}.")
+        error_report.append({
+            "type": "FHIR",
+            "message": "Fail to format FHIR",
+            "data": str(metric)
+        })
         raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")

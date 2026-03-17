@@ -6,16 +6,29 @@ import logging
 import json
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fhir_processor.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # For a complete stateofminds file (not too large !! else use process_stateofminds_by_cats)
 def process_global_stateofminds(stateofminds: Union[List, str]) -> Dict[str, Any]:
 
     obs_list = []
+    error_report = []
     total_created = 0
     for i, stateofmind in enumerate(stateofminds):
         if not isinstance(stateofmind, dict):
             logger.warning(f"Error on reading dict : {stateofmind}.")
+            error_report.append({
+                "type": "dict",
+                "message": "Error on reading dict.",
+                "data": str(stateofmind)
+            })
             continue
 
         # Instance CreatePreFHIR
@@ -26,6 +39,11 @@ def process_global_stateofminds(stateofminds: Union[List, str]) -> Dict[str, Any
             # print(json.dumps(resource, indent=2, sort_keys=False))
         except Exception as e:
             logger.error(f"Fail to create PreFHIR for {i}.")
+            error_report.append({
+                "type": "PreFHIR",
+                "message": "Fail to create PreFHIR",
+                "data": str(stateofmind)
+            })
             raise
         
         # Formating to FHIR 
@@ -35,9 +53,19 @@ def process_global_stateofminds(stateofminds: Union[List, str]) -> Dict[str, Any
             obs_list = obs_list + obs
         except Exception as e:
             logger.error(f"Fail to format FHIR for {i}.")
+            error_report.append({
+                "type": "FHIR",
+                "message": "Fail to format FHIR",
+                "data": str(stateofmind)
+            })
             raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")
@@ -55,9 +83,15 @@ def process_global_stateofminds(stateofminds: Union[List, str]) -> Dict[str, Any
 def process_stateofminds_by_cats(stateofmind: Union[dict, str]) -> Dict[str, Any]:
 
     obs_list = []
+    error_report = []
     total_created = 0
     if not isinstance(stateofmind, dict):
         logger.warning(f"Error on reading dict : {stateofmind}.")
+        error_report.append({
+            "type": "dict",
+            "message": "Error on reading dict.",
+            "data": str(stateofmind)
+        })
 
     # Instance CreatePreFHIR
     try: 
@@ -67,6 +101,11 @@ def process_stateofminds_by_cats(stateofmind: Union[dict, str]) -> Dict[str, Any
         # print(json.dumps(resource, indent=2, sort_keys=False))
     except Exception as e:
         logger.error(f"Fail to create PreFHIR for stateofmind.")
+        error_report.append({
+            "type": "PreFHIR",
+            "message": "Fail to create PreFHIR",
+            "data": str(stateofmind)
+        })
         raise
     
     # Formating to FHIR 
@@ -76,9 +115,19 @@ def process_stateofminds_by_cats(stateofmind: Union[dict, str]) -> Dict[str, Any
         obs_list = obs_list + obs
     except Exception as e:
         logger.error(f"Fail to format FHIR for stateofmind.")
+        error_report.append({
+            "type": "FHIR",
+            "message": "Fail to format FHIR",
+            "data": str(stateofmind)
+        })
         raise
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
+    
+    if error_report:
+        with open('error_report.json', 'w') as f:
+            json.dump(error_report, f, indent=2)
+        logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")
