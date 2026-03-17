@@ -2,6 +2,7 @@ import os
 from libs.minio_requests import upload_object_into_bucket
 import logging
 import json
+from datetime import datetime, timezone
 
 logger = logging.getLogger("Worker-fhir")
 logging.basicConfig(level=logging.INFO)
@@ -18,11 +19,15 @@ def transfert_logs_pipeline():
     success = False
         
     file_path = os.path.join("/app", "error_report.json")
-
+    
+    now = datetime.now()
+    filename = f"logs_fhir_{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S_%f')}.log"
+    
     try:
         logger.info(f"Upload file :")
         result = upload_object_into_bucket(file_path=file_path,
-                                           bucket=BUCKET_LOGS
+                                           bucket=BUCKET_LOGS,
+                                           filename=filename
                                            )
         success = True
 
