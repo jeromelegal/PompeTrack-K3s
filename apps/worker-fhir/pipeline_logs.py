@@ -22,8 +22,8 @@ def transfert_logs_pipeline():
     try:
         logger.info(f"Upload file :")
         result = upload_object_into_bucket(file_path=file_path,
-                                           bucket=BUCKET_LOGS,
-                                           scope="fhir:logs")
+                                           bucket=BUCKET_LOGS
+                                           )
         success = True
 
     except Exception as e:
