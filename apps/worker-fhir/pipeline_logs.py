@@ -17,7 +17,7 @@ def transfert_logs_pipeline():
 
     success = False
         
-    file_path = os.path.join("app", "error_report.json")
+    file_path = os.path.join("/app", "error_report.json")
 
     try:
         logger.info(f"Upload file :")
