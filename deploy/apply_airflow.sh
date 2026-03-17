@@ -2,7 +2,7 @@
 set -euo pipefail
 
 helm -n airflow uninstall airflow || true
-kubectl delete namespace airflow
+kubectl delete namespace airflow || true
 
 apply_dir_ordered() {
   local dir="$1"

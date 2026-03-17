@@ -69,5 +69,19 @@ with DAG(
         log_response=True,
         # response_check=lambda r: r.ok and r.json().get("status") == "success",
     )
+    
+    get_logs_headers_task = MedplumHeaderOperator(
+        task_id="get_logs_headers_task",
+        scope=["fhir:logs"],
+    )
+    
+    run_transfer_logs = HttpOperator(
+        task_id="run_transfer_logs",
+        http_conn_id="worker_fhir",
+        endpoint="/run/logs",
+        method="GET",
+        headers=XComArg(get_logs_headers_task),
+        log_response=True,
+    )
 
-    get_ingestion_headers_task >> list_objects >> has_files(list_objects.output) >> get_worker_headers_task >> run_worker
+    get_ingestion_headers_task >> list_objects >> has_files(list_objects.output) >> get_worker_headers_task >> run_worker >> get_logs_headers_task >> run_transfer_logs
