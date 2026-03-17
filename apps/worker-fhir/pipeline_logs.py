@@ -29,11 +29,13 @@ def transfert_logs_pipeline():
                                            bucket=BUCKET_LOGS,
                                            filename=filename
                                            )
-        success = True
 
     except Exception as e:
         logger.error(f"Fail in process upload error_report.json to minio.")
         raise
+    
+    logger.info(f"Object uploaded in {BUCKET_LOGS}.")
+    success = True
     
     return success
 
@@ -43,5 +45,5 @@ if __name__ == "__main__":
     logger.info(f"Pipeline is {result}")
     if result is True:
         # Clear json file
-        with open('data.json', 'w') as f: 
+        with open("error_report.json", 'w') as f: 
             json.dump([], f)
