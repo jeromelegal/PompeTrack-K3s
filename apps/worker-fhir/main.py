@@ -67,3 +67,16 @@ def run_worker_strength(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.get("/run/logs")
+def run_logs_transfert(
+    device: dict = Depends(require_scopes(["fhir:logs"])),
+):
+    try:
+        print(f"Lancement du transfert de logs {now_iso()}")
+        result = subprocess.run(["python", "/app/pipeline_logs.py"], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=result.stderr)
+        return {"status": "success", "output": result.stdout}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
