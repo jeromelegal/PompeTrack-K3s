@@ -26,9 +26,13 @@ def build_observation_hash(
     Makes hash for observation identifier
     """
     patient_id = patient_id.strip().lower()
+    print(f"\nType_patient: {type(patient_id)}\n")
     measurement_type = measurement_type.strip().lower()
+    print(f"\nType_patient: {type(measurement_type)}\n")
     value_norm = str(value).strip().lower()
-
+    print(f"\nType_patient: {type(value_norm)}\n")
+    print(f"\nType_patient: {type(timestamp)}\n")
+    
     canonical_string = f"{patient_id}|{measurement_type}|{timestamp}|{value_norm}"
     return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
