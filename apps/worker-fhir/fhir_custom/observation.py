@@ -36,7 +36,13 @@ def resolve_hash_fields(
     if measurement_type is None and parent_context is not None:
         measurement_type = parent_context.get("code_code")
 
-    timestamp = raw.get("effectiveDateTime") or raw.get("periodstart")
+    timestamp = (
+        raw.get("effectiveDateTime")
+        or raw.get("periodstart")
+        or raw.get("date")
+        or raw.get("start")
+        or raw.get("parent_start")
+    )
     if timestamp is None and parent_context is not None:
         timestamp = parent_context.get("effectiveDateTime") or parent_context.get("periodstart")
 
@@ -166,7 +172,10 @@ def _coding_bodysite(data: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     }
 
 
-def _build_obs_args(raw: dict[str, Any]) -> dict[str, Any]:
+def _build_obs_args(
+    raw: dict[str, Any],
+    parent_context: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
     Retrieve raw data and build the Observation kwargs.
     """
@@ -326,29 +335,17 @@ def _build_obs_args(raw: dict[str, Any]) -> dict[str, Any]:
     if raw.get("hasMember") is not None:
         obs_kwargs["hasMember"] = raw.get("hasMember")
 
-    # identifier hash
-    patient_id = raw.get("patient_id")
-    measurement_type = raw.get("code_code")
-
-    if not patient_id:
-        logger.info("patient_id manquant.")
-    if not measurement_type:
-        logger.info("code_code manquant.")
-
-    if raw.get("effectiveDateTime") is not None:
-        hash_timestamp = to_fhir_datetime(raw.get("effectiveDateTime"))
-    elif raw.get("periodstart") is not None:
-        hash_timestamp = to_fhir_datetime(raw.get("periodstart"))
-    else:
-        raise ValueError(
-            "Ni effectiveDateTime ni periodstart pour construire le hash."
-        )
+    # Makes hash
+    patient_id, measurement_type, hash_timestamp, value_for_hash = resolve_hash_fields(
+        raw=raw,
+        parent_context=parent_context,
+    )
 
     obs_hash = build_observation_hash(
-        patient_id=raw["patient_id"],
-        measurement_type=raw["code_code"],
-        timestamp=raw.get("effectiveDateTime") or raw.get("periodstart"),
-        value=raw.get("value_value"),
+        patient_id=patient_id,
+        measurement_type=measurement_type,
+        timestamp=hash_timestamp,
+        value=value_for_hash,
     )
 
     obs_kwargs["identifier"] = [
