@@ -19,38 +19,127 @@ from fhir_custom.valuequantity import value_quantity
 
 logger = logging.getLogger(__name__)
 
-def resolve_hash_fields(
-    raw: dict,
-    parent_context: Optional[dict] = None,
-) -> tuple[str, str, Union[str, datetime], Optional[str | float | int]]:
-    """
-    Récupère les champs nécessaires au hash.
-    Si un champ manque dans raw, on le cherche dans parent_context.
-    """
-
+def _extract_patient_id(raw: dict[str, Any], parent_context: Optional[dict[str, Any]] = None) -> Optional[str]:
+    # 1) format brut
     patient_id = raw.get("patient_id")
-    if patient_id is None and parent_context is not None:
+    if patient_id:
+        return patient_id
+
+    # 2) format FHIR / pré-FHIR
+    subject = raw.get("subject")
+    if isinstance(subject, dict):
+        ref = subject.get("reference")
+        if isinstance(ref, str) and ref.startswith("Patient/"):
+            return ref.split("/", 1)[1]
+
+    # 3) fallback parent_context
+    if parent_context:
         patient_id = parent_context.get("patient_id")
+        if patient_id:
+            return patient_id
 
+        subject = parent_context.get("subject")
+        if isinstance(subject, dict):
+            ref = subject.get("reference")
+            if isinstance(ref, str) and ref.startswith("Patient/"):
+                return ref.split("/", 1)[1]
+
+    return None
+
+
+def _extract_timestamp(
+    raw: dict[str, Any],
+    parent_context: Optional[dict[str, Any]] = None,
+) -> Optional[Union[str, datetime]]:
+    # 1) format brut
+    timestamp = raw.get("effectiveDateTime") or raw.get("periodstart") or raw.get("date") or raw.get("start")
+    if timestamp is not None:
+        return timestamp
+
+    # 2) format FHIR / pré-FHIR
+    effective_period = raw.get("effectivePeriod")
+    if isinstance(effective_period, dict):
+        timestamp = effective_period.get("start")
+        if timestamp is not None:
+            return timestamp
+
+    # 3) fallback parent_context
+    if parent_context:
+        timestamp = (
+            parent_context.get("effectiveDateTime")
+            or parent_context.get("periodstart")
+            or parent_context.get("date")
+            or parent_context.get("start")
+        )
+        if timestamp is not None:
+            return timestamp
+
+        effective_period = parent_context.get("effectivePeriod")
+        if isinstance(effective_period, dict):
+            timestamp = effective_period.get("start")
+            if timestamp is not None:
+                return timestamp
+
+    return None
+
+
+def _extract_measurement_type(raw: dict[str, Any], parent_context: Optional[dict[str, Any]] = None) -> Optional[str]:
+    # 1) format brut
     measurement_type = raw.get("code_code")
-    if measurement_type is None and parent_context is not None:
+    if measurement_type:
+        return measurement_type
+
+    # 2) format FHIR / pré-FHIR
+    code = raw.get("code")
+    if hasattr(code, "coding") and code.coding:
+        first = code.coding[0]
+        if getattr(first, "code", None):
+            return first.code
+
+    if isinstance(code, dict):
+        coding = code.get("coding")
+        if isinstance(coding, list) and coding:
+            first = coding[0]
+            if isinstance(first, dict) and first.get("code"):
+                return first["code"]
+
+    # 3) fallback parent_context
+    if parent_context:
         measurement_type = parent_context.get("code_code")
+        if measurement_type:
+            return measurement_type
 
-    timestamp = (
-        raw.get("effectiveDateTime")
-        or raw.get("periodstart")
-        or raw.get("date")
-        or raw.get("start")
-        or raw.get("parent_start")
-    )
-    if timestamp is None and parent_context is not None:
-        timestamp = parent_context.get("effectiveDateTime") or parent_context.get("periodstart")
+        code = parent_context.get("code")
+        if isinstance(code, dict):
+            coding = code.get("coding")
+            if isinstance(coding, list) and coding:
+                first = coding[0]
+                if isinstance(first, dict) and first.get("code"):
+                    return first["code"]
 
+    return None
+
+
+def resolve_hash_fields(
+    raw: dict[str, Any],
+    parent_context: Optional[dict[str, Any]] = None,
+) -> tuple[str, str, Union[str, datetime], Optional[Union[str, float, int]]]:
+    patient_id = _extract_patient_id(raw, parent_context)
+    measurement_type = _extract_measurement_type(raw, parent_context)
+    timestamp = _extract_timestamp(raw, parent_context)
     value = raw.get("value_value")
 
-    if patient_id is None:
+    if value is None:
+        value_quantity = raw.get("valueQuantity")
+        if isinstance(value_quantity, dict):
+            value = value_quantity.get("value")
+
+    if value is None:
+        value = raw.get("valueString")
+
+    if not patient_id:
         raise ValueError("patient_id introuvable ni dans raw ni dans parent_context.")
-    if measurement_type is None:
+    if not measurement_type:
         raise ValueError("measurement_type introuvable ni dans raw ni dans parent_context.")
     if timestamp is None:
         raise ValueError("timestamp introuvable ni dans raw ni dans parent_context.")
