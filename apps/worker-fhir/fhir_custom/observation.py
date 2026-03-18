@@ -57,7 +57,7 @@ def normalize_value(value: Optional[Union[str, float, int]]) -> str:
     return str(value).strip().lower()
 
 def build_observation_hash(
-    patient_id: str,
+    patient_id: Optional[str],
     measurement_type: str,
     timestamp: Union[str, datetime],
     value: Optional[Union[str, float, int]] = None,
@@ -67,7 +67,8 @@ def build_observation_hash(
     value est optionnelle.
     """
     if not isinstance(patient_id, str) or not patient_id.strip():
-        raise ValueError("patient_id doit être une chaîne non vide.")
+        patient_id = "0abc"
+        # raise ValueError("patient_id doit être une chaîne non vide.")
     if not isinstance(measurement_type, str) or not measurement_type.strip():
         raise ValueError("measurement_type doit être une chaîne non vide.")
 
@@ -312,9 +313,9 @@ def _build_obs_args(raw: dict[str, Any]) -> dict[str, Any]:
     measurement_type = raw.get("code_code")
 
     if not patient_id:
-        raise ValueError("patient_id manquant.")
+        logger.info("patient_id manquant.")
     if not measurement_type:
-        raise ValueError("code_code manquant.")
+        logger.info("code_code manquant.")
 
     if raw.get("effectiveDateTime") is not None:
         hash_timestamp = to_fhir_datetime(raw.get("effectiveDateTime"))

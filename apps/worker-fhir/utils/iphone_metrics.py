@@ -15,18 +15,6 @@ logging.basicConfig(
     ]
 )
 
-def split_json(json_file):
-    for k in json_file["data"].keys():
-        if k == "metrics":
-            metrics = json_file["data"]["metrics"]
-        elif k == "workouts":
-            workouts = json_file["data"]["workouts"]
-        elif k == "stateOfMind":
-            stateofmind = json_file["data"]["stateOfMind"]
-        else:
-            print(f"Nouvelle catégorie: {k}.")
-    return metrics, workouts, stateofmind
-
 # For a complete metrics file (not too large !! else use process_metrics_by_cats)
 def process_global_metrics(metrics: Union[List, str]) -> Dict[str, Any]:
     obs_list = []
