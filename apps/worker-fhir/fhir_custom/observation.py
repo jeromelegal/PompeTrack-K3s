@@ -214,7 +214,7 @@ def _build_obs_args(raw: dict) -> dict:
         
     # Makes hash
     if obs_kwargs["effectiveDateTime"]:
-        hash_timestamp = obs_kwargs["effectiveDateTime"]
+        hash_timestamp = to_fhir_datetime(raw.get("effectiveDateTime"))
     else:
         hash_timestamp = to_fhir_datetime(raw.get("periodstart"))
     obs_hash = build_observation_hash(
