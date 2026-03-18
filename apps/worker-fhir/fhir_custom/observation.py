@@ -27,10 +27,9 @@ def build_observation_hash(
     """
     patient_id = patient_id.strip().lower()
     measurement_type = measurement_type.strip().lower()
-    timestamp_norm = normalize_timestamp(timestamp)
     value_norm = str(value).strip().lower()
 
-    canonical_string = f"{patient_id}|{measurement_type}|{timestamp_norm}|{value_norm}"
+    canonical_string = f"{patient_id}|{measurement_type}|{timestamp}|{value_norm}"
     return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
 def to_fhir_datetime(value):
