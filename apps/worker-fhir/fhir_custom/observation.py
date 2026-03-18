@@ -19,6 +19,38 @@ from fhir_custom.valuequantity import value_quantity
 
 logger = logging.getLogger(__name__)
 
+def resolve_hash_fields(
+    raw: dict,
+    parent_context: Optional[dict] = None,
+) -> tuple[str, str, Union[str, datetime], Optional[str | float | int]]:
+    """
+    Récupère les champs nécessaires au hash.
+    Si un champ manque dans raw, on le cherche dans parent_context.
+    """
+
+    patient_id = raw.get("patient_id")
+    if patient_id is None and parent_context is not None:
+        patient_id = parent_context.get("patient_id")
+
+    measurement_type = raw.get("code_code")
+    if measurement_type is None and parent_context is not None:
+        measurement_type = parent_context.get("code_code")
+
+    timestamp = raw.get("effectiveDateTime") or raw.get("periodstart")
+    if timestamp is None and parent_context is not None:
+        timestamp = parent_context.get("effectiveDateTime") or parent_context.get("periodstart")
+
+    value = raw.get("value_value")
+
+    if patient_id is None:
+        raise ValueError("patient_id introuvable ni dans raw ni dans parent_context.")
+    if measurement_type is None:
+        raise ValueError("measurement_type introuvable ni dans raw ni dans parent_context.")
+    if timestamp is None:
+        raise ValueError("timestamp introuvable ni dans raw ni dans parent_context.")
+
+    return patient_id, measurement_type, timestamp, value
+
 def to_fhir_datetime(value: Union[str, datetime]) -> str:
     """
     Convertit une date en chaîne ISO stable pour le hash.
@@ -32,14 +64,11 @@ def to_fhir_datetime(value: Union[str, datetime]) -> str:
         dt = value
     else:
         raise TypeError(f"timestamp doit être str ou datetime, reçu {type(value)}")
-
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
-
     iso_str = dt.isoformat(timespec="seconds")
     if iso_str.endswith("+00:00"):
         iso_str = iso_str[:-6] + "Z"
-
     return iso_str
 
 def normalize_value(value: Optional[Union[str, float, int]]) -> str:
@@ -50,14 +79,12 @@ def normalize_value(value: Optional[Union[str, float, int]]) -> str:
     """
     if value is None:
         return ""
-
     if isinstance(value, float):
         return f"{value:.6f}".rstrip("0").rstrip(".")
-
     return str(value).strip().lower()
 
 def build_observation_hash(
-    patient_id: Optional[str],
+    patient_id: str,
     measurement_type: str,
     timestamp: Union[str, datetime],
     value: Optional[Union[str, float, int]] = None,
@@ -66,21 +93,12 @@ def build_observation_hash(
     Hash toujours calculable si patient_id, measurement_type et timestamp sont présents.
     value est optionnelle.
     """
-    if not isinstance(patient_id, str) or not patient_id.strip():
-        patient_id = "0abc"
-        # raise ValueError("patient_id doit être une chaîne non vide.")
-    if not isinstance(measurement_type, str) or not measurement_type.strip():
-        raise ValueError("measurement_type doit être une chaîne non vide.")
-
     patient_id_norm = patient_id.strip().lower()
     measurement_type_norm = measurement_type.strip().lower()
     timestamp_norm = to_fhir_datetime(timestamp)
-    value_norm = normalize_value(value)   # "" si absent
+    value_norm = normalize_value(value)
 
-    canonical_string = (
-        f"{patient_id_norm}|{measurement_type_norm}|{timestamp_norm}|{value_norm}"
-    )
-
+    canonical_string = f"{patient_id_norm}|{measurement_type_norm}|{timestamp_norm}|{value_norm}"
     return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
 
