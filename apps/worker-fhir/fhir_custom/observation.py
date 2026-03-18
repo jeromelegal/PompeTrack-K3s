@@ -22,16 +22,15 @@ def build_observation_hash(
     timestamp: str | datetime,
     value: Optional[str | float | int],
 ) -> str:
-    """
-    Makes hash for observation identifier
-    """
+    print("DEBUG TYPES:")
+    print("patient_id:", type(patient_id), repr(patient_id))
+    print("measurement_type:", type(measurement_type), repr(measurement_type))
+    print("timestamp:", type(timestamp), repr(timestamp))
+    print("value:", type(value), repr(value))
+
     patient_id = patient_id.strip().lower()
-    print(f"\nType_patient: {type(patient_id)}\n")
     measurement_type = measurement_type.strip().lower()
-    print(f"\nType_patient: {type(measurement_type)}\n")
     value_norm = str(value).strip().lower()
-    print(f"\nType_patient: {type(value_norm)}\n")
-    print(f"\nType_patient: {type(timestamp)}\n")
     
     canonical_string = f"{patient_id}|{measurement_type}|{timestamp}|{value_norm}"
     return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
