@@ -11,9 +11,27 @@ from pydantic_core import from_json
 from pathlib import Path
 import uuid
 import logging
+import hashlib
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)  
+
+def build_observation_hash(
+    patient_id: str,
+    measurement_type: str,
+    timestamp: str | datetime,
+    value: Optional[str | float | int],
+) -> str:
+    """
+    Makes hash for observation identifier
+    """
+    patient_id = patient_id.strip().lower()
+    measurement_type = measurement_type.strip().lower()
+    timestamp_norm = normalize_timestamp(timestamp)
+    value_norm = str(value).strip().lower()
+
+    canonical_string = f"{patient_id}|{measurement_type}|{timestamp_norm}|{value_norm}"
+    return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
 def to_fhir_datetime(value):
     """
@@ -194,6 +212,20 @@ def _build_obs_args(raw: dict) -> dict:
     # Add original hasMember (maked in class : ) 
     if raw.get("hasMember") is not None:
         obs_kwargs["hasMember"] = raw.get("hasMember")
+        
+    # Makes hash
+    if obs_kwargs["effectiveDateTime"]:
+        hash_timestamp = obs_kwargs["effectiveDateTime"]
+    else:
+        hash_timestamp = to_fhir_datetime(raw.get("periodstart"))
+    obs_hash = build_observation_hash(
+            patient_id=raw.get('patient_id'),
+            measurement_type=raw.get("code_code"),
+            timestamp=hash_timestamp,
+            value=raw.get("value_value"),
+            )
+    
+    obs_kwargs["identifier"] = {[{"system": "https://medplum.phylcero.fr/observation-hash", "value": obs_hash}]}
         
     return obs_kwargs
         
