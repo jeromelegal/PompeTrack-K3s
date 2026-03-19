@@ -15,30 +15,32 @@ logging.basicConfig(
     ]
 )
 
-# For a complete manuals file (not too large !! else use process_manuals_by_cats)
-def process_global_manuals(manuals: Union[List, str]) -> Dict[str, Any]:
+
+def process_global_manuals(manuals: Union[List, str, Dict[str, Any]]):
     error_report = []
+
     if not isinstance(manuals, dict):
-        logger.error(f"Error on reading dict.")
+        logger.error("Error on reading dict.")
         error_report.append({
             "type": "dict",
             "message": "Error on reading dict.",
             "data": str(manuals)
         })
-        return
-   
+        return None
+
     if not manuals.get("metrics"):
-        logger.error(f"Error, not 'metrics' in file.")
+        logger.error("Error, not 'metrics' in file.")
         error_report.append({
             "type": "dict",
             "message": "Error, not 'metrics' in file.",
             "data": str(manuals)
         })
-        return
-    
+        return None
+
     metrics = manuals["metrics"]
     obs_list = []
     total_created = 0
+
     for i, manual in enumerate(metrics):
         if not isinstance(manual, dict):
             logger.warning(f"Error on reading dict : {manual}.")
@@ -49,196 +51,167 @@ def process_global_manuals(manuals: Union[List, str]) -> Dict[str, Any]:
             })
             continue
 
-        # Instance CreatePreFHIR
-        try: 
+        try:
             logger.info(f"Creating PreFHIR for {i}.")
             creator = CreatePreFHIR(manual, round_digits=1)
             resource = creator.render()
-            # print(json.dumps(resource, indent=2, sort_keys=False))
-        except Exception as e:
-            logger.error(f"Fail to create PreFHIR for {i}.")
+        except Exception:
+            logger.exception(f"Fail to create PreFHIR for {i}.")
             error_report.append({
                 "type": "PreFHIR",
                 "message": "Fail to create PreFHIR",
                 "data": str(manual)
             })
-            raise
-        
-        # Formating to FHIR 
-        try: 
+            continue
+
+        try:
             logger.info(f"Formating to FHIR for {i}.")
             obs, total_created = list_to_fhir_observation(resource, total_created)
-            obs_list = obs_list + obs
-        except Exception as e:
-            logger.error(f"Fail to format FHIR for {i}.")
+            obs_list.extend(obs)
+        except Exception:
+            logger.exception(f"Fail to format FHIR for {i}.")
             error_report.append({
                 "type": "FHIR",
                 "message": "Fail to format FHIR",
                 "data": str(manual)
             })
-            raise
+            continue
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
-    
+
     if error_report:
-        with open('error_report.json', 'w') as f:
+        with open("error_report.json", "w") as f:
             json.dump(error_report, f, indent=2)
         logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")
-        
-    else:
-        logger.info(f"Building bundle.")
-        bundle_json = build_bundle_fhir(obs_list).json(
-            indent=2,
-            by_alias=True
-        )
+        return None
 
-        return bundle_json
-    
-# For a complete manuals file (not too large !! else use process_manuals_by_cats)
-def process_manuals_by_cats(i: int, manual: Union[dict, str]) -> Dict[str, Any]:
+    logger.info("Building bundle.")
+    return build_bundle_fhir(obs_list)
 
+
+def process_manuals_by_cats(i: int, manual: Union[dict, str]):
     obs_list = []
     error_report = []
     total_created = 0
+
     if not isinstance(manual, dict):
-        logger.error(f"Error - not a dict.")
+        logger.error("Error - not a dict.")
         error_report.append({
             "type": "dict",
             "message": "Error - not a dict.",
             "data": str(manual)
         })
-        return
-    
+        return None
+
     if not manual:
-        logger.error(f"Error empty dict.")
+        logger.error("Error empty dict.")
         error_report.append({
             "type": "dict",
             "message": "Error empty dict.",
             "data": str(manual)
         })
-        return
+        return None
 
-    # Instance CreatePreFHIR
-    try: 
-        #logger.info(f"Creating PreFHIR for {i}.")
+    try:
         creator = CreatePreFHIR(manual, round_digits=1)
         resource = creator.render()
-        # print(json.dumps(resource, indent=2, sort_keys=False))
-    except Exception as e:
-        logger.error(f"Fail to create PreFHIR for {i}.")
+    except Exception:
+        logger.exception(f"Fail to create PreFHIR for {i}.")
         error_report.append({
             "type": "PreFHIR",
             "message": "Fail to create PreFHIR",
             "data": str(manual)
         })
-        raise
-    
-    # Formating to FHIR 
-    try: 
+        return None
+
+    try:
         logger.info(f"Formating to FHIR for {i}.")
         obs, total_created = list_to_fhir_observation(resource, total_created)
-        obs_list = obs_list + obs
-    except Exception as e:
-        logger.error(f"Fail to format FHIR for {i}.")
+        obs_list.extend(obs)
+    except Exception:
+        logger.exception(f"Fail to format FHIR for {i}.")
         error_report.append({
             "type": "FHIR",
             "message": "Fail to format FHIR",
             "data": str(manual)
         })
-        raise
+        return None
 
     logger.info(f"Total resources ajoutées au bundle: {total_created}")
-    
+
     if error_report:
-        with open('error_report.json', 'w') as f:
+        with open("error_report.json", "w") as f:
             json.dump(error_report, f, indent=2)
         logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
         logger.error("Fail to build bundle.")
-        
-    else:
-        logger.info(f"Building bundle.")
-        bundle_json = build_bundle_fhir(obs_list).json(
-            indent=2,
-            by_alias=True
-        )
+        return None
 
-        return bundle_json
-    
+    logger.info("Building bundle.")
+    return build_bundle_fhir(obs_list)
+
 
 def pipeline_metrics_by_cats(manuals: List[Any]):
-    """
-    Full process for manuals by categories
-    """
+    overall_success = True
+
     for i, manual in enumerate(manuals):
         try:
-            bundle_json = process_manuals_by_cats(i, manual)
-            success = upload_bundle(bundle_json)
-            
-            if success:
-                logger.info("Traitement des 'manuals' terminé avec succès")
-                return True
-            else:
-                logger.info("Erreur lors du traitement des 'manuals'.")
-                return False
-                
+            bundle = process_manuals_by_cats(i, manual)
+            if bundle is None:
+                overall_success = False
+                continue
+
+            success = upload_bundle(bundle)
+            if not success:
+                overall_success = False
+
         except Exception as e:
             logger.error(f"Erreur globale : {str(e)}")
-            
+            overall_success = False
+
+    if overall_success:
+        logger.info("Traitement des 'manuals' terminé avec succès")
+    else:
+        logger.info("Erreur lors du traitement des 'manuals'.")
+
+    return overall_success
+
+
 def pipeline_metrics(manuals: List[Any]):
-    """
-    Full process for manuals
-    """
     try:
-        bundle_json = process_global_manuals(manuals)
-        #print(bundle_json)
-        success = upload_bundle(bundle_json)
+        bundle = process_global_manuals(manuals)
+        if bundle is None:
+            return False
+
+        success = upload_bundle(bundle)
         if success:
             print("Traitement terminé avec succès")
             return True
-        else:
-            print("Erreur lors de l'upload")
-            return False
+
+        print("Erreur lors de l'upload")
+        return False
+
     except Exception as e:
         logger.error(f"Erreur globale : {str(e)}")
         return False
-        
+
 
 if __name__ == "__main__":
-
     with open("/app/data/pain.json", "r", encoding="utf-8") as f:
         manuals = json.load(f)
 
-    # metrics = manuals["metrics"]
-    # for i, manual in enumerate(metrics):
-    #     try:
-    #         bundle_json = process_manuals_by_cats(i, manual)
-    #         #print(bundle_json)
-    #         success = upload_bundle(bundle_json)
-            
-    #         if success:
-    #             print("Traitement terminé avec succès")
-    #         else:
-    #             print("Erreur lors de l'upload")
-                
-    #     except Exception as e:
-    #         logger.error(f"Erreur globale : {str(e)}")
-            
     try:
-        bundle_json = process_global_manuals(manuals)
-        #print(bundle_json)
-        success = upload_bundle(bundle_json)
-        
+        bundle = process_global_manuals(manuals)
+        success = upload_bundle(bundle) if bundle is not None else False
+
         if success:
             print("Traitement terminé avec succès")
         else:
             print("Erreur lors de l'upload")
-            
+
     except Exception as e:
         logger.error(f"Erreur globale : {str(e)}")
-        
-        

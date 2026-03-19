@@ -1,5 +1,4 @@
 import os
-import re
 import uuid
 import json
 import logging
@@ -21,9 +20,6 @@ FHIR_BASE = os.getenv(
 )
 
 HASH_SYSTEM = "https://medplum.phylcero.fr/observation-hash"
-
-# FHIR id regex: letters / digits / "-" / "." only, max 64 chars
-FHIR_ID_PATTERN = re.compile(r"^[A-Za-z0-9\-.]{1,64}$")
 
 
 def _extract_hash_from_identifier(identifier_list: Any) -> str | None:
@@ -64,33 +60,21 @@ def _build_observation_request(obs_hash: str | None) -> BundleEntryRequest:
     return request
 
 
-def _is_valid_fhir_id(value: str | None) -> bool:
+def _clean_observation_for_create(obs: Observation) -> Observation:
     """
-    Vérifie si une valeur est un id FHIR valide.
+    Nettoie une Observation avant create :
+    - supprime id pour laisser Medplum le générer
+    - supprime versionId / lastUpdated si présents
+    - conserve les données métier utiles
     """
-    return bool(value and FHIR_ID_PATTERN.fullmatch(value))
-
-
-def _clean_resource_for_create(resource: Observation) -> Observation:
-    """
-    Nettoie une ressource Observation avant un POST create vers Medplum.
-
-    - retire les ids invalides ou inutiles
-    - retire les meta techniques serveur
-    - reconstruit un objet Observation propre
-    """
-    payload = resource.model_dump(
+    payload = obs.model_dump(
         mode="json",
         by_alias=True,
         exclude_none=True,
     )
 
-    resource_id = payload.get("id")
-    if resource_id and not _is_valid_fhir_id(resource_id):
-        logger.warning("Suppression d'un id FHIR invalide avant create: %s", resource_id)
-        payload.pop("id", None)
+    payload.pop("id", None)
 
-    # Pour un POST create, on laisse le serveur gérer versionId / lastUpdated
     meta = payload.get("meta")
     if isinstance(meta, dict):
         meta.pop("versionId", None)
@@ -101,31 +85,10 @@ def _clean_resource_for_create(resource: Observation) -> Observation:
     return Observation(**payload)
 
 
-def _make_entry(resource: Observation, full_url: str | None = None) -> BundleEntry:
-    """
-    Construit une entrée de Bundle transaction pour une Observation.
-    """
-    clean_resource = _clean_resource_for_create(resource)
-    obs_hash = _extract_hash_from_identifier(clean_resource.identifier)
-
-    # Toujours utiliser un vrai UUID pour un URN interne
-    entry_full_url = full_url or f"urn:uuid:{uuid.uuid4()}"
-
-    return BundleEntry(
-        fullUrl=entry_full_url,
-        resource=clean_resource,
-        request=_build_observation_request(obs_hash),
-    )
-
-
 def build_bundle_fhir(observations: List[Observation]) -> Bundle:
     """
-    Construit un Bundle transaction à partir d'objets Observation déjà instanciés.
-
-    Version robuste :
-    - fullUrl toujours valide
-    - ressource nettoyée avant create
-    - ifNoneExist appliqué si hash disponible
+    Construit un Bundle FHIR de type transaction à partir d'objets Observation.
+    Utilisé pour les bundles simples sans relation parent/enfants.
     """
     bundle = Bundle(
         resourceType="Bundle",
@@ -134,7 +97,14 @@ def build_bundle_fhir(observations: List[Observation]) -> Bundle:
     )
 
     for obs in observations:
-        entry = _make_entry(obs)
+        clean_obs = _clean_observation_for_create(obs)
+        obs_hash = _extract_hash_from_identifier(clean_obs.identifier)
+
+        entry = BundleEntry(
+            fullUrl=f"urn:uuid:{uuid.uuid4()}",
+            resource=clean_obs,
+            request=_build_observation_request(obs_hash),
+        )
         bundle.entry.append(entry)
 
     return bundle
@@ -146,12 +116,11 @@ def build_transaction_bundle(
     children_indices: List[int] | None = None,
 ) -> Bundle:
     """
-    Construit un Bundle transaction à partir d'observations brutes (dict).
+    Construit un Bundle FHIR transaction à partir d'observations brutes.
 
-    - ajoute hasMember sur le parent si demandé
-    - transforme chaque dict en ressource FHIR Observation
-    - nettoie les ressources avant create
-    - applique ifNoneExist sur l'identifier hash
+    - ajoute hasMember sur le parent si parent_index et children_indices sont fournis
+    - convertit les dicts en ressources FHIR Observation
+    - applique le conditional create via ifNoneExist
     """
     bundle = Bundle(type="transaction", entry=[])
     urns = [f"urn:uuid:{uuid.uuid4()}" for _ in observations]
@@ -167,12 +136,56 @@ def build_transaction_bundle(
 
     for idx, (obs_dict, urn) in enumerate(zip(observations, urns)):
         ctx = parent_context if idx in children_set else None
-        obs_resource = to_fhir_observation(obs_dict, parent_context=ctx)
 
-        entry = _make_entry(obs_resource, full_url=urn)
+        obs_resource = to_fhir_observation(obs_dict, parent_context=ctx)
+        clean_obs = _clean_observation_for_create(obs_resource)
+        obs_hash = _extract_hash_from_identifier(clean_obs.identifier)
+
+        entry = BundleEntry(
+            fullUrl=urn,
+            resource=clean_obs,
+            request=_build_observation_request(obs_hash),
+        )
         bundle.entry.append(entry)
 
     return bundle
+
+
+def _normalize_payload(bundle: Bundle | Dict[str, Any] | str) -> Dict[str, Any]:
+    """
+    Normalise tout type d'entrée en dict JSON FHIR.
+
+    Accepte :
+    - Bundle Pydantic
+    - dict
+    - string JSON
+    """
+    if isinstance(bundle, Bundle):
+        payload = bundle.model_dump(
+            mode="json",
+            by_alias=True,
+            exclude_none=True,
+        )
+    elif isinstance(bundle, dict):
+        payload = bundle
+    elif isinstance(bundle, str):
+        try:
+            payload = json.loads(bundle)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Le bundle string n'est pas un JSON valide.") from exc
+    else:
+        raise TypeError(
+            f"Type de bundle non supporté: {type(bundle).__name__}. "
+            "Attendu: Bundle, dict ou str JSON."
+        )
+
+    if not isinstance(payload, dict):
+        raise TypeError(
+            f"Payload normalisé invalide: {type(payload).__name__}. "
+            "Un objet JSON (dict) était attendu."
+        )
+
+    return payload
 
 
 def _post_bundle(payload: Dict[str, Any]) -> bool:
@@ -212,30 +225,29 @@ def _post_bundle(payload: Dict[str, Any]) -> bool:
         return False
 
 
-def upload_bundle(bundle: Bundle | Dict[str, Any]) -> bool:
+def upload_bundle(bundle: Bundle | Dict[str, Any] | str) -> bool:
     """
-    Upload générique conservé pour compatibilité.
+    Upload générique robuste.
+    Accepte Bundle, dict ou string JSON.
     """
-    if isinstance(bundle, Bundle):
-        payload = bundle.model_dump(
-            mode="json",
-            by_alias=True,
-            exclude_none=True,
-        )
-    else:
-        payload = bundle
+    try:
+        payload = _normalize_payload(bundle)
+    except Exception:
+        logger.exception("Impossible de normaliser le bundle avant upload")
+        return False
 
     return _post_bundle(payload)
 
 
-def upload_transaction_bundle(bundle: Bundle) -> bool:
+def upload_transaction_bundle(bundle: Bundle | Dict[str, Any] | str) -> bool:
     """
-    Upload d'un Bundle transaction.
-    Conservé pour compatibilité, délègue au même uploader central.
+    Upload transaction bundle.
+    Même comportement que upload_bundle, gardé pour compatibilité.
     """
-    payload = bundle.model_dump(
-        mode="json",
-        by_alias=True,
-        exclude_none=True,
-    )
+    try:
+        payload = _normalize_payload(bundle)
+    except Exception:
+        logger.exception("Impossible de normaliser le transaction bundle avant upload")
+        return False
+
     return _post_bundle(payload)
