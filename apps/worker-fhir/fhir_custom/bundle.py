@@ -3,6 +3,7 @@ import uuid
 import json
 import logging
 from typing import Any, Dict, List
+import time
 
 import requests
 from fhir.resources.bundle import Bundle, BundleEntry, BundleEntryRequest
@@ -21,17 +22,7 @@ FHIR_BASE = os.getenv(
 
 HASH_SYSTEM = "https://medplum.phylcero.fr/observation-hash"
 
-def chunk_list(items, chunk_size: int):
-    if chunk_size <= 0:
-        raise ValueError("chunk_size doit être > 0")
-
-    for i in range(0, len(items), chunk_size):
-        yield items[i:i + chunk_size]
-
-def upload_bundles_in_chunks(observations, chunk_size: int = 10) -> bool:
-    """
-    Découpe une liste d'Observation en petits bundles et les upload un par un.
-    """
+def upload_bundles_in_chunks(observations, chunk_size: int = 10, delay_seconds: float = 1) -> bool:
     overall_success = True
 
     for idx, obs_chunk in enumerate(chunk_list(observations, chunk_size), start=1):
@@ -51,6 +42,8 @@ def upload_bundles_in_chunks(observations, chunk_size: int = 10) -> bool:
                 len(obs_chunk),
             )
             overall_success = False
+
+        time.sleep(delay_seconds)
 
     return overall_success
 

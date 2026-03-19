@@ -132,7 +132,7 @@ def pipeline_stateofminds(stateofminds: List[Any]):
 
     for stateofmind in stateofminds:
         try:                
-            obs_list = process_stateofminds_by_cats(i, stateofmind)
+            obs_list = process_stateofminds_by_cats(stateofmind)
             if obs_list is None:
                 overall_success = False
                 continue
