@@ -155,11 +155,6 @@ def _post_bundle(payload: Dict[str, Any]) -> bool:
         logger.exception("Erreur lors de l'upload du Bundle")
         return False
 
-
-
-
-
-
 def upload_bundle(bundle: Bundle | Dict[str, Any]) -> bool:
     """
     Upload bundle FHIR to Medplum.
@@ -197,3 +192,15 @@ def upload_bundle(bundle: Bundle | Dict[str, Any]) -> bool:
     except Exception:
         logger.exception("Erreur lors de l'upload du Bundle")
         return False
+    
+def upload_transaction_bundle(bundle: Bundle) -> bool:
+    """
+    Upload d'un Bundle transaction.
+    Conservé pour compatibilité, mais délègue au même uploader central.
+    """
+    payload = bundle.model_dump(
+        mode="json",
+        by_alias=True,
+        exclude_none=True,
+    )
+    return _post_bundle(payload)
