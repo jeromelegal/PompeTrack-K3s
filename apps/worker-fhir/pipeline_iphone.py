@@ -13,6 +13,11 @@ BUCKET_RAW = "raw-iphone"
 BUCKET_PROCESSED = "processed-fhir"
 
 def split_json(json_file):
+    metrics = None
+    workouts = None
+    stateofmind = None
+    symptoms = None
+
     for k in json_file["data"].keys():
         if k == "metrics":
             metrics = json_file["data"]["metrics"]
@@ -21,9 +26,10 @@ def split_json(json_file):
         elif k == "stateOfMind":
             stateofmind = json_file["data"]["stateOfMind"]
         elif k == "symptoms":
-            symptoms = json_file["data"]["symptoms"]   
+            symptoms = json_file["data"]["symptoms"]
         else:
             print(f"Nouvelle catégorie: {k}.")
+
     return metrics, workouts, stateofmind, symptoms
 
 def _run_pipeline(name, pipeline_func, data, obj_id):
