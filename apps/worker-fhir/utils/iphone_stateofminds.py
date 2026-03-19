@@ -1,6 +1,6 @@
 from fhir_custom.observation import list_to_fhir_observation
 from fhir_custom.worker_template import CreatePreFHIR_name
-from fhir_custom.bundle import build_bundle_fhir, upload_bundle
+from fhir_custom.bundle import build_bundle_fhir, upload_bundle, upload_bundles_in_chunks
 from typing import Any, Union, List
 import logging
 import json
@@ -123,21 +123,21 @@ def process_stateofminds_by_cats(stateofmind: Union[dict, str]):
         logger.error("Fail to build bundle.")
         return None
 
-    logger.info("Building bundle.")
-    return build_bundle_fhir(obs_list)
+    logger.info("Observation list built.")
+    return obs_list
 
 
 def pipeline_stateofminds(stateofminds: List[Any]):
     overall_success = True
 
     for stateofmind in stateofminds:
-        try:
-            bundle = process_stateofminds_by_cats(stateofmind)
-            if bundle is None:
+        try:                
+            obs_list = process_stateofminds_by_cats(i, stateofmind)
+            if obs_list is None:
                 overall_success = False
                 continue
 
-            success = upload_bundle(bundle)
+            success = upload_bundles_in_chunks(obs_list, chunk_size=5)
             if not success:
                 overall_success = False
 

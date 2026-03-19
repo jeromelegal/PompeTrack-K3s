@@ -1,6 +1,7 @@
 from fhir_custom.observation import list_to_fhir_observation
 from fhir_custom.worker_template import CreatePreFHIR
 from fhir_custom.bundle import build_bundle_fhir, upload_bundle
+from fhir_custom.bundle import upload_bundles_in_chunks
 from typing import Dict, Any, Union, List
 import logging
 import json
@@ -115,11 +116,10 @@ def process_global_strengths(strengths: Union[List, str, Dict[str, Any]]):
         logger.info(f"Rapport d'erreurs généré avec {len(error_report)} erreurs")
 
     if not obs_list:
-        logger.error("Fail to build bundle.")
+        logger.error("Fail to build observations list.")
         return None
 
-    logger.info("Building bundle.")
-    return build_bundle_fhir(obs_list)
+    return obs_list
 
 
 def process_strengths_by_cats(i: int, strength: Union[dict, str]):
@@ -213,12 +213,11 @@ def pipeline_metrics_by_cats(strengths: List[Any]):
 
 def pipeline_metrics(strengths: List[Any]):
     try:
-        strengths = average_strenght_results(strengths)
-        bundle = process_global_strengths(strengths)
-        if bundle is None:
+        obs_list = process_global_strengths(strengths)
+        if obs_list is None:
             return False
 
-        success = upload_bundle(bundle)
+        success = upload_bundles_in_chunks(obs_list, chunk_size=10)
         if success:
             print("Traitement terminé avec succès")
             return True

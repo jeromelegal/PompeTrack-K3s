@@ -21,6 +21,38 @@ FHIR_BASE = os.getenv(
 
 HASH_SYSTEM = "https://medplum.phylcero.fr/observation-hash"
 
+def chunk_list(items, chunk_size: int):
+    if chunk_size <= 0:
+        raise ValueError("chunk_size doit être > 0")
+
+    for i in range(0, len(items), chunk_size):
+        yield items[i:i + chunk_size]
+
+def upload_bundles_in_chunks(observations, chunk_size: int = 10) -> bool:
+    """
+    Découpe une liste d'Observation en petits bundles et les upload un par un.
+    """
+    overall_success = True
+
+    for idx, obs_chunk in enumerate(chunk_list(observations, chunk_size), start=1):
+        bundle = build_bundle_fhir(obs_chunk)
+        success = upload_bundle(bundle)
+
+        if success:
+            logger.info(
+                "Sous-bundle %s uploadé avec succès (%s observations)",
+                idx,
+                len(obs_chunk),
+            )
+        else:
+            logger.warning(
+                "Sous-bundle %s en échec (%s observations)",
+                idx,
+                len(obs_chunk),
+            )
+            overall_success = False
+
+    return overall_success
 
 def _extract_hash_from_identifier(identifier_list: Any) -> str | None:
     """
@@ -65,7 +97,6 @@ def _clean_observation_for_create(obs: Observation) -> Observation:
     Nettoie une Observation avant create :
     - supprime id pour laisser Medplum le générer
     - supprime versionId / lastUpdated si présents
-    - conserve les données métier utiles
     """
     payload = obs.model_dump(
         mode="json",
@@ -120,7 +151,7 @@ def build_transaction_bundle(
 
     - ajoute hasMember sur le parent si parent_index et children_indices sont fournis
     - convertit les dicts en ressources FHIR Observation
-    - applique le conditional create via ifNoneExist
+    - applique ifNoneExist pour éviter les doublons
     """
     bundle = Bundle(type="transaction", entry=[])
     urns = [f"urn:uuid:{uuid.uuid4()}" for _ in observations]
@@ -188,9 +219,80 @@ def _normalize_payload(bundle: Bundle | Dict[str, Any] | str) -> Dict[str, Any]:
     return payload
 
 
+def _summarize_transaction_response(response_json: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Résume une réponse transaction-response Medplum.
+    """
+    summary = {
+        "total_entries": 0,
+        "success_count": 0,
+        "throttled_count": 0,
+        "error_count": 0,
+        "statuses": {},
+        "error_messages": [],
+    }
+
+    entries = response_json.get("entry", [])
+    summary["total_entries"] = len(entries)
+
+    unique_errors = set()
+
+    for entry in entries:
+        response = entry.get("response", {})
+        status = str(response.get("status", "unknown"))
+        summary["statuses"][status] = summary["statuses"].get(status, 0) + 1
+
+        if status.startswith("20"):
+            summary["success_count"] += 1
+            continue
+
+        outcome = response.get("outcome", {})
+        issues = outcome.get("issue", [])
+
+        is_throttled = False
+        for issue in issues:
+            code = issue.get("code")
+            details = issue.get("details", {}).get("text")
+
+            if code == "throttled" or details == "Too Many Requests":
+                is_throttled = True
+
+            if details:
+                unique_errors.add(details)
+
+        if is_throttled:
+            summary["throttled_count"] += 1
+        else:
+            summary["error_count"] += 1
+
+    summary["error_messages"] = sorted(unique_errors)[:5]
+    return summary
+
+
+def _log_response_summary(response_json: Dict[str, Any], http_status: int) -> None:
+    """
+    Log compact et lisible de la réponse Medplum.
+    """
+    summary = _summarize_transaction_response(response_json)
+
+    logger.info(
+        "Medplum HTTP=%s | bundle entries=%s | ok=%s | throttled=%s | errors=%s | statuses=%s",
+        http_status,
+        summary["total_entries"],
+        summary["success_count"],
+        summary["throttled_count"],
+        summary["error_count"],
+        summary["statuses"],
+    )
+
+    if summary["error_messages"]:
+        logger.warning("Medplum messages: %s", summary["error_messages"])
+
+
 def _post_bundle(payload: Dict[str, Any]) -> bool:
     """
     Point unique d'upload vers Medplum.
+    Version sobre : pas de retry automatique lourd, juste un résumé clair.
     """
     try:
         token = get_token()
@@ -199,6 +301,9 @@ def _post_bundle(payload: Dict[str, Any]) -> bool:
             "Authorization": f"Bearer {token}",
         }
 
+        bundle_entries = payload.get("entry", [])
+        logger.info("Uploading bundle with %s entries", len(bundle_entries))
+
         response = requests.post(
             FHIR_BASE,
             json=payload,
@@ -206,22 +311,48 @@ def _post_bundle(payload: Dict[str, Any]) -> bool:
             timeout=30,
         )
 
-        logger.info("Medplum response status: %s", response.status_code)
-        logger.info("Medplum response body: %s", response.text)
+        try:
+            response_json = response.json()
+        except Exception:
+            logger.error("Réponse non JSON de Medplum (HTTP %s)", response.status_code)
+            response.raise_for_status()
+            return False
 
-        response.raise_for_status()
-        logger.info("Bundle uploadé avec succès")
+        _log_response_summary(response_json, response.status_code)
+
+        if response.status_code >= 400:
+            response.raise_for_status()
+
+        summary = _summarize_transaction_response(response_json)
+
+        if summary["throttled_count"] > 0:
+            logger.warning(
+                "Bundle partiellement refusé par throttling: %s/%s observations en 429",
+                summary["throttled_count"],
+                summary["total_entries"],
+            )
+
+        if summary["error_count"] > 0:
+            logger.error(
+                "Bundle avec erreurs: %s OK, %s throttled, %s erreurs",
+                summary["success_count"],
+                summary["throttled_count"],
+                summary["error_count"],
+            )
+            return False
+
+        if summary["throttled_count"] > 0:
+            return False
+
+        logger.info(
+            "Bundle uploadé avec succès: %s/%s observations OK",
+            summary["success_count"],
+            summary["total_entries"],
+        )
         return True
 
     except Exception:
         logger.exception("Erreur lors de l'upload du Bundle")
-        try:
-            logger.error(
-                "Payload envoyé à Medplum:\n%s",
-                json.dumps(payload, indent=2, ensure_ascii=False),
-            )
-        except Exception:
-            logger.error("Impossible de sérialiser le payload pour debug.")
         return False
 
 

@@ -2,6 +2,7 @@ from fhir_custom.observation import to_fhir_observation
 from fhir_custom.worker_template import CreatePreFHIR_workouts
 from fhir_custom.bundle import build_bundle_fhir, upload_bundle
 from fhir_custom.bundle import build_transaction_bundle, upload_transaction_bundle
+from fhir_custom.bundle import upload_bundles_in_chunks
 from typing import Any, Union, List
 import logging
 import json
@@ -78,9 +79,8 @@ def process_global_workouts(workouts: Union[List, str]) -> bool:
                     obs = to_fhir_observation(observation)
                     current_obs_list.append(obs)
 
-                logger.info(f"Creating 'bundle' for workout : {i}.")
-                bundle = build_bundle_fhir(current_obs_list)
-                success = upload_bundle(bundle)
+                logger.info(f"Uploading chunked bundles for workout : {i}.")
+                success = upload_bundles_in_chunks(current_obs_list, chunk_size=5)
                 logger.info(f"Upload bundle {i} is {success}.")
                 if success:
                     standard_bundle_created += 1
