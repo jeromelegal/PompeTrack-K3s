@@ -2,6 +2,7 @@
   "id": "manual_id",
   "patient_id": "patient_id",
   "device_id": "device_id",
+  "date": "date",
   "code_system": "code_system",
   "code_code": "code_code",
   "code_display": "code_display",

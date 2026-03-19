@@ -447,7 +447,10 @@ def _build_obs_args(
     return obs_kwargs
 
 
-def to_fhir_observation(raw: Union[dict[str, Any], str]) -> Observation:
+def to_fhir_observation(
+    raw: Union[dict[str, Any], str],
+    parent_context: Optional[dict[str, Any]] = None,
+) -> Observation:
     """
     Build a FHIR Observation from:
     - a raw dict
@@ -472,7 +475,7 @@ def to_fhir_observation(raw: Union[dict[str, Any], str]) -> Observation:
     else:
         raise TypeError("raw doit être un dict ou le chemin d’un fichier JSON.")
 
-    obs_kwargs = _build_obs_args(data)
+    obs_kwargs = _build_obs_args(data, parent_context=parent_context)
     return Observation(**obs_kwargs)
 
 
