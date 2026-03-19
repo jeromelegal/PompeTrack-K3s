@@ -52,26 +52,36 @@ def _build_observation_request(obs_hash: str | None) -> BundleEntryRequest:
     return request
 
 def build_bundle_fhir(observations: List[Observation]) -> Bundle:
-    """
-    Construit un Bundle transaction à partir d'objets Observation déjà instanciés.
-
-    Cette fonction est conservée pour compatibilité avec l'ancien pipeline,
-    mais elle applique maintenant aussi la déduplication via ifNoneExist.
-    """
     bundle = Bundle(
         resourceType="Bundle",
         type="transaction",
-        entry=[],
+        entry=[]
     )
 
     for obs in observations:
         obs_id = getattr(obs, "id", None) or str(uuid.uuid4())
-        obs_hash = _extract_hash_from_identifier(getattr(obs, "identifier", None))
+
+        obs_hash = None
+        for ident in (getattr(obs, "identifier", None) or []):
+            ident_system = getattr(ident, "system", None)
+            ident_value = getattr(ident, "value", None)
+
+            if ident_system == HASH_SYSTEM and ident_value:
+                obs_hash = ident_value
+                break
+
+        request = BundleEntryRequest(
+            method="POST",
+            url="Observation"
+        )
+
+        if obs_hash:
+            request.ifNoneExist = f"identifier={HASH_SYSTEM}|{obs_hash}"
 
         entry = BundleEntry(
             fullUrl=f"urn:uuid:{obs_id}",
             resource=obs,
-            request=_build_observation_request(obs_hash),
+            request=request
         )
         bundle.entry.append(entry)
 
@@ -146,36 +156,44 @@ def _post_bundle(payload: Dict[str, Any]) -> bool:
         return False
 
 
-def upload_bundle(bundle: Dict[str, Any] | Bundle) -> bool:
-    """
-    Upload générique conservé pour compatibilité avec l'ancien pipeline.
 
-    Accepte soit :
-    - un objet Bundle FHIR
-    - un dict JSON déjà sérialisé
+
+
+
+def upload_bundle(bundle: Bundle | Dict[str, Any]) -> bool:
     """
-    if isinstance(bundle, Bundle):
-        payload = bundle.model_dump(
-            mode="json",
-            by_alias=True,
-            exclude_none=True,
+    Upload bundle FHIR to Medplum.
+    """
+    try:
+        token = get_token()
+        headers = {
+            "Content-Type": "application/fhir+json",
+            "Authorization": f"Bearer {token}"
+        }
+
+        if isinstance(bundle, Bundle):
+            payload = bundle.model_dump(
+                mode="json",
+                by_alias=True,
+                exclude_none=True
+            )
+        else:
+            payload = bundle
+
+        response = requests.post(
+            FHIR_BASE,
+            json=payload,
+            headers=headers,
+            timeout=30
         )
-    else:
-        payload = bundle
 
-    return _post_bundle(payload)
+        logger.info("Medplum response status: %s", response.status_code)
+        logger.info("Medplum response body: %s", response.text)
 
+        response.raise_for_status()
+        logger.info("Bundle uploadé avec succès")
+        return True
 
-
-
-def upload_transaction_bundle(bundle: Bundle) -> bool:
-    """
-    Upload d'un Bundle transaction.
-    Conservé pour compatibilité, mais délègue au même uploader central.
-    """
-    payload = bundle.model_dump(
-        mode="json",
-        by_alias=True,
-        exclude_none=True,
-    )
-    return _post_bundle(payload)
+    except Exception:
+        logger.exception("Erreur lors de l'upload du Bundle")
+        return False
