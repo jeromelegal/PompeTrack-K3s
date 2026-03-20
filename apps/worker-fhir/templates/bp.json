@@ -16,14 +16,14 @@
             "code_system[0]": "code_system[0]", 
             "code_code[0]": "code_code[0]", 
             "code_display[0]": "code_display[0]", 
-            "value_value[0]": "systolic_value", 
+            "value_value[0]": "systolic", 
             "value_unit[0]": "units"
         },
         {
             "code_system[1]": "code_system[1]", 
             "code_code[1]": "code_code[1]", 
             "code_display[1]": "code_display[1]", 
-            "value_value[1]": "diastolic_value", 
+            "value_value[1]": "diastolic", 
             "value_unit[1]": "units"
         }
     ],
