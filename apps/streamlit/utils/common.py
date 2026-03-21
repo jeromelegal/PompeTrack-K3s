@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from utils.stream_requests import tag_stream_request
-from utils.shaping_df import shaping_metrics
+from utils.shaping_df import shaping_metrics, df_workouts
 import streamlit as st
 
 # Config
@@ -49,11 +49,11 @@ def df_generic(list_metrics):
     # st.dataframe(df)
     return df
 
-def df_workouts(list_metrics):
-    df = shaping_metrics(list_metrics)
-    df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True).dt.tz_localize(None)
-    df["duration_min"] = round(df["value"] / 60, 0)
-    return df
+# def df_workouts(list_metrics):
+#     df = shaping_metrics(list_metrics)
+#     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True).dt.tz_localize(None)
+#     df["duration_min"] = round(df["value"] / 60, 0)
+#     return df
 
 def df_spirometry(list_metrics):
     global_df = shaping_metrics(list_metrics)
