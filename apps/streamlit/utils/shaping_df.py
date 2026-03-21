@@ -71,7 +71,7 @@ def shaping_metrics(list_metrics):
 full_metric = {'category': [{'coding': [{'display': 'Vitals'}]}], 'code': {'coding': [{'display': 'Heart rate'}]}, 'device': {'display': 'Polar H10'}, 'effectiveDateTime': '2025-01-01T10:00:00Z'}
 
 
-
+# Workouts 
 def _first_coding(block):
     codings = (block or {}).get("coding") or []
     return codings[0] if codings else {}
@@ -179,4 +179,170 @@ def df_workouts(list_metrics):
     # Tri décroissant
     df = df.sort_values("timestamp", ascending=False).reset_index(drop=True)
 
+    return df
+
+# Stateofminds
+def _read_codeable(block):
+    if not isinstance(block, dict):
+        return None
+
+    if block.get("text"):
+        return block["text"]
+
+    coding = _first_coding(block)
+    return coding.get("display") or coding.get("code")
+
+def _read_category(obs):
+    categories = obs.get("category") or []
+    if not categories:
+        return None
+
+    return _read_codeable(categories[0])
+
+def _read_timestamp(obs):
+    if obs.get("effectiveDateTime"):
+        return obs["effectiveDateTime"]
+
+    period = obs.get("effectivePeriod") or {}
+    return period.get("start")
+
+
+def _read_device(obs):
+    device = obs.get("device") or {}
+    return device.get("display") or device.get("reference")
+
+
+def _read_performer(obs):
+    performers = obs.get("performer") or []
+    values = [
+        p.get("display") or p.get("reference")
+        for p in performers
+        if p.get("display") or p.get("reference")
+    ]
+    return ", ".join(values) if values else None
+
+
+def _read_quantity(obs):
+    vq = obs.get("valueQuantity") or {}
+    return vq.get("value"), vq.get("unit")
+
+
+def _read_interpretation(node):
+    """
+    Gère les cas FHIR standards :
+    interpretation: [{coding:[...]}]
+    """
+    interpretations = node.get("interpretation") or []
+    values = []
+
+    for item in interpretations:
+        val = _read_codeable(item)
+        if val:
+            values.append(val)
+
+    return ", ".join(values) if values else None
+
+
+def _read_component_value(component):
+    """
+    Essaie plusieurs représentations possibles.
+    """
+    interp = _read_interpretation(component)
+    if interp:
+        return interp
+
+    if "valueString" in component:
+        return component.get("valueString")
+
+    if "valueCodeableConcept" in component:
+        return _read_codeable(component.get("valueCodeableConcept"))
+
+    if "valueQuantity" in component:
+        return (component.get("valueQuantity") or {}).get("value")
+
+    if "valueInteger" in component:
+        return component.get("valueInteger")
+
+    if "valueBoolean" in component:
+        return component.get("valueBoolean")
+
+    return None
+
+
+def _read_components(obs):
+    """
+    Retourne un dict des composants du style :
+    {
+        "associations": "health, tasks, work",
+        "labels": "proud"
+    }
+    """
+    out = {}
+
+    for comp in obs.get("component", []) or []:
+        comp_name = _read_codeable(comp.get("code"))
+        if not comp_name:
+            continue
+
+        key = comp_name.strip().lower().replace(" ", "_")
+        out[key] = _read_component_value(comp)
+
+    return out
+
+
+def _normalize_text(value):
+    if value is None:
+        return None
+    return str(value).replace("_", " ").strip()
+
+
+def _split_csv_tokens(value):
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return []
+
+    items = [x.strip() for x in str(value).split(",")]
+    return [x for x in items if x]
+
+
+def df_stateofminds(list_metrics):
+    rows = []
+
+    for obs in list_metrics:
+        if obs.get("resourceType") != "Observation":
+            continue
+
+        parameter = _read_codeable(obs.get("code"))
+        score, unit = _read_quantity(obs)
+        interpretation = _read_interpretation(obs)
+        components = _read_components(obs)
+
+        rows.append({
+            "id": obs.get("id"),
+            "category": _read_category(obs),
+            "parameter": parameter,                         # daily_mood / momentary_emotion
+            "timestamp": _read_timestamp(obs),
+            "performer": _read_performer(obs),
+            "score": score,
+            "unit": unit,
+            "interpretation": _normalize_text(interpretation),
+            "associations": components.get("associations"),
+            "labels": components.get("labels"),
+            "device": _read_device(obs),
+        })
+
+    df = pd.DataFrame(rows)
+
+    if df.empty:
+        return df
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce").dt.tz_localize(None)
+    df["score"] = pd.to_numeric(df["score"], errors="coerce")
+
+    df["parameter"] = df["parameter"].apply(_normalize_text)
+    df["interpretation"] = df["interpretation"].apply(_normalize_text)
+
+    df["association_list"] = df["associations"].apply(_split_csv_tokens)
+    df["label_list"] = df["labels"].apply(_split_csv_tokens)
+
+    df = df.sort_values("timestamp", ascending=False).reset_index(drop=True)
     return df

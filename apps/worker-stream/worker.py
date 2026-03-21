@@ -155,6 +155,7 @@ def fetch_fhir_observation(
         page_count = 100
 
     elements = ",".join([
+        "id",
         "category",
         "code",
         "effectiveDateTime",
@@ -164,6 +165,7 @@ def fetch_fhir_observation(
         "device",
         "hasMember",
         "component",
+        "interpretation",
     ])
 
     params = {
