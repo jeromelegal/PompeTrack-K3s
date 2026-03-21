@@ -62,22 +62,38 @@ def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
     start_date = end_date - pd.Timedelta(days=lookback_days)
     logger.info(f"Starting date is : {start_date}")
     logger.info(f"Ending date is : {end_date}")
-    
-    payload={
-            "startDate": str(start_date),
-            "endDate": str(end_date),
-            "tag": tag,
-            "max_records": max_records,
-            "page_count": page_count
-        }
+
+    payload = {
+        "startDate": str(start_date),
+        "endDate": str(end_date),
+        "tag": tag,
+        "max_records": max_records,
+        "page_count": page_count,
+    }
     logger.info(f"Payload is : {payload}")
-    raw_data =  _stream_request(MEDPLUM_PATIENT_ID, payload)
-    if raw_data:
-        logger.info(f"Data count retrieved : {len(raw_data)}")
-        return raw_data.get("data")
-    else:
+
+    raw_data = _stream_request(MEDPLUM_PATIENT_ID, payload)
+
+    if raw_data is None:
         logger.info("No data retrieved.")
         return None
+
+    data = raw_data.get("data", [])
+    logger.info(f"Observation count retrieved : {len(data)}")
+
+    parents_with_children = [obs for obs in data if obs.get("hasMember")]
+    logger.info(f"Parents with hasMember retrieved : {len(parents_with_children)}")
+
+    for obs in parents_with_children[:10]:
+        logger.info(
+            "PARENT id=%s | hasMember=%s | valueQuantity=%s | code=%s",
+            obs.get("id"),
+            len(obs.get("hasMember", [])),
+            obs.get("valueQuantity"),
+            obs.get("code"),
+        )
+
+    return data
 
 if __name__ == "__main__":
     data = tag_stream_request("metrics", 90)

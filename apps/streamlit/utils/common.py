@@ -219,14 +219,16 @@ def interpret_trend(slope, unit='', threshold_small=0.01):
 def load_data(stream_name: str, lookback_days: int, use_mock: bool):
     if use_mock:
         return _load_mock(stream_name)
+
     data = tag_stream_request(stream_name, lookback_days)
-    if data:
-        try:
-            return shape_df(stream_name, data)
-        except Exception as e:
-            st.markdown(f"Nothing to load : {e}")
-            return None
-    else:
+
+    if data is None:
+        return None
+
+    try:
+        return shape_df(stream_name, data)
+    except Exception as e:
+        st.markdown(f"Nothing to load : {e}")
         return None
 
 
