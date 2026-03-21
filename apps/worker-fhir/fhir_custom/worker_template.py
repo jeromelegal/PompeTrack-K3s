@@ -368,36 +368,51 @@ class CreatePreFHIR:
 class CreatePreFHIR_workouts():
 
     def process(
-        self,
-        payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        
+    self,
+    payload: Dict[str, Any]
+) -> Dict[str, Any]:
+
         observations: List[Dict[str, Any]] = []
         children_indices: List[int] = []
 
-        parent_creator = CreatePreFHIR(
-            payload=payload
-        )
+        parent_creator = CreatePreFHIR(payload=payload)
 
         parent_obs = parent_creator.render()[0]
         observations.append(parent_obs)
         parent_index = 0
-        
+
+        # Contexte parent réutilisable pour les sous-observations
+        parent_context = {
+            "patient_id": MEDPLUM_PATIENT_ID,
+            "device_id": MEDPLUM_DEVICE_ID,
+            "parent_start": payload.get("start"),
+            "parent_end": payload.get("end"),
+            "workout_id": payload.get("id"),
+            "workout_name": payload.get("name"),
+        }
+
         if payload.get("heartRateData"):
             for subobs in payload["heartRateData"]:
                 sub_payload = {
                     "name": "heartratedata",
-                    "units": payload.get("units"),
+                    "units": subobs.get("units") or payload.get("units"),
                     "data": [{
                         "Avg": subobs.get("Avg"),
-                        "date": subobs.get("date")
+                        "date": subobs.get("date") or payload.get("start"),
+                        "patient_id": parent_context["patient_id"],
+                        "device_id": parent_context["device_id"],
+                        "parent_start": parent_context["parent_start"],
+                        "parent_end": parent_context["parent_end"],
+                        "workout_id": parent_context["workout_id"],
+                        "workout_name": parent_context["workout_name"],
                     }]
                 }
+
                 creator = CreatePreFHIR(sub_payload, round_digits=1)
                 sub_obs = creator.render()[0]
                 children_indices.append(len(observations))
                 observations.append(sub_obs)
-                  
+
         return observations, parent_index, children_indices
 
 # Class with name for template name

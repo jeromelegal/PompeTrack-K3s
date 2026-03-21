@@ -35,8 +35,8 @@ def process_weekly_data(
             "manual_bp",
             [
                 {
-                    "systolic_value": systolic, 
-                    "diastolic_value": diastolic, 
+                    "systolic": systolic, 
+                    "diastolic": diastolic, 
                     "date": now
                 }
             ], 

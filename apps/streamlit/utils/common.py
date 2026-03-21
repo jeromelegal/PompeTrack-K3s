@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from utils.stream_requests import tag_stream_request
-from utils.shaping_df import shaping_metrics
+from utils.shaping_df import shaping_metrics, df_workouts, df_stateofminds
 import streamlit as st
 
 # Config
@@ -49,11 +49,11 @@ def df_generic(list_metrics):
     # st.dataframe(df)
     return df
 
-def df_workouts(list_metrics):
-    df = shaping_metrics(list_metrics)
-    df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True).dt.tz_localize(None)
-    df["duration_min"] = round(df["value"] / 60, 0)
-    return df
+# def df_workouts(list_metrics):
+#     df = shaping_metrics(list_metrics)
+#     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True).dt.tz_localize(None)
+#     df["duration_min"] = round(df["value"] / 60, 0)
+#     return df
 
 def df_spirometry(list_metrics):
     global_df = shaping_metrics(list_metrics)
@@ -106,7 +106,7 @@ def shape_df(stream_name, data):
     elif stream_name == "workouts":
         return df_workouts(data)
     elif stream_name == "stateofminds":
-        return df_generic(data)
+        return df_stateofminds(data)
     elif stream_name == "spirometer":
         return df_spirometry(data)
     elif stream_name == "manual_weekly":
@@ -164,69 +164,22 @@ def interpret_trend(slope, unit='', threshold_small=0.01):
         return f"Tendance à la hausse ({slope:.3g} {unit}/jour)."
     else:
         return f"Tendance à la baisse ({slope:.3g} {unit}/jour)."
-
-# def shaping_metrics(list_metrics):
-#     categories, parameters, dates, performers, values, units, devices = [], [], [], [], [], [], []
-    
-#     for metric in list_metrics:
-#         categories.append(metric.get("category")[0].get("coding")[0].get("display"))
-#         # parameters.append(metric.get("code").get("coding")[0].get("display"))
-#         parameters.append(metric.get("code").get("text"))
-#         date = None
-#         try:
-#             date = metric.get("effectiveDateTime") or metric["effectivePeriod"]["start"]
-#         except Exception:
-#             date = None
-#         dates.append(date)
-#         performer = None
-#         try: 
-#             performer = metric.get("performer")[0].get("display")
-#         except Exception:
-#             performer = None
-#         performers.append(performer)
-#         value = None
-#         try:
-#             value = metric.get("valueQuantity").get("value")
-#         except Exception:
-#             value = None
-#         values.append(value)
-#         unit=None
-#         try:
-#             unit = metric.get("valueQuantity").get("unit")
-#         except Exception:
-#             unit = None
-#         units.append(unit)
-#         device = None
-#         try:
-#             device = metric.get("device").get("display")
-#         except Exception:
-#             device = None
-#         devices.append(device)
-#     metrics = {
-#         "category": categories,
-#         "parameter": parameters,
-#         "timestamp": dates,
-#         "performer": performers,
-#         "value": values,
-#         "unit": units,
-#         "device": devices
-#         }
-#     df = pd.DataFrame(metrics)
-#     return df
         
 # Data loading
 @st.cache_data(show_spinner=True)
 def load_data(stream_name: str, lookback_days: int, use_mock: bool):
     if use_mock:
         return _load_mock(stream_name)
+
     data = tag_stream_request(stream_name, lookback_days)
-    if data:
-        try:
-            return shape_df(stream_name, data)
-        except Exception as e:
-            st.markdown(f"Nothing to load : {e}")
-            return None
-    else:
+
+    if data is None:
+        return None
+
+    try:
+        return shape_df(stream_name, data)
+    except Exception as e:
+        st.markdown(f"Nothing to load : {e}")
         return None
 
 
