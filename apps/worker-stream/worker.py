@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import Optional
-from urllib.parse import urlencode, urljoin, urlparse, urlunparse
+from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -31,11 +31,6 @@ def build_search_url(base: str, resource_type: str, params: dict) -> str:
 
 
 def create_session() -> requests.Session:
-    """
-    Session robuste :
-    - ignore les proxies d'environnement
-    - réessaie sur erreurs transitoires réseau / 429 / 5xx
-    """
     retry = Retry(
         total=6,
         connect=6,
@@ -61,43 +56,45 @@ def create_session() -> requests.Session:
     return session
 
 
-def normalize_next_url(next_url: Optional[str], internal_base: str) -> Optional[str]:
+def get_resource_base_url(internal_base: str, resource_type: str) -> str:
+    return f"{internal_base.rstrip('/')}/{resource_type}"
+
+
+def rewrite_next_to_internal_resource_base(
+    next_url: Optional[str],
+    internal_base: str,
+    resource_type: str,
+) -> Optional[str]:
     """
-    Force les URLs de pagination à rester sur la base interne FHIR_BASE.
-    Très utile si Medplum renvoie un 'next' absolu vers un host externe
-    ou vers une URL en https non joignable depuis le pod.
+    Ne garde du 'next' que la query string.
+    On recolle cette query sur NOTRE endpoint interne :
+      {FHIR_BASE}/{resource_type}?...
+    Cela évite tous les problèmes de:
+      - schéma (http/https)
+      - host externe vs service interne
+      - path externe /apifhir/R4 vs interne /fhir/R4
     """
     if not next_url:
         return None
 
     parsed_next = urlparse(next_url)
-    parsed_base = urlparse(internal_base)
 
-    # URL relative -> on la rattache à la base interne
-    if not parsed_next.scheme or not parsed_next.netloc:
-        return urljoin(internal_base.rstrip("/") + "/", next_url)
+    # S'il n'y a pas de query, on ne peut pas paginer proprement
+    if not parsed_next.query:
+        logger.warning("URL 'next' sans query string: %s", next_url)
+        return None
 
-    # URL absolue -> on remplace scheme+netloc par la base interne
-    if (
-        parsed_next.scheme != parsed_base.scheme
-        or parsed_next.netloc != parsed_base.netloc
-    ):
-        rewritten = urlunparse((
-            parsed_base.scheme,
-            parsed_base.netloc,
-            parsed_next.path,
-            parsed_next.params,
-            parsed_next.query,
-            parsed_next.fragment,
-        ))
+    resource_base = get_resource_base_url(internal_base, resource_type)
+    rewritten = f"{resource_base}?{parsed_next.query}"
+
+    if rewritten != next_url:
         logger.warning(
             "Réécriture de l'URL de pagination : %s -> %s",
             next_url,
             rewritten,
         )
-        return rewritten
 
-    return next_url
+    return rewritten
 
 
 def get_bundle_page(
@@ -106,9 +103,6 @@ def get_bundle_page(
     headers: dict,
     timeout: tuple[int, int] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
 ) -> dict:
-    """
-    Récupère une page FHIR avec gestion d'erreur explicite.
-    """
     try:
         r = session.get(url, headers=headers, timeout=timeout)
     except requests.RequestException as e:
@@ -154,12 +148,11 @@ def fetch_fhir_observation(
     tag = payload.get("tag")
 
     max_records = payload.get("max_records", 1000)
-    page_count = int(payload.get("page_count", 200))
+    page_count = int(payload.get("page_count", 100))
     max_pages = int(payload.get("max_pages", 1000))
 
-    # Valeur prudente pour éviter des pages trop lourdes
     if page_count <= 0:
-        page_count = 200
+        page_count = 100
 
     elements = ",".join([
         "category",
@@ -177,7 +170,6 @@ def fetch_fhir_observation(
         "patient": patient_full,
         "_count": page_count,
         "_elements": elements,
-        # "_include": "Observation:has-member",
     }
 
     if category:
@@ -200,8 +192,8 @@ def fetch_fhir_observation(
     seen_obs_refs: set[str] = set()
     visited_urls: set[str] = set()
 
-    url = build_search_url(FHIR_BASE, "Observation", params)
-    url = normalize_next_url(url, FHIR_BASE)
+    resource_type = "Observation"
+    url = build_search_url(FHIR_BASE, resource_type, params)
 
     page_number = 0
 
@@ -214,13 +206,10 @@ def fetch_fhir_observation(
             )
 
         if url in visited_urls:
-            raise RuntimeError(
-                f"Boucle de pagination détectée sur l'URL : {url}"
-            )
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
         visited_urls.add(url)
 
         logger.info("GET page %s: %s", page_number, url)
-
         bundle = get_bundle_page(session, url, headers=headers)
 
         page_obs_count = 0
@@ -258,20 +247,22 @@ def fetch_fhir_observation(
             (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
             None,
         )
-        url = normalize_next_url(raw_next_url, FHIR_BASE)
 
-    # Coupe proprement si on a dépassé max_records au dernier append
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
     if max_records is not None:
         all_observations = all_observations[:max_records]
 
-    # Index : "Observation/{id}" -> Observation
     obs_index = {
         f"Observation/{obs['id']}": obs
         for obs in all_observations
         if "id" in obs
     }
 
-    # Résolution des hasMember
     results = []
     for obs in all_observations:
         resolved_members = []
@@ -301,13 +292,13 @@ if __name__ == "__main__":
         patient=MEDPLUM_PATIENT_ID,
         payload={
             "category": None,
-            "startDate": None,
-            "endDate": None,
+            "startDate": "2025-12-21",
+            "endDate": "2026-03-21",
             "code": None,
             "device": None,
-            "tag": "manual_weekly",
-            "max_records": 50,
-            "page_count": 200,
+            "tag": "metrics",
+            "max_records": 500,
+            "page_count": 50,
             "max_pages": 1000,
         },
     )
