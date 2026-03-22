@@ -16,6 +16,7 @@ logging.basicConfig(
     ]
 )
 
+MEDPLUM_DEVICE_ID_STREAMLIT = os.getenv("MEDPLUM_DEVICE_ID_STREAMLIT")
 
 def process_global_manuals(manuals: Union[List, str, Dict[str, Any]]):
     error_report = []
@@ -54,7 +55,9 @@ def process_global_manuals(manuals: Union[List, str, Dict[str, Any]]):
 
         try:
             logger.info(f"Creating PreFHIR for {i}.")
-            creator = CreatePreFHIR(manual, round_digits=1)
+            creator = CreatePreFHIR(manual, 
+                                    device_id=MEDPLUM_DEVICE_ID_STREAMLIT,
+                                    round_digits=1)
             resource = creator.render()
         except Exception:
             logger.exception(f"Fail to create PreFHIR for {i}.")
@@ -116,7 +119,9 @@ def process_manuals_by_cats(i: int, manual: Union[dict, str]):
         return None
 
     try:
-        creator = CreatePreFHIR(manual, round_digits=1)
+        creator = CreatePreFHIR(manual, 
+                                device_id=MEDPLUM_DEVICE_ID_STREAMLIT,
+                                round_digits=1)
         resource = creator.render()
     except Exception:
         logger.exception(f"Fail to create PreFHIR for {i}.")

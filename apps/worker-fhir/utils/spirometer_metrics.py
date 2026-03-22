@@ -16,6 +16,7 @@ logging.basicConfig(
     ]
 )
 
+MEDPLUM_DEVICE_ID_SPRIROMETER = os.getenv("MEDPLUM_DEVICE_ID_SPRIROMETER")
 
 def process_global_spirometer(spirometer: Union[List, str, Dict[str, Any]]):
     error_report = []
@@ -54,7 +55,9 @@ def process_global_spirometer(spirometer: Union[List, str, Dict[str, Any]]):
 
         try:
             logger.info(f"Creating PreFHIR for {i}.")
-            creator = CreatePreFHIR(metric, round_digits=1)
+            creator = CreatePreFHIR(metric, 
+                                    device_id=MEDPLUM_DEVICE_ID_SPRIROMETER,
+                                    round_digits=1)
             resource = creator.render()
         except Exception:
             logger.exception(f"Fail to create PreFHIR for {i}.")
@@ -116,7 +119,9 @@ def process_spirometer_by_cats(i: int, metric: Union[dict, str]):
         return None
 
     try:
-        creator = CreatePreFHIR(metric, round_digits=1)
+        creator = CreatePreFHIR(metric, 
+                                device_id=MEDPLUM_DEVICE_ID_SPRIROMETER,
+                                round_digits=1)
         resource = creator.render()
     except Exception:
         logger.exception(f"Fail to create PreFHIR for {i}.")
