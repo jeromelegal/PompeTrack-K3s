@@ -71,6 +71,13 @@ async def ingest_iphone(
 ):
     return _ingest_json(payload, BUCKET_RAW_IPHONE, device)
 
+@app.post("/ingest/iphone_api")
+async def ingest_iphone_api(
+    payload: dict = Body(...),
+    device: dict = Depends(require_scopes_light(["ingest:iphone"])),
+):
+    return _ingest_json(payload, BUCKET_RAW_IPHONE, device)
+
 @app.post("/ingest/manual")
 async def ingest_manual(
     payload: dict = Body(...),
