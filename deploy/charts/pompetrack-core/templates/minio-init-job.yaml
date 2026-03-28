@@ -85,6 +85,16 @@ spec:
                 secretKeyRef:
                   name: minio-prom-credentials
                   key: password
+            - name: MEDPLUM_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-medplum-credentials
+                  key: username
+            - name: MEDPLUM_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-medplum-credentials
+                  key: password
 
           command: ["/bin/sh", "-lc"]
           args:
@@ -118,12 +128,14 @@ spec:
               mc mb --ignore-existing local/reports
               mc mb --ignore-existing local/raw-strength
               mc mb --ignore-existing local/fhir-logs
+              mc mb --ignore-existing local/medplum-storage
 
               echo "==> Enable versioning on selected buckets (ignore errors if already enabled)"
               mc version enable local/pg-backups || true
               mc version enable local/processed-fhir || true
               mc version enable local/processed-db || true
               mc version enable local/reports || true
+              mc version enable local/medplum-storage || true
 
               echo "==> Ensure users exist (users are S3 access key / secret key)"
               # pgbackup identity
@@ -143,6 +155,11 @@ spec:
                 echo "User $CONSOLE_ACCESS_KEY already exists"
               else
                 mc admin user add local "$CONSOLE_ACCESS_KEY" "$CONSOLE_SECRET_KEY"
+              fi
+              if mc admin user info local "$MEDPLUM_ACCESS_KEY" >/dev/null 2>&1; then
+                echo "User $MEDPLUM_ACCESS_KEY already exists"
+              else
+                mc admin user add local "$MEDPLUM_ACCESS_KEY" "$MEDPLUM_SECRET_KEY"
               fi
 
               echo "==> (Re)create policies"
@@ -171,6 +188,36 @@ spec:
                     ],
                     "Resource": [
                       "arn:aws:s3:::pg-backups/*"
+                    ]
+                  }
+                ]
+              }
+              EOF
+
+              # Policy: medplum => ONLY medplum-storage bucket
+              cat >/tmp/medplum-policy.json <<'EOF'
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetBucketLocation",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::medplum-storage"
+                    ]
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:PutObject",
+                      "s3:DeleteObject"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::medplum-storage/*"
                     ]
                   }
                 ]
@@ -236,9 +283,15 @@ spec:
               # fi
               mc admin policy create local api-policy /tmp/api-policy.json
 
+              # if mc admin policy info local medplum-policy >/dev/null 2>&1; then
+              #   mc admin policy rm local medplum-policy || true
+              # fi
+              mc admin policy create local medplum-policy /tmp/medplum-policy.json
+
               echo "==> Attach policies to users"
               # mc admin policy attach requires exactly one --user or --group :contentReference[oaicite:2]{index=2}
               mc admin policy attach local pg-backup-policy --user "$PG_BACKUP_ACCESS_KEY" || true
+              mc admin policy attach local medplum-policy --user "$MEDPLUM_ACCESS_KEY" || true
               mc admin policy attach local api-policy --user "$API_ACCESS_KEY" || true
 
               echo "==> Attach policies to user : admin"
@@ -318,6 +371,7 @@ spec:
               echo "==> Sanity checks"
               mc admin policy entities local --policy pg-backup-policy || true
               mc admin policy entities local --policy api-policy || true
+              mc admin policy entities local --policy medplum-policy || true
               mc admin policy entities local --policy consoleAdmin || true
               mc admin policy entities local --policy airflow-logs-rw || true
               mc admin policy entities local --policy prometheus-metrics-read || true

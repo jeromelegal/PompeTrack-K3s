@@ -40,7 +40,7 @@ PATIENT_GENDER="$(kubectl -n "$MEDPLUM_NS" get secret patient-infos -o jsonpath=
 # Devices
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DEVICES_FILE="${DEVICES_FILE:-${SCRIPT_DIR}/devices.json}"
-DEVICE_IDENTIFIER_SYSTEM_DEFAULT="https://pompetrack.phylcero.fr/identifiers/device"
+DEVICE_IDENTIFIER_SYSTEM_DEFAULT="https://medplum.phylcero.fr/identifiers/device"
 # =========================================================
 # Vérifications minimales
 # =========================================================

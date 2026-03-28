@@ -68,6 +68,11 @@ medplum:
             name: medplum-superadmin
             key: password
 
+      - name: MEDPLUM_BINARY_STORAGE
+        value: "file:/data/medplum-binary/"
+      - name: MEDPLUM_STORAGE_BASE_URL
+        value: "https://medplum.phylcero.fr/api/storage/"
+
     revisionHistoryLimit: 3
 
   service:
@@ -95,8 +100,10 @@ postgresql:
   resources:
     requests:
       memory: "1Gi"
+      cpu: "1000m"
     limits:
       memory: "2Gi"
+      cpu: "2000m"
 
 redis:
   auth:
