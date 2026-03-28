@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medplum
+  namespace: medplum
+spec:
+  template:
+    spec:
+      volumes:
+        - name: medplum-binary
+          persistentVolumeClaim:
+            claimName: medplum-binary-pvc
+      containers:
+        - name: medplum
+          volumeMounts:
+            - name: medplum-binary
+              mountPath: /data/medplum-binary

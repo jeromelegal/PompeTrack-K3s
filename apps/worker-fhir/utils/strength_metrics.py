@@ -16,6 +16,7 @@ logging.basicConfig(
     ]
 )
 
+MEDPLUM_DEVICE_ID_STREAMLIT = os.getenv("MEDPLUM_DEVICE_ID_STREAMLIT")
 
 def average_strenght_results(strengths: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -84,7 +85,9 @@ def process_global_strengths(strengths: Union[List, str, Dict[str, Any]]):
 
         try:
             logger.info(f"Creating PreFHIR for {i}.")
-            creator = CreatePreFHIR(strength, round_digits=1)
+            creator = CreatePreFHIR(strength,
+                                    device_id=MEDPLUM_DEVICE_ID_STREAMLIT, 
+                                    round_digits=1)
             resource = creator.render()
         except Exception:
             logger.exception(f"Fail to create PreFHIR for {i}.")
@@ -146,7 +149,9 @@ def process_strengths_by_cats(i: int, strength: Union[dict, str]):
         return None
 
     try:
-        creator = CreatePreFHIR(strength, round_digits=1)
+        creator = CreatePreFHIR(strength, 
+                                device_id=MEDPLUM_DEVICE_ID_STREAMLIT,
+                                round_digits=1)
         resource = creator.render()
     except Exception:
         logger.exception(f"Fail to create PreFHIR for {i}.")

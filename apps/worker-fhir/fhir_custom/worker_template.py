@@ -17,7 +17,9 @@ TEMPLATE_PATH = "templates"
 METADATA_PATH = "metadatas"
 FHIR_BASE = os.getenv("FHIR_BASE", "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4")
 MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
-MEDPLUM_DEVICE_ID = os.getenv("MEDPLUM_DEVICE_ID")
+MEDPLUM_DEVICE_ID_IPHONE_GARTH = os.getenv("MEDPLUM_DEVICE_ID_IPHONE_GARTH")
+MEDPLUM_DEVICE_ID_SPRIROMETER = os.getenv("MEDPLUM_DEVICE_ID_SPRIROMETER")
+MEDPLUM_DEVICE_ID_STREAMLIT = os.getenv("MEDPLUM_DEVICE_ID_STREAMLIT")
 
 # Workouts specifics
 raw = os.getenv("NEED_SUBOBSERVATIONS", "Yoga")
@@ -30,11 +32,6 @@ WORKOUT_NAME_MAP = {
     "Yoga": "yoga",
     "Entraînement de Force Fonctionnelle": "workouts",
     "Musculation": "strength_training",
-}
-
-MEDPLUM_IDS = {
-    "patient_id": MEDPLUM_PATIENT_ID,
-    "device_id": MEDPLUM_DEVICE_ID,
 }
 
 def normalize_name(raw_name: str) -> str:
@@ -156,12 +153,14 @@ class CreatePreFHIR:
     def __init__(
         self,
         payload: Dict[str, Any],
+        device_id: int = MEDPLUM_DEVICE_ID_IPHONE_GARTH,
         round_digits: int = 2,
         round_only_value_paths: bool = True,
         round_strings: bool = False
     ):
         raw_name = payload.get("name")
         technical_name = normalize_name(raw_name)
+        self.device_id = device_id
         self.raw_name = raw_name 
         self.name = technical_name 
         self.metadata_file = f"meta_{self.name}.json"
@@ -342,7 +341,10 @@ class CreatePreFHIR:
                     filler = FillResource(
                         self.constants,
                         entry,
-                        MEDPLUM_IDS,
+                        {
+                            "patient_id": MEDPLUM_PATIENT_ID,
+                            "device_id": self.device_id,
+                        },
                         {"units": self.units}
                     )
                     resource = filler.build(resource)
@@ -384,7 +386,7 @@ class CreatePreFHIR_workouts():
         # Contexte parent réutilisable pour les sous-observations
         parent_context = {
             "patient_id": MEDPLUM_PATIENT_ID,
-            "device_id": MEDPLUM_DEVICE_ID,
+            "device_id": MEDPLUM_DEVICE_ID_IPHONE_GARTH,
             "parent_start": payload.get("start"),
             "parent_end": payload.get("end"),
             "workout_id": payload.get("id"),
