@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-databases
+  namespace: monitoring
+data:
+  postgresql-medplum.json: |-
+{{ .Files.Get "files/grafana-dashboards/databases/postgresql-medplum.json" | indent 4 }}
+  postgresql-airflow.json: |-
+{{ .Files.Get "files/grafana-dashboards/databases/postgresql-airflow.json" | indent 4 }}
+  postgresql-pompetrack-core.json: |-
+{{ .Files.Get "files/grafana-dashboards/databases/postgresql-pompetrack-core.json" | indent 4 }}
+  redis.json: |-
+{{ .Files.Get "files/grafana-dashboards/databases/redis.json" | indent 4 }}

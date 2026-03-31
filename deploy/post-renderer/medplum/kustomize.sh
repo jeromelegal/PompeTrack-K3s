@@ -16,10 +16,12 @@ resources:
   - all.yaml
 patchesStrategicMerge:
   - medplum-probes-patch.yaml
+  - medplum-storage-patch.yaml
 YAML
 
 # 3) Patch (copié depuis ton repo)
 cp ./deploy/post-renderer/medplum/medplum-probes-patch.yaml "$TMP_DIR/medplum-probes-patch.yaml"
+cp ./deploy/post-renderer/medplum/medplum-storage-patch.yaml "$TMP_DIR/medplum-storage-patch.yaml"
 
 # 4) Build via kubectl kustomize (pas besoin d'installer kustomize)
 kubectl kustomize "$TMP_DIR"

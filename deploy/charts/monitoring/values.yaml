@@ -81,11 +81,9 @@ kube-prometheus-stack:
   grafana:
     enabled: true
 
-    # adminUser: admin
-    # adminPassword: admin
     admin:
-      existingSecret: "grafana-admin-secret"  # Nom du Secret créé précédemment
-      userKey: "admin-user"                   # Clé dans le Secret pour le nom d'utilisateur (optionnel, par défaut "admin-user")
+      existingSecret: "grafana-admin-secret"
+      userKey: "admin-user"
       passwordKey: "admin-password"
 
     persistence:
@@ -115,14 +113,14 @@ kube-prometheus-stack:
       dashboardproviders.yaml:
         apiVersion: 1
         providers:
-          - name: 'default'
-            orgId: 1
-            folder: 'General'
-            type: file
-            disableDeletion: false
-            editable: true
-            options:
-              path: /var/lib/grafana/dashboards/default
+          # - name: 'default'
+          #   orgId: 1
+          #   folder: 'General'
+          #   type: file
+          #   disableDeletion: false
+          #   editable: true
+          #   options:
+          #     path: /var/lib/grafana/dashboards/default
           - name: 'kubernetes'
             orgId: 1
             folder: 'Kubernetes'
@@ -147,50 +145,11 @@ kube-prometheus-stack:
             editable: true
             options:
               path: /var/lib/grafana/dashboards/infrastructure
-    dashboards:
-      kubernetes:
-        # K8s Cluster Overview
-        k8s-cluster:
-          gnetId: 7249
-          revision: 1
-          datasource: Prometheus
-        # K8s Pod Resources
-        k8s-pods:
-          gnetId: 747
-          revision: 1
-          datasource: Prometheus
-        # Node Exporter Full
-        node-exporter:
-          gnetId: 1860
-          revision: 37
-          datasource: Prometheus
-      databases:
-        # PostgreSQL
-        postgresql:
-          gnetId: 9628
-          revision: 7
-          datasource: Prometheus
-        # Redis
-        redis:
-          gnetId: 11835
-          revision: 1
-          datasource: Prometheus
-      infrastructure:
-        # Proxmox
-        proxmox:
-          gnetId: 10347
-          revision: 5
-          datasource: Prometheus
-        # Traefik
-        traefik:
-          gnetId: 17346
-          revision: 9
-          datasource: Prometheus
-        # MinIO
-        minio:
-          gnetId: 13502
-          revision: 25
-          datasource: Prometheus
+    dashboardsConfigMaps:
+      kubernetes: "grafana-dashboards-kubernetes"
+      databases: "grafana-dashboards-databases"
+      infrastructure: "grafana-dashboards-infrastructure"
+      
 
   ## ---------------------------
   ## NODE EXPORTER
