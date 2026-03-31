@@ -1,7 +1,7 @@
 from googleapiclient.discovery import build
 from libs.google_auth import get_credentials
 from libs.db_service import upsert_event, delete_event, get_all_events
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pytz
 
 
@@ -19,9 +19,9 @@ def sync_events_from_google():
     service = get_calendar_service()
 
     now = datetime.now(timezone.utc)
-    time_min = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-    time_min = time_min.replace(day=max(1, now.day - 30))
-    time_max = time_min.replace(day=now.day + 90) if now.day + 90 <= 28 else now.replace(month=now.month + 3)
+    time_day = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    time_min = time_day.replace(day=max(1, now.day - 30))
+    time_max = time_day + timedelta(days=90)
 
     # Appel API Google Calendar
     events_result = service.events().list(
