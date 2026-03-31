@@ -14,9 +14,11 @@ logger = logging.getLogger(__name__)
 
 bearer = HTTPBearer(auto_error=False)
 
-LIGHT_JWT_SECRET = os.getenv("LIGHT_JWT_SECRET")
-if not LIGHT_JWT_SECRET:
-    raise RuntimeError("LIGHT_JWT_SECRET is not set")
+################## Only for 'ingestion' #######################################
+# LIGHT_JWT_SECRET = os.getenv("LIGHT_JWT_SECRET")
+# if not LIGHT_JWT_SECRET:
+#     raise RuntimeError("LIGHT_JWT_SECRET is not set")
+###############################################################################
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
