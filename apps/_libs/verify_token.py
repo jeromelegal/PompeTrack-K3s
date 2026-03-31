@@ -17,7 +17,7 @@ JWKS_URL = os.getenv(
     "JWKS_URL",
     "http://medplum-mesh.medplum.svc.cluster.local:8103/.well-known/jwks.json",
 )
-TOKEN_ISSUER = os.getenv("TOKEN_ISSUER", "https://madplum.phylcero.fr/api")
+TOKEN_ISSUER = os.getenv("TOKEN_ISSUER", "https://medplum.phylcero.fr/api")
 
 TOKEN_AUDIENCE_WORKER_FHIR = os.getenv("TOKEN_AUDIENCE_WORKER_FHIR", None)
 TOKEN_AUDIENCE_STREAMLIT = os.getenv("TOKEN_AUDIENCE_STREAMLIT", None)
