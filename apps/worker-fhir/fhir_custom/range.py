@@ -8,12 +8,14 @@ ureg = UnitRegistry()
 # HHIR allowed comparators 
 ALLOWED_COMPARATORS = {"<", "<=", ">", ">=", "ad"}
 
+# Exceptions
 class ReferenceRangeValidationError(ValueError):
     pass
 
+# Function to transform any value in float
 def _to_float(value: Any) -> float:
     """
-    Transform in float
+    Transform any value in float
     """
     if value is None:
         raise ReferenceRangeValidationError("value is None")
@@ -31,8 +33,11 @@ def _to_float(value: Any) -> float:
                 raise ReferenceRangeValidationError(f"Impossible de convertir en float: {value!r}")
     raise ReferenceRangeValidationError(f"Type de 'value' non supporté: {type(value)}")
 
+# Function to make pint quantity
 def _make_pint_quantity(value: float, unit: Optional[str]):
-    """Retourne une pint.Quantity ; si unit None -> dimensionless"""
+    """
+    Returns pint quantity. unit None -> dimensionless
+    """
     if unit is None or unit == "":
         return value * ureg.dimensionless
     try:
@@ -40,11 +45,11 @@ def _make_pint_quantity(value: float, unit: Optional[str]):
     except UndefinedUnitError as e:
         raise ReferenceRangeValidationError(f"Unité inconnue pour pint: {unit!r}") from e
 
+# Function to interpret comparator
 def _interpret_comparator(comparator: Optional[str], is_low: bool) -> str:
     """
-    Retourne normalisation du comparator.
-    On vérifie simplement que comparator est allowed ; la sémantique est appliquée
-    lors du test d'intervalle (inclusif/exclusif).
+    Return comparator.
+    Default to '>=' if None.
     """
     if comparator is None:
         # default inclusive
@@ -56,9 +61,10 @@ def _interpret_comparator(comparator: Optional[str], is_low: bool) -> str:
         return ">=" if is_low else "<="
     return comparator
 
+# Function to interpret comparator
 def _as_interval_bounds(val: float, comp: str):
     """
-    Retourne (min, max, inclusif_min, inclusif_max)
+    Return (min, max, inclusif_min, inclusif_max)
     """
     if comp in (">", ">="):
         return val, None, comp == ">=", None
@@ -66,8 +72,16 @@ def _as_interval_bounds(val: float, comp: str):
         return None, val, None, comp == "<="
     raise ReferenceRangeValidationError(f"Comparator invalide: {comp}")
 
-def _is_interval_empty(low_val: float, low_incl: bool, high_val: float, high_incl: bool) -> bool:
-    """Renvoie True si l'intervalle (low..high) est vide en tenant compte d'inclusivité."""
+# Function to check if interval is empty
+def _is_interval_empty(
+    low_val: float, 
+    low_incl: bool, 
+    high_val: float, 
+    high_incl: bool
+) -> bool:
+    """
+    Return True if interval is empty.
+    """
     if low_val > high_val:
         return True
     if low_val < high_val:
@@ -75,6 +89,7 @@ def _is_interval_empty(low_val: float, low_incl: bool, high_val: float, high_inc
     # low_val == high_val
     return (not low_incl) and (not high_incl)
 
+# Function to build range
 def build_range_validated(
     range_low: Optional[Dict[str, Any]],
     range_high: Optional[Dict[str, Any]],
@@ -240,8 +255,7 @@ def build_range_validated(
     rr0 = {k: v for k, v in rr0.items() if v is not None}
     return [rr0]
 
-# -------------------------------
-# Exemple d'utilisation
+
 if __name__ == "__main__":
     raw = {
         "range_low": {"comparator": ">", "value": "2", "unit": "kg"},

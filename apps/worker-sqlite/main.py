@@ -16,7 +16,8 @@ def root():
 @app.get("/healthz")
 async def healthz():
     return {"status": "ok", "time": now_iso()}
- 
+
+# Endpoint running spirometer pipeline 
 @app.get("/run/spirometer")
 def run_worker_sqlite(
     device: dict = Depends(require_scopes(["airflow:spirometer"])),

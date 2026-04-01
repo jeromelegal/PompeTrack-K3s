@@ -5,7 +5,7 @@ from google.oauth2.credentials import Credentials
 import json
 import os
 
-# Scopes nécessaires pour lire/écrire le calendrier
+# Necessary scopes
 SCOPES = [
     "https://www.googleapis.com/auth/calendar",
     "openid",
@@ -17,9 +17,11 @@ REDIRECT_URI = os.getenv("REDIRECT_URI", "http://192.168.2.88.nip.io/calendar")
 
 CREDENTIALS_FILE = "credentials.json"
 
-
+# Function to create and return the Flow OAuth2
 def get_flow():
-    """Crée et retourne le Flow OAuth2."""
+    """
+    Create and return the Flow OAuth2.
+    """
     flow = Flow.from_client_secrets_file(
         CREDENTIALS_FILE,
         scopes=SCOPES,
@@ -27,25 +29,24 @@ def get_flow():
     )
     return flow
 
-
+# Function to initialize the authentication
 def init_auth():
     """
-    Gère le cycle complet d'authentification OAuth2.
-    Retourne True si l'utilisateur est connecté, False sinon.
+    Initialize the authentication.
     """
 
-    # Déjà authentifié en session
+    # Everything is already connected
     if "credentials" in st.session_state:
         creds = Credentials(**st.session_state["credentials"])
 
-        # Rafraîchit le token si expiré
+        # If the token is expired, refresh it
         if creds.expired and creds.refresh_token:
             creds.refresh(Request())
             st.session_state["credentials"] = credentials_to_dict(creds)
 
         return True
 
-    # Récupère le code OAuth depuis l'URL après redirection Google
+    # Already connected with a code
     query_params = st.query_params
     if "code" in query_params:
         flow = get_flow()
@@ -53,11 +54,11 @@ def init_auth():
         creds = flow.credentials
         st.session_state["credentials"] = credentials_to_dict(creds)
 
-        # Nettoie l'URL
+        # Clear the query params
         st.query_params.clear()
         st.rerun()
 
-    # Pas encore connecté : affiche le bouton de login
+    # No credentials yet
     flow = get_flow()
     auth_url, _ = flow.authorization_url(
         access_type="offline",
@@ -71,24 +72,30 @@ def init_auth():
 
     return False
 
-
+# Function to get the credentials
 def get_credentials():
-    """Retourne les credentials Google depuis la session."""
+    """
+    Return the credentials.
+    """
     if "credentials" not in st.session_state:
         return None
     return Credentials(**st.session_state["credentials"])
 
-
+# Function to logout
 def logout():
-    """Supprime les credentials de la session."""
+    """
+    Delete the credentials.
+    """
     if "credentials" in st.session_state:
         del st.session_state["credentials"]
     st.query_params.clear()
     st.rerun()
 
-
+# Function to convert credentials
 def credentials_to_dict(creds):
-    """Convertit les credentials en dictionnaire sérialisable."""
+    """
+    Convert credentials to a dictionary.
+    """
     return {
         "token": creds.token,
         "refresh_token": creds.refresh_token,

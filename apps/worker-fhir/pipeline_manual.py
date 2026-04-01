@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_MANUAL = "raw-manual"
 BUCKET_PROCESSED = "processed-fhir"
 
+# Function to process manual metrics
 def manual_json_pipeline():
     """
     Pipeline 'manual' :

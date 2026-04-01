@@ -14,21 +14,21 @@ import pytz
 
 PARIS_TZ = pytz.timezone("Europe/Paris")
 
-# --- Configuration de la page ---
+# Configuration
 st.set_page_config(
     page_title="Google Calendar App",
     page_icon="📅",
     layout="wide",
 )
 
-# --- Init DB ---
+# Init DB
 init_db()
 
-# --- Auth ---
+# Authentication
 if not init_auth():
     st.stop()
 
-# --- Header ---
+# Header
 col1, col2 = st.columns([8, 1])
 with col1:
     st.title("📅 Mon Google Calendar")
@@ -36,7 +36,7 @@ with col2:
     if st.button("🚪 Déconnexion"):
         logout()
 
-# --- Sync ---
+# Synchronisation
 with st.spinner("Synchronisation avec Google Calendar..."):
     if "synced" not in st.session_state:
         count = sync_events_from_google()
@@ -48,7 +48,7 @@ if st.button("🔄 Synchroniser"):
     st.success(f"{count} événements synchronisés !")
     st.rerun()
 
-# --- Calendrier ---
+# Calendar
 st.markdown("## 📆 Calendrier")
 
 calendar_options = {
@@ -71,7 +71,6 @@ calendar_result = calendar(
     key="main_calendar",
 )
 
-# --- Gestion des interactions calendrier ---
 selected_event_id = None
 
 if calendar_result.get("eventClick"):
@@ -85,7 +84,7 @@ if calendar_result.get("select"):
     st.session_state["new_event_end"] = selected_end
     st.session_state["show_create_form"] = True
 
-# --- Formulaire Création ---
+# Create Event
 if st.session_state.get("show_create_form"):
     st.markdown("## ➕ Créer un événement")
 
@@ -120,7 +119,7 @@ if st.session_state.get("show_create_form"):
             st.session_state["show_create_form"] = False
             st.rerun()
 
-# --- Formulaire Edition / Suppression ---
+# Event Editor
 if st.session_state.get("selected_event_id"):
     event_id = st.session_state["selected_event_id"]
     event = get_event_by_google_id(event_id)

@@ -35,6 +35,7 @@ MANUAL_WEEKLY_COLS = {
 def is_admin() -> bool:
     return st.session_state.get("admin", False)
 
+# Function to build generic dataframe
 def df_generic(list_metrics):
     global_df = shaping_metrics(list_metrics)
     df = global_df.pivot_table(
@@ -49,12 +50,7 @@ def df_generic(list_metrics):
     # st.dataframe(df)
     return df
 
-# def df_workouts(list_metrics):
-#     df = shaping_metrics(list_metrics)
-#     df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True).dt.tz_localize(None)
-#     df["duration_min"] = round(df["value"] / 60, 0)
-#     return df
-
+# Function to build spirometry dataframe
 def df_spirometry(list_metrics):
     global_df = shaping_metrics(list_metrics)
     df = global_df.pivot_table(
@@ -68,6 +64,7 @@ def df_spirometry(list_metrics):
     # st.dataframe(df)
     return df
 
+# Function to build weekly dataframe
 def df_weekly(list_metrics):
     global_df = shaping_metrics(list_metrics)
     #st.dataframe(global_df)
@@ -84,6 +81,7 @@ def df_weekly(list_metrics):
     # st.dataframe(df)
     return df
 
+# Function to build monthly dataframe
 def df_monthly(list_metrics):
     global_df = shaping_metrics(list_metrics)
     #st.dataframe(global_df)
@@ -99,7 +97,7 @@ def df_monthly(list_metrics):
     # st.dataframe(df)
     return df
 
-
+# Function to shape dataframe
 def shape_df(stream_name, data):
     if stream_name == "metrics":
         return df_generic(data)
@@ -116,6 +114,7 @@ def shape_df(stream_name, data):
     else:
         return Exception
     
+# Function to ensure datetime
 def ensure_datetime(df, col='timestamp'):
     if df is None:
         return df
@@ -123,6 +122,7 @@ def ensure_datetime(df, col='timestamp'):
         df[col] = pd.to_datetime(df[col])
     return df
 
+# Function to convert wide to long
 def long_from_wide(df):
     if df is None:
         return None
@@ -142,9 +142,11 @@ def long_from_wide(df):
     long = df.melt(id_vars='timestamp', value_vars=value_cols, var_name='metric', value_name='value')
     return long
 
+# Function to calculate rolling trend
 def rolling_trend(series, window=7):
     return series.rolling(window, min_periods=1).mean()
 
+# Function to calculate slope
 def slope_of_trend(df, xcol='timestamp', ycol='value'):
     if df is None or df.empty or df[ycol].isnull().all():
         return None
@@ -155,6 +157,7 @@ def slope_of_trend(df, xcol='timestamp', ycol='value'):
     coeff = np.polyfit(tmp['x'], tmp[ycol], 1)
     return float(coeff[0])
 
+# Function to interpret trend
 def interpret_trend(slope, unit='', threshold_small=0.01):
     if slope is None:
         return "Données insuffisantes."

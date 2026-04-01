@@ -15,8 +15,11 @@ logging.basicConfig(
     ]
 )
 
-
+# Function to process global stateofminds
 def process_global_stateofminds(stateofminds: Union[List, str]):
+    """
+    Function to process global stateofminds and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -71,8 +74,11 @@ def process_global_stateofminds(stateofminds: Union[List, str]):
     logger.info("Building bundle.")
     return build_bundle_fhir(obs_list)
 
-
+# Function to process stateofminds
 def process_stateofminds_by_cats(stateofmind: Union[dict, str]):
+    """
+    Function to process stateofminds by categories and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -126,7 +132,7 @@ def process_stateofminds_by_cats(stateofmind: Union[dict, str]):
     logger.info("Observation list built.")
     return obs_list
 
-
+# Pipeline to process stateofminds
 def pipeline_stateofminds(stateofminds: List[Any]):
     overall_success = True
 

@@ -21,16 +21,22 @@ MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
 DEFAULT_CONNECT_TIMEOUT = 10
 DEFAULT_READ_TIMEOUT = 120
 
-
+# Function to build the search URL
 def build_search_url(base: str, resource_type: str, params: dict) -> str:
+    """
+    Build the search URL based on the base URL, resource type, and query parameters.
+    """
     query = urlencode(
         {k: v for k, v in params.items() if v is not None},
         doseq=True
     )
     return f"{base.rstrip('/')}/{resource_type}?{query}"
 
-
+# Function to create a requests session
 def create_session() -> requests.Session:
+    """
+    Create a requests session with retry logic.
+    """
     retry = Retry(
         total=6,
         connect=6,
@@ -55,31 +61,27 @@ def create_session() -> requests.Session:
     session.mount("https://", adapter)
     return session
 
-
+# Function to get the resource base URL
 def get_resource_base_url(internal_base: str, resource_type: str) -> str:
     return f"{internal_base.rstrip('/')}/{resource_type}"
 
-
+# Function to rewrite the 'next' URL
 def rewrite_next_to_internal_resource_base(
     next_url: Optional[str],
     internal_base: str,
     resource_type: str,
 ) -> Optional[str]:
     """
-    Ne garde du 'next' que la query string.
-    On recolle cette query sur NOTRE endpoint interne :
+    Keep the 'next' URL.
+    If it contains a query string, 
+    rewrite it to the internal resource base URL with the query string.
       {FHIR_BASE}/{resource_type}?...
-    Cela évite tous les problèmes de:
-      - schéma (http/https)
-      - host externe vs service interne
-      - path externe /apifhir/R4 vs interne /fhir/R4
     """
     if not next_url:
         return None
 
     parsed_next = urlparse(next_url)
 
-    # S'il n'y a pas de query, on ne peut pas paginer proprement
     if not parsed_next.query:
         logger.warning("URL 'next' sans query string: %s", next_url)
         return None
@@ -96,13 +98,16 @@ def rewrite_next_to_internal_resource_base(
 
     return rewritten
 
-
+# Function to get a bundle page
 def get_bundle_page(
     session: requests.Session,
     url: str,
     headers: dict,
     timeout: tuple[int, int] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
 ) -> dict:
+    """
+    Get a bundle page.
+    """
     try:
         r = session.get(url, headers=headers, timeout=timeout)
     except requests.RequestException as e:
@@ -124,11 +129,14 @@ def get_bundle_page(
             f"Body(partiel)={r.text[:500] if r.text else ''}"
         ) from e
 
-
+# Function to fetch FHIR observations
 def fetch_fhir_observation(
     patient: str,
     payload: Optional[dict] = None
 ) -> list[dict]:
+    """
+    Fetch FHIR observations.
+    """
     token = get_token()
     headers = {
         "Authorization": f"Bearer {token}",

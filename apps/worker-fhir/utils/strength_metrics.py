@@ -18,6 +18,7 @@ logging.basicConfig(
 
 MEDPLUM_DEVICE_ID_STREAMLIT = os.getenv("MEDPLUM_DEVICE_ID_STREAMLIT")
 
+# Function to average strengths
 def average_strenght_results(strengths: Dict[str, Any]) -> Dict[str, Any]:
     """
     Average the results of the strengths for each category
@@ -47,8 +48,11 @@ def average_strenght_results(strengths: Dict[str, Any]) -> Dict[str, Any]:
 
     return {"metrics": metrics}
 
-
+# Function to process global strengths
 def process_global_strengths(strengths: Union[List, str, Dict[str, Any]]):
+    """
+    Function to process global strengths and return a list of observations.
+    """
     error_report = []
 
     if not isinstance(strengths, dict):
@@ -124,8 +128,11 @@ def process_global_strengths(strengths: Union[List, str, Dict[str, Any]]):
 
     return obs_list
 
-
+# Function to process strengths by categories
 def process_strengths_by_cats(i: int, strength: Union[dict, str]):
+    """
+    Function to process strengths by categories and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -189,7 +196,7 @@ def process_strengths_by_cats(i: int, strength: Union[dict, str]):
     logger.info("Building bundle.")
     return build_bundle_fhir(obs_list)
 
-
+# Pipeline to process metrics by categories
 def pipeline_metrics_by_cats(strengths: List[Any]):
     overall_success = True
 
@@ -215,7 +222,7 @@ def pipeline_metrics_by_cats(strengths: List[Any]):
 
     return overall_success
 
-
+# Pipeline to process metrics
 def pipeline_metrics(strengths: List[Any]):
     try:
         obs_list = process_global_strengths(strengths)

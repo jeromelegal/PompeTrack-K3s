@@ -22,7 +22,6 @@ def prepare_workouts_df(df: pd.DataFrame) -> pd.DataFrame:
     if "value" in df.columns:
         df["value"] = pd.to_numeric(df["value"], errors="coerce")
 
-    # Normalisation des labels
     if "parameter" in df.columns:
         df["parameter"] = df["parameter"].fillna("Inconnu")
     else:
@@ -37,7 +36,6 @@ def prepare_workouts_df(df: pd.DataFrame) -> pd.DataFrame:
     if "unit" not in df.columns:
         df["unit"] = None
 
-    # Colonnes temporelles utiles
     df = df.dropna(subset=["timestamp"]).copy()
     df["date"] = df["timestamp"].dt.normalize()
     df["week"] = df["timestamp"].dt.to_period("W").dt.start_time
@@ -56,11 +54,6 @@ def prepare_workouts_df(df: pd.DataFrame) -> pd.DataFrame:
     df["weekday_num"] = df["timestamp"].dt.dayofweek
     df["weekday"] = df["weekday_num"].map(weekday_map)
 
-    # Calories optionnelles
-    # La page utilise si disponible:
-    # - energy_kcal
-    # - sinon energy_kj
-    # - sinon rien
     if "energy_kcal" in df.columns:
         df["energy_kcal"] = pd.to_numeric(df["energy_kcal"], errors="coerce")
     else:
@@ -71,11 +64,9 @@ def prepare_workouts_df(df: pd.DataFrame) -> pd.DataFrame:
     else:
         df["energy_kj"] = pd.NA
 
-    # Si seul energy_kj existe
     mask_missing_kcal = df["energy_kcal"].isna() & df["energy_kj"].notna()
     df.loc[mask_missing_kcal, "energy_kcal"] = df.loc[mask_missing_kcal, "energy_kj"] / 4.184
 
-    # Si seul energy_kcal existe
     mask_missing_kj = df["energy_kj"].isna() & df["energy_kcal"].notna()
     df.loc[mask_missing_kj, "energy_kj"] = df.loc[mask_missing_kj, "energy_kcal"] * 4.184
 
@@ -123,7 +114,6 @@ if workouts_df.empty:
     st.warning("Aucune donnée exploitable après préparation.")
     st.stop()
 
-# Filtres
 type_options = sorted(workouts_df["parameter"].dropna().unique().tolist())
 selected_types = st.sidebar.multiselect(
     "Type de workout",
@@ -172,7 +162,6 @@ else:
 
 st.markdown("---")
 
-# Agrégations
 by_type = (
     filtered.groupby("parameter", dropna=False)
     .agg(
@@ -226,7 +215,6 @@ monthly_minutes = (
     .sort_values("month")
 )
 
-# Ligne 1
 col1, col2 = st.columns([1.8, 1.2])
 
 with col1:
@@ -254,7 +242,6 @@ with col2:
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# Ligne 2
 col3, col4 = st.columns(2)
 
 with col3:
@@ -294,7 +281,6 @@ with col4:
         )
         st.plotly_chart(fig_weekday, use_container_width=True)
 
-# Ligne 3
 col5, col6 = st.columns([1.5, 1.5])
 
 with col5:

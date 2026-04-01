@@ -5,7 +5,8 @@ from libs.security import require_scopes
 
 app = FastAPI(title="Health Worker Controller")
 
-def now_iso(): return datetime.now(timezone.utc).isoformat()
+def now_iso(): 
+    return datetime.now(timezone.utc).isoformat()
 
 @app.get("/")
 def root():
@@ -15,6 +16,7 @@ def root():
 async def healthz():
     return {"status": "ok", "time": now_iso()}
  
+# Endpoint running iphone pipeline
 @app.get("/run/iphone")
 def run_worker_iphone(
     device: dict = Depends(require_scopes(["airflow:iphone"])),
@@ -27,7 +29,8 @@ def run_worker_iphone(
         return {"status": "success", "output": result.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+# Endpoint running manual pipeline    
 @app.get("/run/manual")
 def run_worker_manual(
     device: dict = Depends(require_scopes(["airflow:manual"])),
@@ -40,7 +43,8 @@ def run_worker_manual(
         return {"status": "success", "output": result.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+# Endpoint running spirometer pipeline    
 @app.get("/run/spirometer")
 def run_worker_spirometer(
     device: dict = Depends(require_scopes(["airflow:spirometer"])),
@@ -53,7 +57,8 @@ def run_worker_spirometer(
         return {"status": "success", "output": result.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+# Endpoint running strength pipeline    
 @app.get("/run/strength")
 def run_worker_strength(
     device: dict = Depends(require_scopes(["airflow:strength"])),
@@ -66,7 +71,8 @@ def run_worker_strength(
         return {"status": "success", "output": result.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+# Endpoint running logs transfert    
 @app.get("/run/logs")
 def run_logs_transfert(
     device: dict = Depends(require_scopes(["fhir:logs"])),

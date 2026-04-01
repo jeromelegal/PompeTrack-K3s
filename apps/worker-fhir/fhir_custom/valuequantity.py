@@ -4,12 +4,14 @@ from fhir.resources.quantity import Quantity
 from typing import Any
 from decimal import Decimal, InvalidOperation
 
+# Exceptions
 class ValueQuantityValidationError(ValueError):
     pass
 
+# Function to transform any value in float
 def _to_float(value: Any) -> float:
     """
-    Transform in float
+    Transform any value in float
     """
     if value is None:
         raise ValueQuantityValidationError("value is None")
@@ -30,19 +32,24 @@ def _to_float(value: Any) -> float:
                 raise ValueQuantityValidationError(f"Impossible de convertir en float: {value!r}")
     raise ValueQuantityValidationError(f"Type de 'value' non supporté: {type(value)}")
 
-
+# Function to serialize a pydantic FHIR model
 def _model_dump_safe(m):
-    """Utilitaire pour sérialiser un modèle pydantic FHIR selon la version."""
+    """
+    Serialize any pydantic model.
+    """
     try:
         return m.model_dump()
     except AttributeError:
         return m.dict()
 
-
+# Function to create value
 def value_quantity(
     value: Union[int, float, str],
     unit: Optional[str] = None
 ) -> dict:
+    """
+    Creates valueQuantity from any value
+    """
     if value is None:
         raise ValueQuantityValidationError("value absente ou incorrecte")
     try:

@@ -1,7 +1,10 @@
 import numpy as np
 
-
+# Function to compute stats
 def compute_trials_stats(trials):
+    """
+    Compute stats for a list of trials.
+    """
     vals = [v for v in trials if v is not None]
     if not vals:
         return {"max": None, "mean": None, "fatigue_index_pct": None}
@@ -14,13 +17,21 @@ def compute_trials_stats(trials):
         fi = None
     return {"max": mx, "mean": mean, "fatigue_index_pct": fi}
 
+# Function to verify that x can be converted to float
 def safe_float(x):
+    """
+    Verify that x can be converted to float.
+    """
     try:
         return float(x)
     except Exception:
         return None
 
+# Function to flag asymmetry
 def flag_asymmetry(left_max, right_max, threshold_pct=10.0):
+    """
+    Returns asymmetry ratio and flag.
+    """
     if left_max is None or right_max is None:
         return None, False, "Données insuffisantes pour asymétrie."
     if right_max == 0:
@@ -32,7 +43,11 @@ def flag_asymmetry(left_max, right_max, threshold_pct=10.0):
         msg = "⚠️ " + msg
     return ratio, flag, msg
 
+# Function to interpret fatigue
 def interpret_fatigue(fi_pct):
+    """
+    Interpret fatigue index.
+    """
     if fi_pct is None:
         return "Pas assez d'essais pour calculer la fatigabilité."
     if fi_pct <= 5:

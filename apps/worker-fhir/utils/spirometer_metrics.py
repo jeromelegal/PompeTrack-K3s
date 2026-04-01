@@ -19,7 +19,11 @@ logging.basicConfig(
 
 MEDPLUM_DEVICE_ID_SPRIROMETER = os.getenv("MEDPLUM_DEVICE_ID_SPRIROMETER")
 
+# Function to process global spirometer
 def process_global_spirometer(spirometer: Union[List, str, Dict[str, Any]]):
+    """
+    Function to process global spirometer and return a list of observations.
+    """
     error_report = []
 
     if not isinstance(spirometer, dict):
@@ -95,8 +99,11 @@ def process_global_spirometer(spirometer: Union[List, str, Dict[str, Any]]):
 
     return obs_list
 
-
+# Function to process spirometer by categories
 def process_spirometer_by_cats(i: int, metric: Union[dict, str]):
+    """
+    Function to process spirometer by categories and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -160,7 +167,7 @@ def process_spirometer_by_cats(i: int, metric: Union[dict, str]):
     logger.info("Building bundle.")
     return build_bundle_fhir(obs_list)
 
-
+# Pipeline to process global spirometer by categories
 def pipeline_metrics_by_cats(spirometer: List[Any]):
     overall_success = True
 
@@ -186,7 +193,7 @@ def pipeline_metrics_by_cats(spirometer: List[Any]):
 
     return overall_success
 
-
+# Pipeline to process global spirometer
 def pipeline_metrics(spirometer: List[Any]):
     try:
         obs_list = process_global_spirometer(spirometer)

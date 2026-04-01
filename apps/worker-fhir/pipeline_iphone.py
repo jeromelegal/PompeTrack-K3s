@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_RAW = "raw-iphone"
 BUCKET_PROCESSED = "processed-fhir"
 
+# Function to split json
 def split_json(json_file):
     metrics = None
     workouts = None
@@ -34,9 +35,8 @@ def split_json(json_file):
 
 def _run_pipeline(name, pipeline_func, data, obj_id):
     """
-    Exécute une fonction de pipeline (metrics/workouts/stateofminds)
-    et gére l’échec avec un message log.  
-    Retourne le résultat ou None en cas d’erreur.
+    Run pipeline (metrics/workouts/stateofminds)  
+    Return None if error.
     """
     if not data:
         return None
@@ -45,13 +45,14 @@ def _run_pipeline(name, pipeline_func, data, obj_id):
     except Exception as exc:
         logger.error(f"Erreur de pipeline_{name} sur {obj_id} : {exc}")
         raise   
-    
+
+# Main pipeline    
 def iphone_json_pipeline():
     """
     Pipeline iphone :
-    1 – Récupérer les fichiers en RAW
-    2 – Transformer en FHIR et uploader
-    3 – Déplacer le fichier RAW vers BUCKET_PROCESSED
+    1 – Retrieve file list from BUCKET_RAW
+    2 – Transform FHIR file and upload 
+    3 – Move raw_file to BUCKET_PROCESSED
     """
     logger.info("Début du pipeline iphone_json")
     objects_list = get_object_list(bucket=BUCKET_RAW)

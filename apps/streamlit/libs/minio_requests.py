@@ -25,21 +25,22 @@ ENDPOINT_INGEST_SQLITE = os.getenv("ENDPOINT_INGEST_SQLITE", "/ingest/sqlite/")
 
 DEFAULT_TIMEOUT = float(os.getenv("MINIO_API_TIMEOUT", "30"))
 
-
+# Function to ensure leading slash
 def _url(path: str) -> str:
     if not path.startswith("/"):
         path = "/" + path
     return BASE_URL_MINIO_API + path
 
-
+# Function to add auth headers
 def _auth_headers(scope: str, extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+    """Add auth headers."""
     token = get_token(scope)
     headers = {"Authorization": f"Bearer {token}"}
     if extra:
         headers.update(extra)
     return headers
 
-
+# Function to get object list
 def get_object_list(bucket: str, scope: str = "object:list") -> Optional[Any]:
     """Retrieve objects list in a bucket."""
     url = _url(ENDPOINT_OBJECTS_LIST + bucket)
@@ -56,7 +57,7 @@ def get_object_list(bucket: str, scope: str = "object:list") -> Optional[Any]:
         logger.error("get_object_list non-JSON bucket=%s err=%s", bucket, e)
         return None
 
-
+# Function to download json
 def get_object_json(bucket: str, object_name: str, scope: str = "download:json") -> Any:
     """Download json file. Returns dict/list or [] on error."""
     url = _url(ENDPOINT_OBJECT_JSON + bucket + "/" + object_name)
@@ -73,7 +74,7 @@ def get_object_json(bucket: str, object_name: str, scope: str = "download:json")
         logger.error("get_object_json non-JSON bucket=%s object=%s err=%s", bucket, object_name, e)
         return []
 
-
+# Function to move object
 def move_object(
     object_name: str,
     source_bucket: str,
@@ -106,12 +107,10 @@ def move_object(
     except requests.RequestException as e:
         return {"ok": False, "error": str(e), "status_code": 0, "data": None}
 
-
+# Function to upload manual file
 def upload_manual_file(object_name: Union[str, Dict[str, Any]], scope: str = "ingest:manual") -> Any:
     """
     Upload manual ingestion payload.
-    Note: je laisse 'data=' car ton code original le faisait.
-    Si l'API attend du JSON, remplace par `json=object_name`.
     """
     url = _url(ENDPOINT_INGEST_MANUAL)
     headers = _auth_headers(scope, extra={"Content-Type": "application/json"})
@@ -125,8 +124,8 @@ def upload_manual_file(object_name: Union[str, Dict[str, Any]], scope: str = "in
         raise
     except ValueError:
         return None
-
-
+    
+# Function to upload spirometer file
 def upload_spirometer_file(object_name: Any, scope: str = "ingest:spirometer") -> Any:
     """Upload spirometer payload as JSON."""
     url = _url(ENDPOINT_SPIROMETER)
@@ -140,11 +139,10 @@ def upload_spirometer_file(object_name: Any, scope: str = "ingest:spirometer") -
         logger.error("upload_spirometer_file failed err=%s", e)
         raise
 
-
+# Function to upload iPhone JSON
 def upload_iphone_json(object_file: Any, scope: str = "ingest:iphone") -> requests.Response:
     """
     Upload iPhone JSON.
-    object_file attendu: type Streamlit UploadedFile ou un objet avec .getvalue()
     """
     url = _url(ENDPOINT_IPHONE)
     headers = _auth_headers(scope, extra={"Content-Type": "application/json"})
@@ -163,11 +161,10 @@ def upload_iphone_json(object_file: Any, scope: str = "ingest:iphone") -> reques
         logger.error("upload_iphone_json failed err=%s", e)
         raise
 
-
+# Function to upload sqlite file
 def upload_db_file(object_file: Any, scope: str = "ingest:sqlite") -> requests.Response:
     """
     Upload sqlite file (multipart).
-    object_file attendu: Streamlit UploadedFile ou un objet avec .name et .getvalue()
     """
     url = _url(ENDPOINT_INGEST_SQLITE)
     headers = _auth_headers(scope, extra={"Accept": "application/json"})
@@ -182,7 +179,7 @@ def upload_db_file(object_file: Any, scope: str = "ingest:sqlite") -> requests.R
         logger.error("upload_db_file failed err=%s", e)
         raise
 
-
+#
 def upload_object_into_bucket(
     file_path: str,
     bucket: str,
@@ -218,7 +215,7 @@ def upload_object_into_bucket(
         logger.exception("upload_object_into_bucket file open failed file_path=%s err=%s", file_path, e)
         return None
 
-
+# Function to download file
 def get_object(bucket: str, object_name: str, scope: str = "download:object") -> bool:
     """Download file to /tmp/<object_name>."""
     url = _url(ENDPOINT_DOWNLOAD_GENERIC + bucket + "/" + object_name)
@@ -239,7 +236,7 @@ def get_object(bucket: str, object_name: str, scope: str = "download:object") ->
         logger.error("get_object local write failed path=%s err=%s", local_path, e)
         return False
 
-
+# Function to delete object
 def delete_object_on_minio(bucket: str, object_name: str, scope: str = "object:delete") -> bool:
     """Delete object in a bucket (kept as GET because your API seems to do that)."""
     url = _url(ENDPOINT_OBJECT_DELETE + bucket + "/" + object_name)
@@ -253,7 +250,7 @@ def delete_object_on_minio(bucket: str, object_name: str, scope: str = "object:d
         logger.error("delete_object_on_minio failed bucket=%s object=%s err=%s", bucket, object_name, e)
         return False
 
-
+# Function to download object
 def download_db_object_to_tmp(
     bucket: str,
     object_name: str,

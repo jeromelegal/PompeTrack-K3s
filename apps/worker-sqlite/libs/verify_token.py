@@ -1,4 +1,3 @@
-# libs/verify_token.py
 import os
 import time
 import logging
@@ -11,8 +10,7 @@ from jwt.algorithms import ECAlgorithm
 
 logger = logging.getLogger(__name__)
 
-# ── Configuration ────────────────────────────────────────────────────────────
-
+# Global configuration
 JWKS_URL = os.getenv(
     "JWKS_URL",
     "http://medplum-mesh.medplum.svc.cluster.local:8103/.well-known/jwks.json",
@@ -27,8 +25,6 @@ TOKEN_AUDIENCE_INGESTION = os.getenv("TOKEN_AUDIENCE_INGESTION", None)
 TOKEN_AUDIENCE_WORKER_STREAM = os.getenv("TOKEN_AUDIENCE_WORKER_STREAM", None)
 
 JWKS_CACHE_TTL = int(os.getenv("JWKS_CACHE_TTL", "300"))  # 5 min
-
-# ── Audiences autorisées ─────────────────────────────────────────────────────
 
 VALID_AUDIENCES = [
     aud for aud in [
@@ -45,19 +41,19 @@ VALID_AUDIENCES = [
 if not VALID_AUDIENCES:
     logger.warning("No TOKEN_AUDIENCE_* configured — audience verification disabled!")
 
-# ── Exceptions ───────────────────────────────────────────────────────────────
 
+# Exceptions
 class InsufficientScopeError(Exception):
-    """Token valide mais scope insuffisant."""
+    """Exception raised when the token does not have the required scope."""
     pass
 
-# ── Cache JWKS ───────────────────────────────────────────────────────────────
-
+# Cache
 _jwks_cache: dict = {}
 _jwks_cache_ts: float = 0.0
 
+# Function to fetch public keys
 def _fetch_jwks() -> dict:
-    """Récupère les clés publiques depuis le JWKS endpoint."""
+    """Retrieves JWKS."""
     logger.debug("Fetching JWKS from %s", JWKS_URL)
     try:
         with urllib.request.urlopen(JWKS_URL, timeout=5) as resp:
@@ -78,8 +74,9 @@ def _fetch_jwks() -> dict:
 
     return keys
 
+# Function to get JWKS
 def _get_jwks() -> dict:
-    """Retourne les clés JWKS (depuis le cache ou en refetchant)."""
+    """Returns JWKS keys."""
     global _jwks_cache, _jwks_cache_ts
 
     if time.monotonic() - _jwks_cache_ts > JWKS_CACHE_TTL or not _jwks_cache:
@@ -89,8 +86,9 @@ def _get_jwks() -> dict:
 
     return _jwks_cache
 
+# Function to get public key
 def _get_public_key(kid: str):
-    """Retourne la clé publique correspondant au kid."""
+    """Returns kid public key."""
     global _jwks_cache_ts
 
     keys = _get_jwks()
@@ -105,27 +103,12 @@ def _get_public_key(kid: str):
 
     return keys[kid]
 
-# ── Vérification du token ────────────────────────────────────────────────────
-
+# Function to verify token
 def verify_token(token: str, required_scope: str | None = None) -> dict:
     """
-    Vérifie un JWT signé ES256.
-
-    Args:
-        token:          Le JWT brut (Bearer token)
-        required_scope: Scope attendu (ex: "ingest:fhir"). Si fourni,
-                        lève InsufficientScopeError si absent du token.
-
-    Returns:
-        dict: payload décodé
-
-    Raises:
-        jwt.PyJWTError:        signature invalide, token expiré, issuer incorrect...
-        ValueError:            kid introuvable
-        RuntimeError:          JWKS inaccessible
-        InsufficientScopeError: token valide mais scope insuffisant
+    Verify a token and return its payload.
     """
-    # 1. Récupérer le kid depuis l'en-tête
+    # Request public key
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header.get("kid")
 
@@ -134,7 +117,7 @@ def verify_token(token: str, required_scope: str | None = None) -> dict:
 
     public_key = _get_public_key(kid)
 
-    # 2. Vérifier signature, issuer, audience, expiration
+    # Verify token
     decode_kwargs = dict(
         algorithms=["ES256"],
         issuer=TOKEN_ISSUER,
@@ -148,7 +131,7 @@ def verify_token(token: str, required_scope: str | None = None) -> dict:
 
     payload = jwt.decode(token, public_key, **decode_kwargs)
 
-    # 3. Vérifier le scope si demandé
+    # Verify scope
     if required_scope is not None:
         token_scopes = payload.get("scope", "").split()
         if required_scope not in token_scopes:

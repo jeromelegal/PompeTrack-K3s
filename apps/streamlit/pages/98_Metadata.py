@@ -24,7 +24,7 @@ with col_template:
 
 st.markdown("---")
 
-# Session state initialization for constants structure
+
 if "constants" not in st.session_state:
     # seed with empty well-known keys used in your example
     st.session_state.constants = {
@@ -59,9 +59,7 @@ if "constants" not in st.session_state:
 if "comp_counter" not in st.session_state:
     st.session_state.comp_counter = 0
 
-# Editor toggled inside an expander
 with st.expander("Éditer `constants`", expanded=True):
-    # Buttons to reset/add keys
     col_add, col_import = st.columns([2,2])
     with col_add:
         with st.form("add_constant"):

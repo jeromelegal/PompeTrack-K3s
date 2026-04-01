@@ -3,6 +3,7 @@ import pytest
 
 from utils.shaping_df import shaping_metrics
 
+# Fixtures
 @pytest.fixture
 def full_metric():
     return {
@@ -23,11 +24,12 @@ def minimal_metric():
     }
 
 
-
+# Tests shaping metrics
 def test_shaping_metrics_returns_dataframe(full_metric):
     df = shaping_metrics([full_metric])
     assert isinstance(df, pd.DataFrame)
 
+# Tests shaping metrics
 def test_shaping_metrics_columns(full_metric):
     df = shaping_metrics([full_metric])
 
@@ -41,6 +43,7 @@ def test_shaping_metrics_columns(full_metric):
         "device",
     ]
 
+# Tests shaping metrics
 def test_shaping_metrics_full_metric(full_metric):
     df = shaping_metrics([full_metric])
 
@@ -53,6 +56,7 @@ def test_shaping_metrics_full_metric(full_metric):
     assert row["unit"] == "bpm"
     assert row["device"] == "Polar H10"
 
+# Tests shaping metrics missing optional fields
 def test_shaping_metrics_missing_optional_fields(minimal_metric):
     df = shaping_metrics([minimal_metric])
     row = df.iloc[0]
@@ -62,12 +66,14 @@ def test_shaping_metrics_missing_optional_fields(minimal_metric):
     assert row["unit"] is None
     assert row["device"] is None
 
+# Tests shaping metrics multiple rows
 def test_shaping_metrics_multiple_rows(full_metric, minimal_metric):
     df = shaping_metrics([full_metric, minimal_metric])
 
     assert len(df) == 2
     assert df.iloc[1]["parameter"] == "Weight"
 
+# Tests shaping metrics empty list
 def test_shaping_metrics_empty_list():
     df = shaping_metrics([])
     assert isinstance(df, pd.DataFrame)

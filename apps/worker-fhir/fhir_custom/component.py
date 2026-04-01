@@ -9,10 +9,15 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+# Exceptions
 class ComponentValidationError(ValueError):
     pass
 
+# Function to transform in float
 def _to_float(value: Any) -> float:
+    """
+    Transform any value in float.
+    """
     if value is None:
         raise ComponentValidationError("value is None")
     if isinstance(value, (int, float)):
@@ -32,16 +37,20 @@ def _to_float(value: Any) -> float:
                 raise ComponentValidationError(f"Impossible de convertir en float: {value!r}")
     raise ComponentValidationError(f"Type de 'value' non supporté: {type(value)}")
 
+# Function to serialize
 def _model_dump_safe(m):
-    """Utilitaire pour sérialiser un modèle pydantic FHIR selon la version."""
+    """
+    Serialize any pydantic model.
+    """
     try:
         return m.model_dump()
     except AttributeError:
         return m.dict()
 
+# Function to build components
 def build_components_validated(raw: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Transforme une liste de dicts simples en liste 'component' FHIR validée.
+    Transform a list of dict inputs into a list of dict outputs.
     Input expected example element:
     {
       "code_system": "http://loinc.org",
@@ -124,7 +133,7 @@ def build_components_validated(raw: List[Dict[str, Any]]) -> List[Dict[str, Any]
         if inter_system or inter_code or inter_display:
             codings: List[Coding] = []
 
-            # Cas 1 : inter_display est une liste -> plusieurs Coding
+            # Case 1 : inter_display is a list
             if isinstance(inter_display, list):
                 for val in inter_display:
                     if not isinstance(val, str):
@@ -145,7 +154,7 @@ def build_components_validated(raw: List[Dict[str, Any]]) -> List[Dict[str, Any]
                             f"component[{idx}].interpretation.coding invalide: {e}"
                         ) from e
 
-            # Cas 2 : inter_display est une string (comportement historique)
+            # Case 2 : inter_display is a string
             else:
                 coding_kwargs = {}
                 if inter_system is not None:
@@ -176,8 +185,7 @@ def build_components_validated(raw: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
     return components_out
 
-# -------------------------
-# Exemple d'utilisation
+
 if __name__ == "__main__":
     raw = [
         {

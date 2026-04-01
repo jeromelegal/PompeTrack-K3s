@@ -18,7 +18,11 @@ logging.basicConfig(
 
 MEDPLUM_DEVICE_ID_STREAMLIT = os.getenv("MEDPLUM_DEVICE_ID_STREAMLIT")
 
+# Function to process global manuals
 def process_global_manuals(manuals: Union[List, str, Dict[str, Any]]):
+    """
+    Function to process global manuals and return a list of observations.
+    """
     error_report = []
 
     if not isinstance(manuals, dict):
@@ -94,8 +98,11 @@ def process_global_manuals(manuals: Union[List, str, Dict[str, Any]]):
 
     return obs_list
 
-
+# Function to process manuals by categories
 def process_manuals_by_cats(i: int, manual: Union[dict, str]):
+    """
+    Function to process manuals by categories and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -159,7 +166,7 @@ def process_manuals_by_cats(i: int, manual: Union[dict, str]):
     logger.info("Building bundle.")
     return build_bundle_fhir(obs_list)
 
-
+# Pipeline to process global workouts by categories
 def pipeline_metrics_by_cats(manuals: List[Any]):
     overall_success = True
 
@@ -185,7 +192,7 @@ def pipeline_metrics_by_cats(manuals: List[Any]):
 
     return overall_success
 
-
+# Pipeline to process global workouts
 def pipeline_metrics(manuals: List[Any]):
     try:
         obs_list = process_global_manuals(manuals)

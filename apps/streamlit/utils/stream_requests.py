@@ -43,7 +43,9 @@ def _stream_request(
     patient_id: str, 
     payload: dict
     ):
-    
+    """
+    Generic request
+    """
     token = get_token(["stream:fhir"])
     url = f"http://worker-stream/data/observation/{patient_id}"
     headers = {"Authorization": f"Bearer {token}"}
@@ -57,6 +59,9 @@ def _stream_request(
 
 # Tag stream request
 def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
+    """
+    Request for a specific tag.
+    """
     logger.info("Start request :")
     end_date = _date_today()
     start_date = end_date - pd.Timedelta(days=lookback_days)

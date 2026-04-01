@@ -12,6 +12,7 @@ from airflow.models.xcom_arg import XComArg
 
 BUCKET = "raw-iphone"
 
+# Extract the objects from the response
 def extract_objects(response_text: str) -> list:
     try:
         data = json.loads(response_text)
@@ -22,6 +23,11 @@ def extract_objects(response_text: str) -> list:
     if isinstance(data, dict) and isinstance(data.get("objects"), list):
         return data["objects"]
     return []
+
+# Dag process :
+# 1. Get the ingestion headers
+# 2. List the objects in the bucket
+# 3. Run the ingestion pipeline
 
 with DAG(
     dag_id="iphone_minio_watch_and_run",

@@ -34,6 +34,7 @@ WORKOUT_NAME_MAP = {
     "Musculation": "strength_training",
 }
 
+# Function to normalize 
 def normalize_name(raw_name: str) -> str:
     """
     Convert a human-readable workout name into a safe technical identifier.
@@ -53,6 +54,7 @@ def normalize_name(raw_name: str) -> str:
 
     return name
 
+# Function to fill the template
 class FillResource:
     """
     Replace every string value in a template that matches a key in
@@ -122,9 +124,8 @@ class FillResource:
         default: Mapping[str, Any] | None = None,
     ) -> None:
         """
-        Ajoute aux sources un dict plat du type:
+        Add :
           {f"{prefix}_system": "...", f"{prefix}_code": "...", ...}
-        à partir d'un keyword (ex: "Léger").
         """
         if not keyword:
             return
@@ -315,8 +316,7 @@ class CreatePreFHIR:
     # Render
     def render(self) -> List[Dict[str, Any]]:
         """
-        Normalise self.data, remplit le template pour chaque “resource” et
-        renvoie la liste des ressources formatées.
+        Normalise self.data, fill template for “resource”
         """
         rendered: List[Dict[str, Any]] = []
 
@@ -452,23 +452,13 @@ class CreatePreFHIR_name(CreatePreFHIR):
 
 class CreatePreFHIR_symptoms:
     """
-    Adapter pour le template meta_iphone_symptom.json / symptoms.json.
-
-    - start -> date  (effectiveDateTime attend "date")
-    - name  -> note  (value_string attend "note")
-    - severity -> keyword pour remplir vcc_* via SEVERITY_LEVELS
+    Class for symptoms
     """
     TEMPLATE_NAME = "iphone_symptom"
 
     def process(self, symptom: Dict[str, Any]):
-        # 1) Fabrique un payload compatible CreatePreFHIR_name
         payload = copy.deepcopy(symptom)
-
-        # 2) Crée le creator standard (charge meta_iphone_symptom.json)
         creator = CreatePreFHIR_name(payload=payload, name=self.TEMPLATE_NAME)
-
-        # 3) Render standard, MAIS on injecte le codeable vcc_* avant build.
-        #    -> On refait ici une boucle très proche de CreatePreFHIR.render()
         rendered = []
 
         normalized_data = creator._normalize(creator.data)
@@ -505,247 +495,8 @@ class CreatePreFHIR_symptoms:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO) 
     
-    payload =  {
-    "metadata": {},
-    "id": "19323448-8391-472B-9997-8E02A36615AD",
-    "end": "2025-11-27 09:46:11 +0100",
-    "heartRateData": [
-      
-      {
-        "units": "count/min",
-        "Min": 91,
-        "Max": 91,
-        "source": "Connect",
-        "date": "2025-11-27 09:41:51 +0100",
-        "Avg": 91
-      },
-      {
-        "source": "Connect",
-        "Max": 104,
-        "Avg": 104,
-        "date": "2025-11-27 09:43:51 +0100",
-        "Min": 104,
-        "units": "count/min"
-      },
-      {
-        "Max": 74,
-        "date": "2025-11-27 09:45:51 +0100",
-        "Avg": 74,
-        "units": "count/min",
-        "source": "Connect",
-        "Min": 74
-      }
-    ],
-    "heartRateRecovery": [
-      {
-        "Max": 70,
-        "date": "2025-11-27 09:47:59 +0100",
-        "Min": 70,
-        "units": "count/min",
-        "source": "Connect",
-        "Avg": 70
-      }
-    ],
-    "start": "2025-11-27 09:34:51 +0100",
-    "name": "Yoga",
-    "activeEnergyBurned": {
-      "units": "kJ",
-      "qty": 43
-    },
-    "distance": {
-      "qty": 0,
-      "units": "km"
-    },
-    "duration": 680.2890014648438,
-    "activeEnergy": [
-      {
-        "units": "kcal",
-        "qty": 15.86784436725581,
-        "date": "2025-11-27 09:34:51 +0100",
-        "source": "Connect"
-      },
-      {
-        "date": "2025-11-27 09:35:51 +0100",
-        "qty": 15.86784436725581,
-        "source": "Connect",
-        "units": "kcal"
-      },
-      {
-        "units": "kcal",
-        "qty": 15.86784436725581,
-        "date": "2025-11-27 09:36:51 +0100",
-        "source": "Connect"
-      },
-      {
-        "date": "2025-11-27 09:37:51 +0100",
-        "qty": 15.867844367255806,
-        "source": "Connect",
-        "units": "kcal"
-      },
-      {
-        "source": "Connect",
-        "date": "2025-11-27 09:38:51 +0100",
-        "units": "kcal",
-        "qty": 15.867844367255806
-      },
-      {
-        "qty": 15.867844367255806,
-        "source": "Connect",
-        "date": "2025-11-27 09:39:51 +0100",
-        "units": "kcal"
-      },
-      {
-        "units": "kcal",
-        "source": "Connect",
-        "qty": 15.867844367255802,
-        "date": "2025-11-27 09:40:51 +0100"
-      },
-      {
-        "source": "Connect",
-        "units": "kcal",
-        "qty": 15.867844367255806,
-        "date": "2025-11-27 09:41:51 +0100"
-      },
-      {
-        "date": "2025-11-27 09:42:51 +0100",
-        "units": "kcal",
-        "source": "Connect",
-        "qty": 15.867844367255804
-      },
-      {
-        "source": "Connect",
-        "units": "kcal",
-        "date": "2025-11-27 09:43:51 +0100",
-        "qty": 15.867844367255806
-      },
-      {
-        "date": "2025-11-27 09:44:51 +0100",
-        "qty": 15.867844367255806,
-        "source": "Connect",
-        "units": "kcal"
-      },
-      {
-        "date": "2025-11-27 09:45:51 +0100",
-        "units": "kcal",
-        "source": "Connect",
-        "qty": 5.365711960186096
-      }
-    ]
-  }
-    
-#     payload =  {
-#     "heartRateRecovery": [
-#       {
-#         "Min": 86,
-#         "units": "count/min",
-#         "date": "2025-03-15 18:27:57 +0100",
-#         "source": "JustFit",
-#         "Avg": 86,
-#         "Max": 86
-#       }
-#     ],
-#     "duration": 715,
-#     "name": "Entra\u00eenement de Force Fonctionnelle",
-#     "activeEnergyBurned": {
-#       "units": "kJ",
-#       "qty": 70
-#     },
-#     "id": "D09E72D1-22D6-4243-9003-67EF3F4DA85D",
-#     "end": "2025-03-15 18:27:12 +0100",
-#     "activeEnergy": [
-#       {
-#         "source": "JustFit",
-#         "qty": 25.276905851791803,
-#         "date": "2025-03-15 18:15:37 +0100",
-#         "units": "kcal"
-#       },
-#       {
-#         "source": "JustFit",
-#         "qty": 25.276905851791803,
-#         "units": "kcal",
-#         "date": "2025-03-15 18:16:37 +0100"
-#       },
-#       {
-#         "source": "JustFit",
-#         "date": "2025-03-15 18:17:37 +0100",
-#         "units": "kcal",
-#         "qty": 25.276905851791803
-#       },
-#       {
-#         "date": "2025-03-15 18:18:37 +0100",
-#         "qty": 25.276905851791806,
-#         "source": "JustFit",
-#         "units": "kcal"
-#       },
-#       {
-#         "qty": 25.276905851791803,
-#         "source": "JustFit",
-#         "units": "kcal",
-#         "date": "2025-03-15 18:19:37 +0100"
-#       },
-#       {
-#         "source": "JustFit",
-#         "qty": 25.276905851791806,
-#         "units": "kcal",
-#         "date": "2025-03-15 18:20:37 +0100"
-#       },
-#       {
-#         "qty": 25.27690585179181,
-#         "source": "JustFit",
-#         "units": "kcal",
-#         "date": "2025-03-15 18:21:37 +0100"
-#       },
-#       {
-#         "date": "2025-03-15 18:22:37 +0100",
-#         "units": "kcal",
-#         "qty": 25.276905851791806,
-#         "source": "JustFit"
-#       },
-#       {
-#         "source": "JustFit",
-#         "units": "kcal",
-#         "qty": 25.27690585179181,
-#         "date": "2025-03-15 18:23:37 +0100"
-#       },
-#       {
-#         "source": "JustFit",
-#         "qty": 25.27690585179181,
-#         "date": "2025-03-15 18:24:37 +0100",
-#         "units": "kcal"
-#       },
-#       {
-#         "units": "kcal",
-#         "date": "2025-03-15 18:25:37 +0100",
-#         "qty": 25.276905851791806,
-#         "source": "JustFit"
-#       },
-#       {
-#         "qty": 14.834035630290192,
-#         "units": "kcal",
-#         "date": "2025-03-15 18:26:37 +0100",
-#         "source": "JustFit"
-#       }
-#     ],
-#     "start": "2025-03-15 18:15:37 +0100"
-#   }   
-
-#     payload = {
-#     "kind": "momentary_emotion",
-#     "associations": [
-#       "tasks",
-#       "work",
-#       "family"
-#     ],
-#     "id": "0630A61B-2B8F-4BFA-A140-5C9DB6193410",
-#     "valenceClassification": "slightly_pleasant",
-#     "end": "2025-12-07T13:32:10Z",
-#     "valence": 0.33333333333333326,
-#     "start": "2025-12-07T13:32:10Z",
-#     "labels": [
-#       "proud",
-#       "satisfied"
-#     ]
-#   }
+    with open("symptoms.json", "r") as f:
+        payload = json.load(f)
 
     creator = CreatePreFHIR_workouts()
     resource = creator.process(payload)

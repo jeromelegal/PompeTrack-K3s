@@ -96,9 +96,7 @@ def test_fetch_fhir_observation_pagination(mocker):
 
 def test_resolve_has_member(mocker):
     """
-    Ce test vérifie que la boucle qui parcourt la propriété hasMember
-    est bien exécutée et que les données sont ajoutées dans
-    la clé resolvedHasMember.
+    Test the resolve_has_member function
     """
     all_observations = [
         {

@@ -1,5 +1,6 @@
 import pandas as pd
 
+# Function to shape metrics
 def shaping_metrics(list_metrics):
     rows = []
 
@@ -132,7 +133,6 @@ def _get_duration_min(obs):
         if unit in ("minutes", "minute", "min"):
             return round(float(value), 1)
 
-    # Fallback si pas de valueQuantity : calcul depuis effectivePeriod
     period = obs.get("effectivePeriod") or {}
     start = period.get("start")
     end = period.get("end")
@@ -172,11 +172,7 @@ def df_workouts(list_metrics):
         return df
 
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce").dt.tz_localize(None)
-
-    # Optionnel : ne garder que les lignes avec un vrai nom de workout
     df = df[df["parameter"].notna()]
-
-    # Tri décroissant
     df = df.sort_values("timestamp", ascending=False).reset_index(drop=True)
 
     return df
@@ -229,8 +225,7 @@ def _read_quantity(obs):
 
 def _read_interpretation(node):
     """
-    Gère les cas FHIR standards :
-    interpretation: [{coding:[...]}]
+    Try different representations
     """
     interpretations = node.get("interpretation") or []
     values = []
@@ -245,7 +240,7 @@ def _read_interpretation(node):
 
 def _read_component_value(component):
     """
-    Essaie plusieurs représentations possibles.
+    Try different representations.
     """
     interp = _read_interpretation(component)
     if interp:
@@ -271,11 +266,7 @@ def _read_component_value(component):
 
 def _read_components(obs):
     """
-    Retourne un dict des composants du style :
-    {
-        "associations": "health, tasks, work",
-        "labels": "proud"
-    }
+    Try different representations
     """
     out = {}
 

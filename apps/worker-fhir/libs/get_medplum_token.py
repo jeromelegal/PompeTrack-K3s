@@ -13,39 +13,43 @@ from libs.secrets_utils import read_secret_from_file
 
 logger = logging.getLogger("get_medplum_token")
 
+# Reading client ID and secret from environment variables or secrets
 CLIENT_ID = read_secret_from_file("MEDPLUM_CLIENT_ID")
 CLIENT_SECRET = read_secret_from_file("MEDPLUM_CLIENT_SECRET")
 
+# Base URL of the Medplum API
 BASE_URL = os.getenv(
     "MEDPLUM_BASE_URL",
     "http://medplum-mesh.medplum.svc.cluster.local:8103",
 ).rstrip("/")
 
+# Endpoint for getting the access token
 TOKEN_ENDPOINT = os.getenv(
     "MEDPLUM_TOKEN_ENDPOINT",
     f"{BASE_URL}/oauth2/token",
 )
 
+# Default scope for the token
 DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "")
 
-# scope_string -> (access_token, expires_at)
+# Cache for storing access tokens
 _token_cache: Dict[str, Tuple[str, float]] = {}
 _cache_lock = threading.RLock()
 
 
 class TokenError(RuntimeError):
-    """Erreur lors de l'obtention du token OAuth2."""
+    """Error when getting token OAuth2."""
     pass
 
 
 ScopeInput = Union[str, Iterable[str], None]
 
-
+# Function to normalize scope
 def _normalize_scope(scope: ScopeInput) -> str:
     """
-    Normalise le scope en string (clé de cache stable).
+    Normalize string scope.
     - None -> DEFAULT_SCOPE
-    - list/tuple/set -> "a b c" (trié, dédoublonné)
+    - list/tuple/set -> "a b c"
     - str -> str
     """
     if scope is None:
@@ -64,21 +68,21 @@ def _normalize_scope(scope: ScopeInput) -> str:
     uniq = sorted(set(items))
     return " ".join(uniq).strip()
 
-
+# Function to check if token is valid
 def _is_token_valid_for_scope(scope_key: str) -> bool:
-    """Vérifie si on a un token non-expiré pour ce scope (marge 10s)."""
+    """Verify if token is valid."""
     token_entry = _token_cache.get(scope_key)
     if not token_entry:
         return False
     _, expires_at = token_entry
     return (time.time() + 10) < expires_at
 
-
+# Function to decode base64
 def _b64url_decode(data: str) -> bytes:
     pad = "=" * (-len(data) % 4)
     return base64.urlsafe_b64decode(data + pad)
 
-
+# Function to decode JWT
 def _decode_jwt_no_verify(token: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Decode JWT header/payload WITHOUT verifying signature.
@@ -92,9 +96,9 @@ def _decode_jwt_no_verify(token: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     payload = json.loads(_b64url_decode(parts[1]).decode("utf-8"))
     return header, payload
 
-
+# Function to log token claims
 def _log_token_claims_info(access_token: str) -> None:
-    """Log best-effort des infos utiles sans jamais logger le token complet."""
+    """Log token claims."""
     try:
         header, payload = _decode_jwt_no_verify(access_token)
 
@@ -127,7 +131,7 @@ def _log_token_claims_info(access_token: str) -> None:
     except Exception as e:
         logger.debug("Could not decode JWT claims (non-fatal): %s", e)
 
-
+# Function to fetch token
 def _fetch_token_from_server(scope_key: str) -> dict:
     if not CLIENT_ID or not CLIENT_SECRET:
         raise TokenError("MEDPLUM_CLIENT_ID / MEDPLUM_CLIENT_SECRET are missing")
@@ -162,21 +166,21 @@ def _fetch_token_from_server(scope_key: str) -> dict:
 
     return token_json
 
-
+# Function to clear token cache
 def clear_token_cache() -> None:
-    """Utile en debug/tests."""
+    """Used in debug."""
     with _cache_lock:
         _token_cache.clear()
 
-
+# Function to get token
 def get_token(scope: ScopeInput = DEFAULT_SCOPE, force_refresh: bool = False) -> str:
     """
-    Retourne un access_token valide.
-    Cache par scope normalisé.
+    Return a valid access_token.
+    Cache by scope.
 
-    scope accepte:
+    accepted scope values:
       - str
-      - list/tuple/set de str
+      - list/tuple/set
       - None
     """
     scope_key = _normalize_scope(scope)

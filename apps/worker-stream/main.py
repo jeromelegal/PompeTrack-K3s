@@ -17,7 +17,8 @@ def root():
 @app.get("/healthz")
 async def healthz():
     return {"status": "ok", "time": now_iso()}
- 
+
+# Endpoint to fetch observation 
 @app.post("/data/observation/{patient_id}")
 def fetch_obseration(
     patient_id: str,

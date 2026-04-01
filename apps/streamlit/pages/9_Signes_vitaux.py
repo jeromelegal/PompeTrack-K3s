@@ -4,7 +4,6 @@ import json
 from utils.minio_requests import upload_manual_file
 from utils.processing import process_weekly_data
 
-# ----- Styles (simple card look) -----
 st.markdown(
     """
     <style>
@@ -45,7 +44,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- Helper stubs (à remplacer par tes fonctions réelles) ---
 def save_weekly(data: dict):
     """Sauvegarde hebdo : envoi vers minio avec upload_file."""
     st.success("Envoi données hebdomadaires vers Minio. ✅")
@@ -60,7 +58,7 @@ st.markdown("<div class='section-title'>📅 Données hebdomadaires</div>", unsa
 st.markdown("<div class='muted'>Remplir les mesures prises cette semaine</div>", unsafe_allow_html=True)
 st.write("")
 
-# Utilisation d'un form pour grouper les champs et un bouton unique
+
 with st.form("form_weekly"):
     date_week = st.date_input("Date de la mesure 📆", value=date.today())
     weight = st.number_input("Poids (kg) ⚖️", min_value=20.0, max_value=300.0, value=75.0, step=0.1, format="%.1f")
@@ -74,9 +72,8 @@ with st.form("form_weekly"):
         diastolic = st.number_input("Tension diastolique (mmHg) 🩺", min_value=30, max_value=150, value=80, step=1)
     symptoms = st.text_area("Journal de symptômes 📝", placeholder="Décris ici l'évolution, les triggers, médicaments pris, etc.", height=120)
 
-    st.write("")  # espacement
+    st.write("")
     submitted_weekly = st.form_submit_button("Valider les données hebdo ✅")
-    # Si tu préfères un bouton séparé hors du form, on peut aussi faire st.button en dehors.
 
 if submitted_weekly:
     weekly_payload = process_weekly_data(
@@ -87,7 +84,7 @@ if submitted_weekly:
         diastolic=diastolic,
         symptoms=symptoms,
     )
-    # Appel stub (remplace par ton implémentation)
+
     save_weekly(weekly_payload)
 
-st.markdown('</div>', unsafe_allow_html=True)  # fin card
+st.markdown('</div>', unsafe_allow_html=True)

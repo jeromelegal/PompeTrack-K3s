@@ -28,10 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Function date now
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
-# ── Global endpoints ──────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -41,8 +41,7 @@ def root():
 async def healthz():
     return {"status": "ok", "time": now_iso()}
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
+# Helper json ingest function
 def _ingest_json(payload: dict, bucket: str, device: dict):
     if not payload:
         raise HTTPException(status_code=400, detail="empty payload")
@@ -52,6 +51,7 @@ def _ingest_json(payload: dict, bucket: str, device: dict):
         raise HTTPException(status_code=500, detail=response.get("error", "upload failed"))
     return {"status": "ok", "bytes": len(data), "device": device.get("device")}
 
+# Helper bytes ingest function
 def _ingest_bytes(data: bytes, bucket: str, device: dict, object_name: str | None = None):
     if not data:
         raise HTTPException(status_code=400, detail="empty payload")
@@ -62,8 +62,7 @@ def _ingest_bytes(data: bytes, bucket: str, device: dict, object_name: str | Non
         raise HTTPException(status_code=500, detail=response.get("error", "upload failed"))
     return {"status": "ok", "bytes": len(data), "device": device.get("device")}
 
-# ── Ingest endpoints ──────────────────────────────────────────────────────────
-
+# Endpoint iPhone
 @app.post("/ingest/iphone")
 async def ingest_iphone(
     payload: dict = Body(...),
@@ -71,6 +70,7 @@ async def ingest_iphone(
 ):
     return _ingest_json(payload, BUCKET_RAW_IPHONE, device)
 
+# Endpoint iPhone for API
 @app.post("/ingest/iphone_api")
 async def ingest_iphone_api(
     payload: dict = Body(...),
@@ -78,6 +78,7 @@ async def ingest_iphone_api(
 ):
     return _ingest_json(payload, BUCKET_RAW_IPHONE, device)
 
+# Endpoint Manual
 @app.post("/ingest/manual")
 async def ingest_manual(
     payload: dict = Body(...),
@@ -85,6 +86,7 @@ async def ingest_manual(
 ):
     return _ingest_json(payload, BUCKET_RAW_MANUAL, device)
 
+# Endpoint Strength
 @app.post("/ingest/strength")
 async def ingest_strenght(
     payload: dict = Body(...),
@@ -92,6 +94,7 @@ async def ingest_strenght(
 ):
     return _ingest_json(payload, BUCKET_RAW_STRENGTH, device)
 
+# Endpoint Spirometer
 @app.post("/ingest/spirometer")
 async def ingest_spirometer(
     payload: dict = Body(...),
@@ -99,6 +102,7 @@ async def ingest_spirometer(
 ):
     return _ingest_json(payload, BUCKET_RAW_SPIROMETER, device)
 
+# Endpoint SQLite
 @app.post("/ingest/sqlite")
 async def ingest_sqlite(
     file: UploadFile = File(...),
@@ -111,6 +115,7 @@ async def ingest_sqlite(
     data = await file.read()
     return _ingest_bytes(data, BUCKET_SQLITE_RAW_SPIROMETER, device, object_name=file.filename)
 
+# Endpoint FHIR
 @app.post("/ingest/fhir")
 async def ingest_fhir(
     payload: dict = Body(...),
@@ -118,6 +123,7 @@ async def ingest_fhir(
 ):
     return _ingest_json(payload, BUCKET_PROCESSED_FHIR, device)
 
+# Endpoint Generic
 @app.post("/ingest/generic/{bucket}")
 async def ingest_generic(
     bucket: str,
@@ -174,8 +180,7 @@ async def ingest_dataframe(
         "filename": object_name,
     }
 
-# ── Download / object endpoints ───────────────────────────────────────────────
-
+# Endpoint download object
 @app.get("/download/{bucket}/{object_name}")
 async def download_object(
     bucket: str,
@@ -184,6 +189,7 @@ async def download_object(
 ):
     return get_raw_object(bucket, object_name)
 
+# Endpoint download json
 @app.get("/object/json/{bucket}/{object_name}")
 async def get_json_object(
     bucket: str,
@@ -195,8 +201,7 @@ async def get_json_object(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-# ── Bucket endpoints ──────────────────────────────────────────────────────────
-
+# Endpoint create bucket
 @app.post("/bucket/create/{bucket}")
 async def bucket_creation(
     bucket: str,
@@ -206,6 +211,7 @@ async def bucket_creation(
         raise HTTPException(status_code=500, detail="bucket creation failed")
     return {"status": "ok", "device": device.get("device"), "bucket_name": bucket}
 
+# Endpoint list objects
 @app.get("/bucket/object-list/{bucket}")
 async def bucket_object_list(
     bucket: str,
@@ -213,8 +219,7 @@ async def bucket_object_list(
 ):
     return bucket_list_objects(bucket)
 
-# ── Move / delete endpoints ───────────────────────────────────────────────────
-
+# Endpoint move object
 @app.post("/object/move/{object_name}/{source_bucket}/{destination_bucket}")
 async def move_object_endpoint(
     object_name: str,
@@ -226,6 +231,7 @@ async def move_object_endpoint(
         raise HTTPException(status_code=500, detail="move failed")
     return {"status": "ok"}
 
+# Endpoint delete object
 @app.post("/object/delete/{bucket_name}/{object_name}")
 async def delete_object_endpoint(
     bucket_name: str,

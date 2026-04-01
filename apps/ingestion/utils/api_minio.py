@@ -36,7 +36,7 @@ s3_client = boto3.client(
     config=_botocore_config,
 )
 
-
+# Create resource
 def _make_object_name(bucket: str, filename: str | None):
     """
     Si `filename` est None ou vide, génère une clé aléatoire.
@@ -48,7 +48,7 @@ def _make_object_name(bucket: str, filename: str | None):
             return filename
         return f"{filename}"
 
-
+# Upload a file
 def upload_file(
     filedata: Union[str, bytes, bytearray, BytesIO],
     bucket: str,
@@ -110,7 +110,7 @@ def upload_file(
         logger.exception("MINIO upload failed")
         return {"ok": False, "error": str(exc), "bucket": bucket, "object": object_name}
 
-
+# Function list objects
 def bucket_list_objects(bucket: str, s3_client=s3_client, prefix: str | None = None):
     """
     Return list of file name in a bucket.
@@ -129,7 +129,7 @@ def bucket_list_objects(bucket: str, s3_client=s3_client, prefix: str | None = N
         logging.error(e)
         raise RuntimeError(f"Erreur S3 lors du listing du bucket '{bucket}': {e}") from e
 
-
+# Function download file
 def download_file(bucket: str, key: str, s3_client=s3_client) -> str:
     """
     Download object in a temp file and return local path.
@@ -145,7 +145,7 @@ def download_file(bucket: str, key: str, s3_client=s3_client) -> str:
         logger.exception("Erreur lors du download_file depuis %s/%s", bucket, key)
         raise RuntimeError(f"Erreur lors de la lecture '{key}' dans '{bucket}': {e}") from e
 
-
+# Function download raw object
 def get_raw_object(bucket: str, object_name: str, s3_client=s3_client) -> str:
     """
     Download object
@@ -167,7 +167,7 @@ def get_raw_object(bucket: str, object_name: str, s3_client=s3_client) -> str:
     except (ClientError, BotoCoreError) as e:
         raise ValueError(f"Objet introuvable ou erreur MinIO: {e}")
 
-
+# Function get json
 def get_object_json(bucket: str, object_name: str, s3_client=s3_client):
     """
     Return a json object from a bucket.
@@ -183,7 +183,7 @@ def get_object_json(bucket: str, object_name: str, s3_client=s3_client):
         logging.error(je)
         raise ValueError(f"Le contenu de '{object_name}' n'est pas un JSON valide : {je}") from je
 
-
+# Function move object
 def move_object(object_name, source_bucket, destination_bucket, s3_client=s3_client):
     """
     Move an object from a bucket to another
@@ -206,7 +206,7 @@ def move_object(object_name, source_bucket, destination_bucket, s3_client=s3_cli
         print(f"Fail to move object : {e}")
         return False
 
-
+# Function create bucket
 def bucket_create(bucket_name, s3_client=s3_client):
     """
     Create a bucket.
@@ -218,7 +218,7 @@ def bucket_create(bucket_name, s3_client=s3_client):
         return False
     return True
 
-
+# Function delete bucket
 def bucket_delete(bucket_name, s3_client=s3_client):
     """
     Delete a bucket.
@@ -230,7 +230,7 @@ def bucket_delete(bucket_name, s3_client=s3_client):
         return False
     return True
 
-
+# Function delete object
 def object_delete(object_name, bucket_name, s3_client=s3_client):
     """
     Delete object in a bucket.
@@ -242,19 +242,21 @@ def object_delete(object_name, bucket_name, s3_client=s3_client):
         return False
     return True
 
-
+# Function list buckets
 def buckets_list(s3_client=s3_client):
-    """Lister le noms des buckets"""
+    """
+    List buckets in MinIO
+    """
     response = s3_client.list_buckets()
     logger.info('Existing buckets:')
     for bucket in response['Buckets']:
         logger.info(f'  {bucket["Name"]}')
     return response
 
-
+# Function streaming
 def _streaming_body_iter(streaming_body, chunk_size: int = 64 * 1024):
     """
-    Itère sur le StreamingBody de boto3 en chunks.
+    Iterate over a streaming body.
     """
     while True:
         chunk = streaming_body.read(chunk_size)
@@ -262,7 +264,7 @@ def _streaming_body_iter(streaming_body, chunk_size: int = 64 * 1024):
             break
         yield chunk
 
-
+# Function get stream object
 def get_object_stream(bucket: str,
                       key: str,
                       s3_client=s3_client,
@@ -270,7 +272,7 @@ def get_object_stream(bucket: str,
                       media_type: str = "application/octet-stream",
                       chunk_size: int = 64 * 1024):
     """
-    Récupère l'objet depuis S3/MinIO et renvoie une StreamingResponse.
+    Retrieve object in a bucket and stream it.
     """
     try:
         resp = s3_client.get_object(Bucket=bucket, Key=key)

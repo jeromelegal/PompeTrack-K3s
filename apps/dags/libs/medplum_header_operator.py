@@ -4,10 +4,10 @@ from datetime import timedelta
 
 class MedplumHeaderOperator(BaseOperator):
     """
-    Opérateur pour récupérer un token Medplum et générer des headers d'authentification.
+    Operator to get medplum headers.
 
     Args:
-        scope (list): Liste des scopes nécessaires pour le token (ex: ["object:list"]).
+        scope (list): scope list to request (ex: ["object:list"]).
     """
     def __init__(self, scope, *, retries=3, retry_delay=timedelta(minutes=1), **kwargs):
         super().__init__(

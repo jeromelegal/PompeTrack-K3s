@@ -4,7 +4,6 @@ import json
 from utils.minio_requests import upload_manual_file
 from utils.processing import process_weekly_data, process_monthly_data
 
-# ----- Styles (simple card look) -----
 st.markdown(
     """
     <style>
@@ -31,7 +30,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ----- Header -----
 st.markdown(
     """
     <div style="display:flex;align-items:center;gap:18px">
@@ -46,9 +44,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.write("")  # petit espacement
+st.write("") 
 
-# --- Helper stubs (à remplacer par tes fonctions réelles) ---
+
 def save_weekly(data: dict):
     """Sauvegarde hebdo : envoi vers minio avec upload_file."""
     st.success("Envoi données hebdomadaires vers Minio. ✅")
@@ -67,11 +65,6 @@ def save_monthly(data: dict):
     result = upload_manual_file(bytes_data)
     st.success(f"Envoi Minio : {result}")
 
-
-
-# ------------------------
-# Colonne DROITE : Mensuel
-# ------------------------
 
 st.markdown('<div class="card">', unsafe_allow_html=True)
 st.markdown("<div class='section-title'>📏 Données mensuelles</div>", unsafe_allow_html=True)
@@ -113,7 +106,7 @@ if submitted_monthly:
     )
     save_monthly(monthly_payload)
 
-st.markdown('</div>', unsafe_allow_html=True)  # fin card
+st.markdown('</div>', unsafe_allow_html=True)  
 
 st.markdown("---")
 st.caption("Copyright - PHYLCERO©")

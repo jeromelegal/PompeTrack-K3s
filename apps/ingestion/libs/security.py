@@ -14,14 +14,15 @@ logger = logging.getLogger(__name__)
 
 bearer = HTTPBearer(auto_error=False)
 
+################## Only for 'ingestion' #######################################
 LIGHT_JWT_SECRET = os.getenv("LIGHT_JWT_SECRET")
 if not LIGHT_JWT_SECRET:
     raise RuntimeError("LIGHT_JWT_SECRET is not set")
+###############################################################################
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
+# Function _extract_scopes
 def _extract_scopes(payload: Dict[str, Any]) -> List[str]:
-    """Extrait les scopes depuis 'scope' (str ou list) ou 'scp' (list)."""
+    """Extracts scopes from 'scope' (str or list) or 'scp' (list)."""
     scopes: List[str] = []
 
     scope_field = payload.get("scope")
@@ -39,9 +40,9 @@ def _extract_scopes(payload: Dict[str, Any]) -> List[str]:
     return [s for s in scopes if not (s in seen or seen.add(s))]
 
 
-
+# Function _extract_caller
 def _extract_caller(payload: Dict[str, Any]) -> str:
-    """Extrait l'identité du client depuis le payload."""
+    """Extracts caller from 'client_id' (str) or 'azp' (str)."""
     return (
         payload.get("client_id")
         or payload.get("azp")
@@ -49,34 +50,22 @@ def _extract_caller(payload: Dict[str, Any]) -> str:
         or "unknown-client"
     )
 
-# ── Dépendance principale ─────────────────────────────────────────────────────
-
+# Function require_scopes
 def require_scopes(required: List[str]) -> Callable:
     """
-    Dépendance FastAPI qui vérifie le token Bearer et les scopes requis.
-
-    Usage :
-        # Cas 1 : protéger la route uniquement
-        @app.post("/route", dependencies=[Depends(require_scopes(["ingest:fhir"]))])
-        def my_route(): ...
-
-        # Cas 2 : protéger ET accéder au contexte
-        @app.post("/route")
-        def my_route(ctx: dict = Depends(require_scopes(["ingest:fhir"]))):
-            print(ctx["device"])   # identité du client
-            print(ctx["scopes"])   # scopes accordés
+    Decorator to require specific scopes in a FastAPI endpoint.
     """
     def _dep(
         creds: HTTPAuthorizationCredentials = Depends(bearer),
     ) -> Dict[str, Any]:
 
-        # 1. Vérifier la présence du token
+        # Verify the presence of the token
         if creds is None or creds.scheme.lower() != "bearer":
             raise HTTPException(status_code=401, detail="Missing Bearer token")
 
         token = creds.credentials
 
-        # 2. Vérifier la signature, l'expiration, l'issuer, l'audience
+        # Verify the token signature
         try:
             payload = verify_token(token)
         except jwt.ExpiredSignatureError:
@@ -91,7 +80,7 @@ def require_scopes(required: List[str]) -> Callable:
         except InsufficientScopeError as exc:
             raise HTTPException(status_code=403, detail=str(exc))
 
-        # 3. Vérifier les scopes
+        # Verify the scopes
         token_scopes = set(_extract_scopes(payload))
         missing = [s for s in required if s not in token_scopes]
         if missing:
@@ -103,40 +92,39 @@ def require_scopes(required: List[str]) -> Callable:
             )
             raise HTTPException(status_code=403, detail=f"Missing scopes: {missing}")
 
-        # 4. Retourner le contexte enrichi
+        # Return the enriched context
         return {
             "device": _extract_caller(payload),
             "scopes": sorted(token_scopes),
             "sub":    payload.get("sub"),
-            "payload": payload,  # accès complet si besoin
+            "payload": payload,
         }
 
     return _dep
 
+# Function require_scopes_light for specific devices
 def require_scopes_light(required: List[str]) -> Callable:
     """
-    Version light de require_scopes pour devices sans mTLS.
-    Utilise un JWT fixe signé HS256 avec un secret partagé.
-    Pas d'expiration, mais signature et scopes vérifiés.
+    Light decorator to require specific scopes in a FastAPI endpoint.
     """
     def _dep(
         creds: HTTPAuthorizationCredentials = Depends(bearer),
     ) -> Dict[str, Any]:
 
-        # 1. Vérifier la présence du token
+        # Verify the presence of the token
         if creds is None or creds.scheme.lower() != "bearer":
             raise HTTPException(status_code=401, detail="Missing Bearer token")
 
         token = creds.credentials
 
-        # 2. Vérifier la signature avec le secret partagé
+        # Verify the token signature
         try:
             payload = jwt.decode(
                 token,
-                LIGHT_JWT_SECRET,      # lu depuis variable d'env
+                LIGHT_JWT_SECRET,
                 algorithms=["HS256"],
                 options={
-                    "verify_exp": False,   # pas d'expiration
+                    "verify_exp": False,
                 },
             )
         except jwt.InvalidSignatureError:
@@ -145,7 +133,7 @@ def require_scopes_light(required: List[str]) -> Callable:
             logger.warning("Light token verification failed: %s", exc)
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        # 3. Vérifier les scopes
+        # Verify the scopes
         token_scopes = set(payload.get("scopes", []))
         missing = [s for s in required if s not in token_scopes]
         if missing:
@@ -157,7 +145,7 @@ def require_scopes_light(required: List[str]) -> Callable:
             )
             raise HTTPException(status_code=403, detail=f"Missing scopes: {missing}")
 
-        # 4. Retourner le contexte enrichi
+        # Return the enriched context
         return {
             "device": payload.get("sub", "unknown"),
             "scopes": sorted(token_scopes),

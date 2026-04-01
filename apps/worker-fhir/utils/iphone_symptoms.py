@@ -17,8 +17,11 @@ logging.basicConfig(
     ]
 )
 
-
+# Function to process global symptoms
 def process_global_symptoms(symptoms: Union[List, str]) -> bool:
+    """
+    Function to process global symptoms and return a list of observations.
+    """
     error_report = []
     standard_bundle_created = 0
     transaction_bundle_created = 0
@@ -107,8 +110,11 @@ def process_global_symptoms(symptoms: Union[List, str]) -> bool:
     logger.info(f"Total transaction bundle uploaded : {transaction_bundle_created}")
     return len(error_report) == 0
 
-
+# Function to normalize symptoms
 def _normalize_symptoms(symptoms):
+    """
+    Function to normalize symptoms.
+    """
     if not isinstance(symptoms, list):
         return []
 
@@ -122,7 +128,7 @@ def _normalize_symptoms(symptoms):
         out.append(new)
     return out
 
-
+# Pipeline to process symptoms
 def pipeline_symptoms(symptoms: List[Union[str, Any]]):
     normalized_symptoms = _normalize_symptoms(symptoms)
 

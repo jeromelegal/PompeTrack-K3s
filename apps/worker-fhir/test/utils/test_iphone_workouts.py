@@ -28,28 +28,20 @@ def test_process_workout_without_children(
     mock_upload,
     dummy_workout_list
 ):
-    """
-    Cas : aucune sous-observation → bundle standard
-    """
-
-    # ----- CreatePreFHIR_workouts.process -----
     mock_creator = MagicMock()
     mock_creator.process.return_value = (
         [{"fake": "observation"}],  # observations
         0,                           # parent_index
-        []                           # children_indices → chemin standard
+        []                           # children_indices
     )
     mock_creator_cls.return_value = mock_creator
 
-    # ----- to_fhir_observation -----
     mock_to_fhir.return_value = {"resourceType": "Observation"}
 
-    # ----- build_bundle_fhir().json() -----
     mock_bundle = MagicMock()
     mock_bundle.json.return_value = {"resourceType": "Bundle"}
     mock_build_bundle.return_value = mock_bundle
 
-    # ----- upload_bundle -----
     mock_upload.return_value = True
 
     result = process_global_workouts(dummy_workout_list)
@@ -69,15 +61,12 @@ def test_process_workout_with_children(
     mock_upload_transaction,
     dummy_workout_list
 ):
-    """
-    Cas : sous-observations → transaction bundle
-    """
 
     mock_creator = MagicMock()
     mock_creator.process.return_value = (
         [{"parent": "obs"}, {"child": "obs"}],
         0,
-        [1]  # children_indices non vide
+        [1]  # children_indices = [1]
     )
     mock_creator_cls.return_value = mock_creator
 

@@ -4,17 +4,16 @@ from libs.db_service import upsert_event, delete_event, get_all_events
 from datetime import datetime, timezone, timedelta
 import pytz
 
-
+# Function to get the Calendar API service
 def get_calendar_service():
-    """Retourne le service Google Calendar."""
+    """Returns an authorized Calendar API service."""
     creds = get_credentials()
     return build("calendar", "v3", credentials=creds)
 
-
+# Function to sync events from Google Calendar
 def sync_events_from_google():
     """
-    Récupère les événements Google Calendar (30 jours passés / 90 jours futurs)
-    et les synchronise dans la base de données.
+    Retrieves events from Google Calendar and synchronizes them with the database.
     """
     service = get_calendar_service()
 
@@ -23,7 +22,7 @@ def sync_events_from_google():
     time_min = time_day.replace(day=max(1, now.day - 30))
     time_max = time_day + timedelta(days=90)
 
-    # Appel API Google Calendar
+    # Call API Google Calendar
     events_result = service.events().list(
         calendarId="primary",
         timeMin=time_min.isoformat(),
@@ -40,7 +39,7 @@ def sync_events_from_google():
         title = event.get("summary", "Sans titre")
         description = event.get("description", "")
 
-        # Gestion des événements full-day vs datetime
+        # Parse start and end dates
         start = event["start"].get("dateTime", event["start"].get("date"))
         end = event["end"].get("dateTime", event["end"].get("date"))
 
@@ -51,9 +50,11 @@ def sync_events_from_google():
 
     return len(google_events)
 
-
+# Function to create an event
 def create_event(title, description, start_dt, end_dt):
-    """Crée un événement dans Google Calendar et le synchronise en DB."""
+    """
+    Creates an event in Google Calendar.
+    """
     service = get_calendar_service()
 
     event_body = {
@@ -78,9 +79,11 @@ def create_event(title, description, start_dt, end_dt):
 
     return created_event["id"]
 
-
+# Function to update an event
 def update_event(google_event_id, title, description, start_dt, end_dt):
-    """Met à jour un événement dans Google Calendar et en DB."""
+    """
+    Updates an event in Google Calendar and in DB.
+    """
     service = get_calendar_service()
 
     event_body = {
@@ -98,9 +101,11 @@ def update_event(google_event_id, title, description, start_dt, end_dt):
 
     upsert_event(google_event_id, title, description, start_dt, end_dt)
 
-
+# Function to remove an event
 def remove_event(google_event_id):
-    """Supprime un événement dans Google Calendar et en DB."""
+    """
+    Deletes an event from Google Calendar and from DB.
+    """
     service = get_calendar_service()
 
     service.events().delete(
@@ -110,10 +115,10 @@ def remove_event(google_event_id):
 
     delete_event(google_event_id)
 
-
+# Function to get events
 def get_events_for_calendar():
     """
-    Retourne les événements formatés pour streamlit-calendar.
+    Returns a list of events for the calendar.
     """
     events = get_all_events()
     calendar_events = []
@@ -129,15 +134,17 @@ def get_events_for_calendar():
 
     return calendar_events
 
-
+# Function to parse datetime
 def parse_datetime(dt_str):
-    """Parse une date ou datetime en objet datetime avec timezone."""
+    """
+    Parse a datetime string.
+    """
     if "T" in dt_str:
         dt = datetime.fromisoformat(dt_str)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt
     else:
-        # Événement full-day : on met minuit UTC
+        # If no timezone is specified, assume UTC
         dt = datetime.strptime(dt_str, "%Y-%m-%d")
         return dt.replace(tzinfo=timezone.utc)

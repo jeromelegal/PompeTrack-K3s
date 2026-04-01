@@ -6,9 +6,7 @@ from libs.minio_requests import upload_iphone_json, upload_object_into_bucket, u
 
 st.set_page_config("Dashboard Santé", layout="wide")
 
-# =========================
-# ADMIN LOGIN
-# =========================
+# Admin login
 st.sidebar.title("Accès")
 
 if not is_admin():
@@ -23,9 +21,7 @@ else:
         st.session_state.admin = False
         st.rerun()
 
-# =========================
-# PAGE CONTENT
-# =========================
+# Page title
 st.title("📊 Dashboard Santé")
 
 st.markdown("""
@@ -38,9 +34,7 @@ Ce tableau de bord permet de visualiser :
 Les données sont chargées **uniquement à l’ouverture des pages**.
 """)
 
-# =========================
-# SUMMARY
-# =========================
+# Quick summary
 st.subheader("Résumé rapide")
 
 use_mock = is_admin()
@@ -53,6 +47,7 @@ st.subheader("Ingestion des données :")
 
 b1, b2, b3 = st.columns(3)
 
+# Function to show request response
 def show_response(r: requests.Response):
     st.write("Status:", r.status_code)
     ct = (r.headers.get("content-type") or "").lower()

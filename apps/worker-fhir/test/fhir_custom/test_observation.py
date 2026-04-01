@@ -88,12 +88,12 @@ def test_build_obs_args_minimal(mock_external):
         "patient_id": "123",
     }
     kwargs = _build_obs_args(raw)
-    # obligatoire
+
     assert kwargs["status"] == "final"
     assert kwargs["subject"]["reference"] == "Patient/123"
-    # non-objet
+
     assert isinstance(kwargs["code"], CodeableConcept)
-    # rien d'autre ajouté
+
     for key in ["effectiveDateTime", "effectivePeriod", "category", "interpretation",
                 "note", "bodySite", "method", "device", "referenceRange",
                 "component", "valueQuantity", "extension", "hasMember"]:

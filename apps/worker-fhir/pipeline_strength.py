@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_STRENGTH = "raw-strength"
 BUCKET_PROCESSED = "processed-fhir"
 
+# Pipeline 'strength'
 def strength_json_pipeline():
     """
     Pipeline 'strength' :

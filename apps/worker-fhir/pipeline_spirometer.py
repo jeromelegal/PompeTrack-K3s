@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_SPIROMETER = "raw-spirometer"
 BUCKET_PROCESSED = "processed-fhir"
 
+# Pipeline 'spirometer'
 def spirometer_json_pipeline():
     """
     Pipeline 'spirometer' :

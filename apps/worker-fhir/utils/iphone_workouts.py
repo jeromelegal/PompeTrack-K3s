@@ -17,8 +17,11 @@ logging.basicConfig(
     ]
 )
 
-
+# Function to process global workouts
 def process_global_workouts(workouts: Union[List, str]) -> bool:
+    """
+    Function to process global workouts and return a list of observations.
+    """
     error_report = []
     standard_bundle_created = 0
     transaction_bundle_created = 0
@@ -108,8 +111,11 @@ def process_global_workouts(workouts: Union[List, str]) -> bool:
 
     return len(error_report) == 0
 
-
+# Pipeline to process global workouts
 def pipeline_workouts(workouts: List[Union[str, Any]]):
+    """
+    Function to process global workouts and return a list of observations.
+    """
     try:
         success = process_global_workouts(workouts)
 

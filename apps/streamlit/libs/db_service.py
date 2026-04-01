@@ -2,7 +2,7 @@ import psycopg2
 import os
 from datetime import datetime
 
-# Configuration de la connexion PostgreSQL
+# DB config
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "pompetrack-core-postgresql"),
     "port": os.getenv("DB_PORT", "5432"),
@@ -11,13 +11,15 @@ DB_CONFIG = {
     "password": os.getenv("DB_PASSWORD"),
 }
 
-
+# Function to get a database connection
 def get_connection():
     return psycopg2.connect(**DB_CONFIG)
 
-
+# Function to initialize the database
 def init_db():
-    """Crée la table events si elle n'existe pas."""
+    """
+    Creates the events table if it doesn't exist.
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
@@ -33,9 +35,11 @@ def init_db():
             """)
         conn.commit()
 
-
+# Function to upsert an event
 def upsert_event(google_event_id, title, description, start_datetime, end_datetime):
-    """Insère ou met à jour un événement."""
+    """
+    Inserts or updates an event.
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
@@ -51,9 +55,11 @@ def upsert_event(google_event_id, title, description, start_datetime, end_dateti
             """, (google_event_id, title, description, start_datetime, end_datetime))
         conn.commit()
 
-
+# Function to delete an event
 def delete_event(google_event_id):
-    """Supprime un événement par son google_event_id."""
+    """
+    Deletes an event.
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
@@ -61,9 +67,11 @@ def delete_event(google_event_id):
             """, (google_event_id,))
         conn.commit()
 
-
+# Function to get all events
 def get_all_events():
-    """Retourne tous les événements."""
+    """
+    Returns all events.
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
@@ -84,9 +92,11 @@ def get_all_events():
         })
     return events
 
-
+# Function to get an event
 def get_event_by_google_id(google_event_id):
-    """Retourne un événement par son google_event_id."""
+    """
+    Returns an event by google_event_id.
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""

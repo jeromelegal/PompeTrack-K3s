@@ -22,14 +22,26 @@ FHIR_BASE = os.getenv(
 
 HASH_SYSTEM = "https://medplum.phylcero.fr/observation-hash"
 
+# Function to split a list into chunks
 def chunk_list(items, chunk_size: int):
+    """
+    Split a list into chunks.
+    """
     if chunk_size <= 0:
         raise ValueError("chunk_size doit être > 0")
 
     for i in range(0, len(items), chunk_size):
         yield items[i:i + chunk_size]
 
-def upload_bundles_in_chunks(observations, chunk_size: int = 10, delay_seconds: float = 1) -> bool:
+# Function to upload a bundle
+def upload_bundles_in_chunks(
+    observations, 
+    chunk_size: int = 10, 
+    delay_seconds: float = 1
+) -> bool:
+    """
+    Upload a list of observations in chunks.
+    """
     overall_success = True
 
     for idx, obs_chunk in enumerate(chunk_list(observations, chunk_size), start=1):
@@ -54,10 +66,10 @@ def upload_bundles_in_chunks(observations, chunk_size: int = 10, delay_seconds: 
 
     return overall_success
 
+# Function to extract hash from identifier
 def _extract_hash_from_identifier(identifier_list: Any) -> str | None:
     """
-    Extrait la valeur du hash depuis identifier[*] si le system correspond à HASH_SYSTEM.
-    Compatible avec des objets FHIR Pydantic ou des dicts.
+    Extracts the hash from an identifier list.
     """
     if not identifier_list:
         return None
@@ -75,11 +87,10 @@ def _extract_hash_from_identifier(identifier_list: Any) -> str | None:
 
     return None
 
-
+# Function to build observation request
 def _build_observation_request(obs_hash: str | None) -> BundleEntryRequest:
     """
-    Construit la requête FHIR pour une Observation.
-    Ajoute ifNoneExist si un hash est disponible pour éviter les doublons.
+    Builds a BundleEntryRequest for an Observation.
     """
     request = BundleEntryRequest(
         method="POST",
@@ -91,12 +102,10 @@ def _build_observation_request(obs_hash: str | None) -> BundleEntryRequest:
 
     return request
 
-
+# Function to clean observation
 def _clean_observation_for_create(obs: Observation) -> Observation:
     """
-    Nettoie une Observation avant create :
-    - supprime id pour laisser Medplum le générer
-    - supprime versionId / lastUpdated si présents
+    Clean an Observation for creation.
     """
     payload = obs.model_dump(
         mode="json",
@@ -115,11 +124,10 @@ def _clean_observation_for_create(obs: Observation) -> Observation:
 
     return Observation(**payload)
 
-
+# Function to build bundle
 def build_bundle_fhir(observations: List[Observation]) -> Bundle:
     """
-    Construit un Bundle FHIR de type transaction à partir d'objets Observation.
-    Utilisé pour les bundles simples sans relation parent/enfants.
+    Build a Bundle FHIR transaction from a list of observations.
     """
     bundle = Bundle(
         resourceType="Bundle",
@@ -140,18 +148,14 @@ def build_bundle_fhir(observations: List[Observation]) -> Bundle:
 
     return bundle
 
-
+# Function to build transaction bundle
 def build_transaction_bundle(
     observations: List[Dict[str, Any]],
     parent_index: int | None = None,
     children_indices: List[int] | None = None,
 ) -> Bundle:
     """
-    Construit un Bundle FHIR transaction à partir d'observations brutes.
-
-    - ajoute hasMember sur le parent si parent_index et children_indices sont fournis
-    - convertit les dicts en ressources FHIR Observation
-    - applique ifNoneExist pour éviter les doublons
+    Build a Bundle FHIR transaction from a list of observations.
     """
     bundle = Bundle(type="transaction", entry=[])
     urns = [f"urn:uuid:{uuid.uuid4()}" for _ in observations]
@@ -181,15 +185,11 @@ def build_transaction_bundle(
 
     return bundle
 
-
+# Function to normalize payload
 def _normalize_payload(bundle: Bundle | Dict[str, Any] | str) -> Dict[str, Any]:
     """
-    Normalise tout type d'entrée en dict JSON FHIR.
-
-    Accepte :
-    - Bundle Pydantic
-    - dict
-    - string JSON
+    Normalize bundle payload.
+    Accept Bundle, dict or string JSON.
     """
     if isinstance(bundle, Bundle):
         payload = bundle.model_dump(
@@ -218,10 +218,10 @@ def _normalize_payload(bundle: Bundle | Dict[str, Any] | str) -> Dict[str, Any]:
 
     return payload
 
-
+# Function to summarize transaction response
 def _summarize_transaction_response(response_json: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Résume une réponse transaction-response Medplum.
+    Summarize transaction response.
     """
     summary = {
         "total_entries": 0,
@@ -268,10 +268,10 @@ def _summarize_transaction_response(response_json: Dict[str, Any]) -> Dict[str, 
     summary["error_messages"] = sorted(unique_errors)[:5]
     return summary
 
-
+# Function to log response summary
 def _log_response_summary(response_json: Dict[str, Any], http_status: int) -> None:
     """
-    Log compact et lisible de la réponse Medplum.
+    Compute and log response summary.
     """
     summary = _summarize_transaction_response(response_json)
 
@@ -288,11 +288,10 @@ def _log_response_summary(response_json: Dict[str, Any], http_status: int) -> No
     if summary["error_messages"]:
         logger.warning("Medplum messages: %s", summary["error_messages"])
 
-
+# Function to post bundle
 def _post_bundle(payload: Dict[str, Any]) -> bool:
     """
-    Point unique d'upload vers Medplum.
-    Version sobre : pas de retry automatique lourd, juste un résumé clair.
+    Post bundle to Medplum.
     """
     try:
         token = get_token()
@@ -355,11 +354,10 @@ def _post_bundle(payload: Dict[str, Any]) -> bool:
         logger.exception("Erreur lors de l'upload du Bundle")
         return False
 
-
+# Function to upload bundle
 def upload_bundle(bundle: Bundle | Dict[str, Any] | str) -> bool:
     """
-    Upload générique robuste.
-    Accepte Bundle, dict ou string JSON.
+    Upload bundle.
     """
     try:
         payload = _normalize_payload(bundle)
@@ -369,11 +367,10 @@ def upload_bundle(bundle: Bundle | Dict[str, Any] | str) -> bool:
 
     return _post_bundle(payload)
 
-
+# Function to upload transaction bundle
 def upload_transaction_bundle(bundle: Bundle | Dict[str, Any] | str) -> bool:
     """
     Upload transaction bundle.
-    Même comportement que upload_bundle, gardé pour compatibilité.
     """
     try:
         payload = _normalize_payload(bundle)

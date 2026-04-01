@@ -11,7 +11,7 @@ st.set_page_config(page_title="Pain Map — Affichage immédiat", layout="center
 st.title("Carte de douleur") 
 st.write("Cliquez sur la silhouette pour ajouter des points de douleur.") 
 
-# ----- Config ----- 
+# Constants
 IMAGE_PATH = "/app/pages/images/body.png" 
 MAX_DISPLAY_HEIGHT = 900 
 MARKER_RADIUS_PX = 8 
@@ -34,7 +34,7 @@ DEFAULT_ZONE_LIST = [
                      "Pied gauche (dessous)", "Pied droit (dessous)"] 
 
 
-# ----- Session State -----
+# Session State
 if "confirmed_markers" not in st.session_state:
     st.session_state.confirmed_markers = []
 if "pending_markers" not in st.session_state:
@@ -44,7 +44,7 @@ if "next_id" not in st.session_state:
 if "last_click" not in st.session_state:
     st.session_state.last_click = None
 
-# ----- Load Image -----
+# Load Image
 try:
     pil_img = Image.open(IMAGE_PATH).convert("RGBA")
     w, h = pil_img.size
@@ -55,11 +55,10 @@ except Exception as e:
     st.error(f"Erreur chargement image : {e}")
     pil_img = None
 
-# ----- Display Image + Handle Clicks -----
+# Display Image + Handle Clicks
 font = load_font(FONT_SIZE)
 annotated_img = draw_markers_on_image(pil_img, st.session_state.confirmed_markers, st.session_state.pending_markers, font=font)
 
-# Utiliser un bouton pour valider le clic (évite les rafraîchissements intempestifs)
 click_container = st.empty()
 coords = streamlit_image_coordinates(annotated_img, key="img_coords")
 
@@ -79,9 +78,9 @@ if coords and st.session_state.last_click != coords:
         "created_at": datetime.utcnow().isoformat() + "Z",
     })
     st.session_state.next_id += 1
-    st.rerun()  # Rafraîchir UNIQUEMENT après un nouveau clic
+    st.rerun()
 
-# ----- Confirm/Cancel Pending Markers -----
+# Confirm/Cancel Pending Markers
 if st.session_state.pending_markers:
     st.subheader(f"{len(st.session_state.pending_markers)} point(s) temporaire(s)")
     for i, m in enumerate(st.session_state.pending_markers):
@@ -93,13 +92,13 @@ if st.session_state.pending_markers:
             m.update({"zone": zone_choice, "intensity": intensity})
             st.session_state.confirmed_markers.append(m)
             st.session_state.pending_markers.remove(m)
-            st.rerun()  # Rafraîchir après confirmation
+            st.rerun()
 
     if st.button("Annuler tous les points temporaires"):
         st.session_state.pending_markers = []
-        st.rerun()  # Rafraîchir après annulation
+        st.rerun()  
 
-# ----- Display Confirmed Markers -----
+# Display Confirmed Markers
 st.subheader("Marqueurs confirmés")
 if not st.session_state.confirmed_markers:
     st.info("Aucun marqueur confirmé.")
@@ -113,9 +112,9 @@ else:
             st.session_state.confirmed_markers[i].update({"zone": zone, "intensity": intensity, "note": note})
             if st.button(f"Supprimer {m['id']}", key=f"delete_{m['id']}"):
                 st.session_state.confirmed_markers.remove(m)
-                st.rerun()  # Rafraîchir après suppression
+                st.rerun()
 
-# ----- Export JSON -----
+# Export JSON
 if st.session_state.confirmed_markers:
     pains = [{
         "zone": m.get("zone"),
@@ -126,7 +125,7 @@ if st.session_state.confirmed_markers:
     
     payload = process_pain_map(pains)
     if st.button("Exporter JSON ✅"):
-        # Upload vers Minio
+        # Upload to Minio
         try:
             bytes_data = json.dumps(payload, ensure_ascii=False, default=str).encode("utf-8")
             result = upload_manual_file(bytes_data)

@@ -61,7 +61,7 @@ raw_one = [
         "code_display[0]": "Energy expended",
         "value_value[0]": "42",
         "value_unit[0]": "kJ",
-        # interprétation historique (string)
+
         "inter_system[0]": "http://example.org",
         "inter_code[0]": "123-456",
         "inter_display[0]": "example"
@@ -70,16 +70,16 @@ raw_one = [
 
 def test_build_components_validated_full_valid():
     res = build_components_validated(raw_one)
-    # res est une liste de dicts FHIR
+
     assert isinstance(res, list)
     c = res[0]
-    # Vérif code
+
     assert c["code"]["coding"][0]["system"] == "http://loinc.org"
     assert c["code"]["coding"][0]["code"] == "41981-2"
-    # Vérif quantity
+
     assert c["valueQuantity"]["value"] == 42.0
     assert c["valueQuantity"]["unit"] == "kJ"
-    # Vérif interprétation
+
     assert isinstance(c["interpretation"], list)
     assert c["interpretation"][0]["coding"][0]["display"] == "example"
     

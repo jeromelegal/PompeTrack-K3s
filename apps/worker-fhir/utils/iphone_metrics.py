@@ -15,8 +15,11 @@ logging.basicConfig(
     ]
 )
 
-
+# Function to process global metrics
 def process_global_metrics(metrics: Union[List, str]):
+    """
+    Function to process global metrics and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -71,8 +74,11 @@ def process_global_metrics(metrics: Union[List, str]):
     logger.info("Building bundle.")
     return build_bundle_fhir(obs_list)
 
-
+# Function to process metrics by categories
 def process_metrics_by_cats(i: int, metric: Union[dict, str]):
+    """
+    Function to process metrics by categories and return a list of observations.
+    """
     obs_list = []
     error_report = []
     total_created = 0
@@ -125,7 +131,7 @@ def process_metrics_by_cats(i: int, metric: Union[dict, str]):
     logger.info("Observation list built.")
     return obs_list
 
-
+# Pipeline to process metrics
 def pipeline_metrics(metrics: List[Union[str, Any]]):
     overall_success = True
 

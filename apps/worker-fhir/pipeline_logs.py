@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 BUCKET_LOGS = "fhir-logs"
 
+# Function to transfert logs
 def transfert_logs_pipeline():
     """
     Pipeline 'logs' :

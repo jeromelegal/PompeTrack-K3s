@@ -19,8 +19,15 @@ from fhir_custom.valuequantity import value_quantity
 
 logger = logging.getLogger(__name__)
 
-def _extract_patient_id(raw: dict[str, Any], parent_context: Optional[dict[str, Any]] = None) -> Optional[str]:
-    # 1) format brut
+# Function to extract patient_id
+def _extract_patient_id(
+    raw: dict[str, Any], 
+    parent_context: Optional[dict[str, Any]] = None
+) -> Optional[str]:
+    """
+    Extract the patient_id from the raw data or the parent_context.
+    """
+    # 1) format raw data
     patient_id = raw.get("patient_id")
     if patient_id:
         return patient_id
@@ -46,12 +53,15 @@ def _extract_patient_id(raw: dict[str, Any], parent_context: Optional[dict[str, 
 
     return None
 
-
+# Function to extract timestamp
 def _extract_timestamp(
     raw: dict[str, Any],
     parent_context: Optional[dict[str, Any]] = None,
 ) -> Optional[Union[str, datetime]]:
-    # 1) format brut
+    """
+    Extract the timestamp from the raw data or the parent_context.
+    """
+    # 1) raw format 
     timestamp = raw.get("effectiveDateTime") or raw.get("periodstart") or raw.get("date") or raw.get("start")
     if timestamp is not None:
         return timestamp
@@ -82,9 +92,15 @@ def _extract_timestamp(
 
     return None
 
-
-def _extract_measurement_type(raw: dict[str, Any], parent_context: Optional[dict[str, Any]] = None) -> Optional[str]:
-    # 1) format brut
+# Function to extract measurement_type
+def _extract_measurement_type(
+    raw: dict[str, Any], 
+    parent_context: Optional[dict[str, Any]] = None
+) -> Optional[str]:
+    """
+    Extract the measurement_type from the raw data or the parent_context.
+    """
+    # 1) raw format
     measurement_type = raw.get("code_code")
     if measurement_type:
         return measurement_type
@@ -119,11 +135,14 @@ def _extract_measurement_type(raw: dict[str, Any], parent_context: Optional[dict
 
     return None
 
-
+# Function to resolve hash fields
 def resolve_hash_fields(
     raw: dict[str, Any],
     parent_context: Optional[dict[str, Any]] = None,
 ) -> tuple[str, str, Union[str, datetime], Optional[Union[str, float, int]]]:
+    """
+    Extract patient_id, measurement_type and timestamp from the raw data or the parent_context.
+    """
     patient_id = _extract_patient_id(raw, parent_context)
     measurement_type = _extract_measurement_type(raw, parent_context)
     timestamp = _extract_timestamp(raw, parent_context)
@@ -146,9 +165,10 @@ def resolve_hash_fields(
 
     return patient_id, measurement_type, timestamp, value
 
+# Function to convert timestamp
 def to_fhir_datetime(value: Union[str, datetime]) -> str:
     """
-    Convertit une date en chaîne ISO stable pour le hash.
+    Convert a timestamp to a FHIR datetime.
     """
     if isinstance(value, str):
         try:
@@ -166,11 +186,12 @@ def to_fhir_datetime(value: Union[str, datetime]) -> str:
         iso_str = iso_str[:-6] + "Z"
     return iso_str
 
+# Function to normalize value
 def normalize_value(value: Optional[Union[str, float, int]]) -> str:
     """
     None -> ""
-    float -> représentation stable
-    sinon -> str nettoyée en lowercase
+    float -> str
+    else -> lower str
     """
     if value is None:
         return ""
@@ -178,6 +199,7 @@ def normalize_value(value: Optional[Union[str, float, int]]) -> str:
         return f"{value:.6f}".rstrip("0").rstrip(".")
     return str(value).strip().lower()
 
+# Function to build hash
 def build_observation_hash(
     patient_id: str,
     measurement_type: str,
@@ -185,8 +207,7 @@ def build_observation_hash(
     value: Optional[Union[str, float, int]] = None,
 ) -> str:
     """
-    Hash toujours calculable si patient_id, measurement_type et timestamp sont présents.
-    value est optionnelle.
+    Build a hash from patient_id, measurement_type, timestamp and value.
     """
     patient_id_norm = patient_id.strip().lower()
     measurement_type_norm = measurement_type.strip().lower()
@@ -196,7 +217,7 @@ def build_observation_hash(
     canonical_string = f"{patient_id_norm}|{measurement_type_norm}|{timestamp_norm}|{value_norm}"
     return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
-
+# Function to build CodeableConcept
 def _codeable(
     system: Optional[str] = None,
     code: Optional[str] = None,
@@ -217,11 +238,11 @@ def _codeable(
         text=text,
     )
 
-
+# Function to convert iso to datetime
 def iso_to_dt(iso_value: str) -> datetime:
     return parser.isoparse(iso_value)
 
-
+# Function to create a coding list
 def _coding_list(codings: Optional[Union[list[str], str]] = None) -> dict[str, list[dict[str, str]]]:
     """
     Create a coding list structure:
@@ -240,7 +261,7 @@ def _coding_list(codings: Optional[Union[list[str], str]] = None) -> dict[str, l
 
     return {"coding": coding}
 
-
+# Function to create a bodySite
 def _coding_bodysite(data: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     """
     Create a bodySite structure:
@@ -260,7 +281,7 @@ def _coding_bodysite(data: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         "text": data.get("text"),
     }
 
-
+# Function to build Observation kwargs
 def _build_obs_args(
     raw: dict[str, Any],
     parent_context: Optional[dict[str, Any]] = None,
@@ -446,7 +467,7 @@ def _build_obs_args(
 
     return obs_kwargs
 
-
+# Function to build a FHIR Observation
 def to_fhir_observation(
     raw: Union[dict[str, Any], str],
     parent_context: Optional[dict[str, Any]] = None,
@@ -478,7 +499,7 @@ def to_fhir_observation(
     obs_kwargs = _build_obs_args(data, parent_context=parent_context)
     return Observation(**obs_kwargs)
 
-
+# Function to build a list of FHIR Observations
 def list_to_fhir_observation(
     raw: list[dict[str, Any]],
     total_created: int = 0,

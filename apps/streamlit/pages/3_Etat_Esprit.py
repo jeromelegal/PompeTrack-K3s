@@ -110,7 +110,6 @@ if filtered.empty:
     st.info("Aucune entrée ne correspond aux filtres.")
     st.stop()
 
-# KPIs
 entry_count = len(filtered)
 avg_score = filtered["score"].mean() if filtered["score"].notna().any() else None
 last_entry = filtered.sort_values("timestamp").iloc[-1]
@@ -128,7 +127,6 @@ st.caption(f"Dernière interprétation : {last_interp if pd.notna(last_interp) e
 
 st.markdown("---")
 
-# Agrégations
 monthly_score = (
     filtered.groupby(["month", "parameter"], dropna=False)["score"]
     .mean()
@@ -153,7 +151,6 @@ weekday_score = (
 assoc_counts = explode_token_counts(filtered, "association_list", "association").head(15)
 label_counts = explode_token_counts(filtered, "label_list", "label").head(15)
 
-# Ligne 1
 col1, col2 = st.columns([1.7, 1.3])
 
 with col1:
@@ -185,7 +182,6 @@ with col2:
     fig_interp.update_xaxes(tickangle=35)
     st.plotly_chart(fig_interp, use_container_width=True)
 
-# Ligne 2
 col3, col4 = st.columns(2)
 
 with col3:
@@ -212,7 +208,6 @@ with col4:
     )
     st.plotly_chart(fig_weekday, use_container_width=True)
 
-# Ligne 3
 col5, col6 = st.columns(2)
 
 with col5:

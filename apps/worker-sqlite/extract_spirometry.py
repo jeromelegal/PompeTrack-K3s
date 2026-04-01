@@ -36,8 +36,12 @@ FVC_IDX = {
     "FEF75": 15,
     "FEF2575": 16,
 }
-        
+
+# Function to create instance        
 def _create_instance(name, date, value, unit) -> dict:
+    """
+    Create instance object
+    """
     return  {
         "name": name,
         "data": [
@@ -49,6 +53,7 @@ def _create_instance(name, date, value, unit) -> dict:
         "units": unit
     }
 
+# Function to verify if object is sqlite
 def is_sqlite_db(path: str) -> bool:
     """
     Verify if object is sqlite db
@@ -59,13 +64,17 @@ def is_sqlite_db(path: str) -> bool:
         return header == b"SQLite format 3\x00"
     except OSError:
         return False
-        
+
+# Function to move object and cleanup        
 def postprocess_move_and_cleanup(
     local_path: str,
     object_name: str,
     raw_bucket: str,
     processed_bucket: str,
 ) -> None:
+    """
+    Move object from raw to processed bucket and cleanup
+    """
     response = move_object(
         object_name=object_name,
         source_bucket=raw_bucket,
@@ -81,8 +90,12 @@ def postprocess_move_and_cleanup(
     except OSError as e:
         logger.warning(f"Move OK but local remove error on object :{object_name}")
 
-
+# Function to process db
 def process_db_to_json(db_path):
+    """
+    Process db to json.
+    Return list of instances.
+    """
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
@@ -132,7 +145,7 @@ def process_db_to_json(db_path):
         logger.error(f"Erreur lors de l'envoi : {e}")
         return False
             
-
+# Function to process db
 def pipeline_sqlite_to_json(
     raw_bucket: str = BUCKET_DB_RAW,
     processed_bucket: str = BUCKET_PROCESSED,
