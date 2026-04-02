@@ -470,7 +470,10 @@ class CreatePreFHIR_symptoms:
             filler = FillResource(
                 creator.constants,
                 entry,
-                MEDPLUM_IDS,
+                {
+                            "patient_id": MEDPLUM_PATIENT_ID,
+                            "device_id": MEDPLUM_DEVICE_ID_IPHONE_GARTH,
+                        },
                 {"units": creator.units},
             )
             filler.update_codeable(
