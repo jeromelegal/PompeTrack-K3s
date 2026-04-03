@@ -1,27 +1,12 @@
 import json
-import os
-from typing import Optional
-
 import pandas as pd
-import psycopg2
 import streamlit as st
 
+from libs.db_service import get_connection
 
 st.set_page_config(page_title="RxNorm → FHIR Medication", layout="wide")
 
 RXNORM_SYSTEM = "http://www.nlm.nih.gov/research/umls/rxnorm"
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "pompetrack-core-postgresql"),
-    "port": os.getenv("DB_PORT", "5432"),
-    "database": os.getenv("DB_NAME", "pompetrack"),
-    "user": os.getenv("DB_USER", "pompetrack-user"),
-    "password": os.getenv("DB_PASSWORD"),
-}
-
-@st.cache_resource
-def get_connection():
-    """Create and cache a PostgreSQL connection."""
-    return psycopg2.connect(**DB_CONFIG)
 
 
 @st.cache_data(ttl=60)
@@ -61,7 +46,7 @@ def build_medication_json(rxcui: str, display: str) -> dict:
 
 
 def build_medplum_transaction_bundle(rxcui: str, display: str) -> dict:
-    """Build a Medplum-compatible transaction Bundle creating one Medication."""
+    """Build a transaction Bundle for Medplum."""
     medication = build_medication_json(rxcui=rxcui, display=display)
     return {
         "resourceType": "Bundle",
@@ -78,33 +63,32 @@ def build_medplum_transaction_bundle(rxcui: str, display: str) -> dict:
     }
 
 
+# Initialisation du state
+if "rxnorm_results" not in st.session_state:
+    st.session_state.rxnorm_results = None
+
+if "rxnorm_keyword" not in st.session_state:
+    st.session_state.rxnorm_keyword = "mirtazapine"
+
+if "rxnorm_tty_selection" not in st.session_state:
+    st.session_state.rxnorm_tty_selection = ["SCD", "SBD"]
+
+if "selected_rxnorm_label" not in st.session_state:
+    st.session_state.selected_rxnorm_label = None
+
+
 st.title("Recherche RxNorm pour créer un FHIR Medication")
 st.write(
     "Recherche dans `rxnconso` sur les types `SCD` et `SBD` afin de récupérer un code RxNorm précis "
     "(dosage / forme / éventuellement marque)."
 )
 
-with st.sidebar:
-    st.header("Connexion PostgreSQL")
-    st.caption("Les paramètres sont lus depuis les variables d'environnement.")
-    st.code(
-        "\n".join(
-            [
-                f"PGHOST={os.getenv('PGHOST', 'localhost')}",
-                f"PGPORT={os.getenv('PGPORT', '5432')}",
-                f"PGDATABASE={os.getenv('PGDATABASE', 'postgres')}",
-                f"PGUSER={os.getenv('PGUSER', 'postgres')}",
-                "PGPASSWORD=********" if os.getenv("PGPASSWORD") else "PGPASSWORD=(vide)",
-            ]
-        )
-    )
-
 col1, col2 = st.columns([2, 1])
 
 with col1:
     keyword = st.text_input(
         "Mot clé médicament",
-        value="mirtazapine",
+        value=st.session_state.rxnorm_keyword,
         help="Exemples : mirtazapine, duloxetine, levothyroxine, etc.",
     )
 
@@ -112,86 +96,117 @@ with col2:
     tty_selection = st.multiselect(
         "Types RxNorm",
         options=["SCD", "SBD"],
-        default=["SCD", "SBD"],
+        default=st.session_state.rxnorm_tty_selection,
         help="SCD = générique structuré ; SBD = version brandée.",
     )
 
-search_clicked = st.button("Rechercher", type="primary")
 
-if search_clicked:
+if st.button("Rechercher", type="primary"):
+    st.session_state.rxnorm_keyword = keyword
+    st.session_state.rxnorm_tty_selection = tty_selection
+
     if not keyword.strip():
         st.warning("Saisis un mot clé.")
+        st.session_state.rxnorm_results = None
+        st.session_state.selected_rxnorm_label = None
+
     elif not tty_selection:
         st.warning("Sélectionne au moins un type RxNorm.")
+        st.session_state.rxnorm_results = None
+        st.session_state.selected_rxnorm_label = None
+
     else:
         try:
             results = search_rxnorm(keyword, tuple(tty_selection))
+            st.session_state.rxnorm_results = results
+            st.session_state.selected_rxnorm_label = None
         except Exception as exc:
             st.error(f"Erreur PostgreSQL : {exc}")
-        else:
-            st.subheader("Résultats")
-            st.caption(f"{len(results)} résultat(s)")
-            st.dataframe(results, use_container_width=True, hide_index=True)
+            st.session_state.rxnorm_results = None
+            st.session_state.selected_rxnorm_label = None
 
-            if not results.empty:
-                results = results.copy()
-                results["label"] = results.apply(
-                    lambda row: f"[{row['tty']}] {row['str']}  |  RxCUI={row['rxcui']}  |  code={row['code']}",
-                    axis=1,
-                )
 
-                selected_label = st.selectbox(
-                    "Choisis une entrée pour générer le JSON FHIR Medication",
-                    options=results["label"].tolist(),
-                )
-                selected_row = results.loc[results["label"] == selected_label].iloc[0]
+results = st.session_state.rxnorm_results
 
-                st.subheader("Détail de l'entrée sélectionnée")
-                detail_col1, detail_col2, detail_col3, detail_col4 = st.columns(4)
-                detail_col1.metric("RxCUI", str(selected_row["rxcui"]))
-                detail_col2.metric("TTY", str(selected_row["tty"]))
-                detail_col3.metric("Code", str(selected_row["code"]))
-                detail_col4.metric("Display", str(selected_row["str"]))
+if results is not None:
+    st.subheader("Résultats")
+    st.caption(f"{len(results)} résultat(s)")
+    st.dataframe(results, use_container_width=True, hide_index=True)
 
-                medication_json = build_medication_json(
-                    rxcui=str(selected_row["rxcui"]),
-                    display=str(selected_row["str"]),
-                )
+    if not results.empty:
+        results_display = results.copy()
+        results_display["label"] = results_display.apply(
+            lambda row: (
+                f"[{row['tty']}] {row['str']}  |  "
+                f"RxCUI={row['rxcui']}  |  code={row['code']}"
+            ),
+            axis=1,
+        )
 
-                st.subheader("FHIR Medication JSON")
-                st.json(medication_json)
+        labels = results_display["label"].tolist()
 
-                json_text = json.dumps(medication_json, indent=2, ensure_ascii=False)
-                st.download_button(
-                    label="Télécharger le Medication JSON",
-                    data=json_text,
-                    file_name=f"medication_{selected_row['rxcui']}.json",
-                    mime="application/json",
-                )
+        if (
+            st.session_state.selected_rxnorm_label is None
+            or st.session_state.selected_rxnorm_label not in labels
+        ):
+            st.session_state.selected_rxnorm_label = labels[0]
 
-                with st.expander("Version texte à copier"):
-                    st.code(json_text, language="json")
+        selected_label = st.selectbox(
+            "Choisis une entrée pour générer le JSON FHIR Medication",
+            options=labels,
+            key="selected_rxnorm_label",
+        )
 
-                transaction_bundle = build_medplum_transaction_bundle(
-                    rxcui=str(selected_row["rxcui"]),
-                    display=str(selected_row["str"]),
-                )
+        selected_row = results_display.loc[
+            results_display["label"] == selected_label
+        ].iloc[0]
 
-                st.subheader("Bundle transaction Medplum")
-                st.json(transaction_bundle)
+        st.subheader("Détail de l'entrée sélectionnée")
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("RxCUI", str(selected_row["rxcui"]))
+        c2.metric("TTY", str(selected_row["tty"]))
+        c3.metric("Code", str(selected_row["code"]))
+        c4.metric("Display", str(selected_row["str"]))
 
-                bundle_text = json.dumps(transaction_bundle, indent=2, ensure_ascii=False)
-                st.download_button(
-                    label="Télécharger le Bundle transaction",
-                    data=bundle_text,
-                    file_name=f"bundle_medication_{selected_row['rxcui']}.json",
-                    mime="application/json",
-                )
+        medication_json = build_medication_json(
+            rxcui=str(selected_row["rxcui"]),
+            display=str(selected_row["str"]),
+        )
 
-                with st.expander("Bundle texte à copier"):
-                    st.code(bundle_text, language="json")
-            else:
-                st.info("Aucun résultat trouvé pour ce mot clé.")
+        st.subheader("FHIR Medication JSON")
+        st.json(medication_json)
+
+        medication_text = json.dumps(medication_json, indent=2, ensure_ascii=False)
+        st.download_button(
+            label="Télécharger le Medication JSON",
+            data=medication_text,
+            file_name=f"medication_{selected_row['rxcui']}.json",
+            mime="application/json",
+        )
+
+        with st.expander("Medication JSON à copier"):
+            st.code(medication_text, language="json")
+
+        transaction_bundle = build_medplum_transaction_bundle(
+            rxcui=str(selected_row["rxcui"]),
+            display=str(selected_row["str"]),
+        )
+
+        st.subheader("Bundle transaction Medplum")
+        st.json(transaction_bundle)
+
+        bundle_text = json.dumps(transaction_bundle, indent=2, ensure_ascii=False)
+        st.download_button(
+            label="Télécharger le Bundle transaction",
+            data=bundle_text,
+            file_name=f"bundle_medication_{selected_row['rxcui']}.json",
+            mime="application/json",
+        )
+
+        with st.expander("Bundle transaction à copier"):
+            st.code(bundle_text, language="json")
+
+    else:
+        st.info("Aucun résultat trouvé pour ce mot clé.")
 
 st.divider()
-
