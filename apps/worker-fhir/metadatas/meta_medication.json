@@ -1,0 +1,8 @@
+{
+  "name": "medication",
+  "template": "medication.json",
+  "constants": {
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/medication-group",
+    "tag_code": "medication"
+  }
+}

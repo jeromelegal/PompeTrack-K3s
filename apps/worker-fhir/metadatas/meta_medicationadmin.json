@@ -1,0 +1,10 @@
+{
+  "name": "medicationadmin",
+  "template": "medicationadmin.json",
+  "constants": {
+    "unit": "count",
+
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/medication-group",
+    "tag_code": "medicationadmin"
+  }
+}

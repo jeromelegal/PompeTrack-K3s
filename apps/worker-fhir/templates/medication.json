@@ -1,0 +1,12 @@
+{
+    "status": "status",
+
+    "code_system": "code_system",
+    "code_code": "code_code",
+    "code_display": "code_display",
+    "code_text": "code_text",
+
+    "tag_system": "tag_system",
+    "tag_code": "tag_code"
+  
+}

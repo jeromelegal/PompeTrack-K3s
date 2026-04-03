@@ -1,0 +1,15 @@
+{
+
+    "effectiveDateTime": "start",
+
+    "medication_code": "displayText",
+    "status": "status",
+
+    "dose_value": "dosage",
+    
+    "patient_id": "patient_id",
+
+    "tag_system": "tag_system",
+    "tag_code": "tag_code"
+  
+}
