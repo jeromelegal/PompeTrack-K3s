@@ -153,7 +153,7 @@ if search_clicked:
                 detail_col3.metric("Code", str(selected_row["code"]))
                 detail_col4.metric("Display", str(selected_row["str"]))
 
-                                medication_json = build_medication_json(
+                medication_json = build_medication_json(
                     rxcui=str(selected_row["rxcui"]),
                     display=str(selected_row["str"]),
                 )
