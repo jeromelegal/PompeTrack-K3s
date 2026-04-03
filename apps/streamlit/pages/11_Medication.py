@@ -1,7 +1,6 @@
 import json
 import os
 from typing import Optional
-from libs.db_service import get_connection
 
 import pandas as pd
 import psycopg2
@@ -11,6 +10,18 @@ import streamlit as st
 st.set_page_config(page_title="RxNorm → FHIR Medication", layout="wide")
 
 RXNORM_SYSTEM = "http://www.nlm.nih.gov/research/umls/rxnorm"
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "pompetrack-core-postgresql"),
+    "port": os.getenv("DB_PORT", "5432"),
+    "database": os.getenv("DB_NAME", "pompetrack"),
+    "user": os.getenv("DB_USER", "pompetrack-user"),
+    "password": os.getenv("DB_PASSWORD"),
+}
+
+@st.cache_resource
+def get_connection():
+    """Create and cache a PostgreSQL connection."""
+    return psycopg2.connect(**DB_CONFIG)
 
 
 @st.cache_data(ttl=60)
@@ -32,7 +43,7 @@ def search_rxnorm(keyword: str, tty_values: tuple[str, ...]) -> pd.DataFrame:
     return pd.read_sql_query(query, conn, params=params)
 
 
-def build_medication_json(code: str, display: str) -> dict:
+def build_medication_json(rxcui: str, display: str) -> dict:
     """Build a minimal FHIR Medication resource."""
     return {
         "resourceType": "Medication",
@@ -40,12 +51,30 @@ def build_medication_json(code: str, display: str) -> dict:
             "coding": [
                 {
                     "system": RXNORM_SYSTEM,
-                    "code": str(code),
+                    "code": str(rxcui),
                     "display": display,
                 }
             ],
             "text": display,
         },
+    }
+
+
+def build_medplum_transaction_bundle(rxcui: str, display: str) -> dict:
+    """Build a Medplum-compatible transaction Bundle creating one Medication."""
+    medication = build_medication_json(rxcui=rxcui, display=display)
+    return {
+        "resourceType": "Bundle",
+        "type": "transaction",
+        "entry": [
+            {
+                "resource": medication,
+                "request": {
+                    "method": "POST",
+                    "url": "Medication",
+                },
+            }
+        ],
     }
 
 
@@ -55,20 +84,20 @@ st.write(
     "(dosage / forme / éventuellement marque)."
 )
 
-# with st.sidebar:
-#     st.header("Connexion PostgreSQL")
-#     st.caption("Les paramètres sont lus depuis les variables d'environnement.")
-#     st.code(
-#         "\n".join(
-#             [
-#                 f"PGHOST={os.getenv('PGHOST', 'localhost')}",
-#                 f"PGPORT={os.getenv('PGPORT', '5432')}",
-#                 f"PGDATABASE={os.getenv('PGDATABASE', 'postgres')}",
-#                 f"PGUSER={os.getenv('PGUSER', 'postgres')}",
-#                 "PGPASSWORD=********" if os.getenv("PGPASSWORD") else "PGPASSWORD=(vide)",
-#             ]
-#         )
-#     )
+with st.sidebar:
+    st.header("Connexion PostgreSQL")
+    st.caption("Les paramètres sont lus depuis les variables d'environnement.")
+    st.code(
+        "\n".join(
+            [
+                f"PGHOST={os.getenv('PGHOST', 'localhost')}",
+                f"PGPORT={os.getenv('PGPORT', '5432')}",
+                f"PGDATABASE={os.getenv('PGDATABASE', 'postgres')}",
+                f"PGUSER={os.getenv('PGUSER', 'postgres')}",
+                "PGPASSWORD=********" if os.getenv("PGPASSWORD") else "PGPASSWORD=(vide)",
+            ]
+        )
+    )
 
 col1, col2 = st.columns([2, 1])
 
@@ -124,8 +153,8 @@ if search_clicked:
                 detail_col3.metric("Code", str(selected_row["code"]))
                 detail_col4.metric("Display", str(selected_row["str"]))
 
-                medication_json = build_medication_json(
-                    code=str(selected_row["code"]),
+                                medication_json = build_medication_json(
+                    rxcui=str(selected_row["rxcui"]),
                     display=str(selected_row["str"]),
                 )
 
@@ -134,39 +163,35 @@ if search_clicked:
 
                 json_text = json.dumps(medication_json, indent=2, ensure_ascii=False)
                 st.download_button(
-                    label="Télécharger le JSON",
+                    label="Télécharger le Medication JSON",
                     data=json_text,
-                    file_name=f"medication_{selected_row['code']}.json",
+                    file_name=f"medication_{selected_row['rxcui']}.json",
                     mime="application/json",
                 )
 
                 with st.expander("Version texte à copier"):
                     st.code(json_text, language="json")
+
+                transaction_bundle = build_medplum_transaction_bundle(
+                    rxcui=str(selected_row["rxcui"]),
+                    display=str(selected_row["str"]),
+                )
+
+                st.subheader("Bundle transaction Medplum")
+                st.json(transaction_bundle)
+
+                bundle_text = json.dumps(transaction_bundle, indent=2, ensure_ascii=False)
+                st.download_button(
+                    label="Télécharger le Bundle transaction",
+                    data=bundle_text,
+                    file_name=f"bundle_medication_{selected_row['rxcui']}.json",
+                    mime="application/json",
+                )
+
+                with st.expander("Bundle texte à copier"):
+                    st.code(bundle_text, language="json")
             else:
                 st.info("Aucun résultat trouvé pour ce mot clé.")
 
 st.divider()
 
-with st.expander("SQL utilisé"):
-    st.code(
-        """
-SELECT rxcui, tty, code, str
-FROM rxnconso
-WHERE str ILIKE '%mirtazapine%'
-  AND tty IN ('SCD', 'SBD')
-ORDER BY tty, str;
-        """.strip(),
-        language="sql",
-    )
-
-# with st.expander("Exemple de variables d'environnement"):
-#     st.code(
-#         """
-# PGHOST=pompetrack-core-postgresql
-# PGPORT=5432
-# PGDATABASE=postgres
-# PGUSER=<utilisateur_sql>
-# PGPASSWORD=<mot_de_passe>
-#         """.strip(),
-#         language="bash",
-#     )
