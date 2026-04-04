@@ -1,5 +1,5 @@
 from fhir_custom.medicationadministration import list_to_fhir_medication
-from fhir_custom.worker_template import CreatePreFHIR_medications
+from fhir_custom.worker_template import CreatePreFHIR_medicationadministration
 from fhir_custom.bundle import build_bundle_fhir, upload_bundle
 from fhir_custom.bundle import build_transaction_bundle, upload_transaction_bundle
 from fhir_custom.bundle import upload_bundles_in_chunks
@@ -38,7 +38,7 @@ def process_global_medications(medications: Union[List, str]):
 
         try:
             logger.info(f"Creating PreFHIR for {i}.")
-            creator = CreatePreFHIR_medications()
+            creator = CreatePreFHIR_medicationadministration()
             medications, parent_index, children_indices = creator.process(medication)
         except Exception:
             logger.exception(f"Fail to create PreFHIR for {i}.")

@@ -86,3 +86,17 @@ def run_logs_transfert(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+# Endpoint running medication pipeline    
+@app.get("/run/medication")
+def run_worker_medication(
+    device: dict = Depends(require_scopes(["airflow:medication"])),
+):
+    try:
+        print(f"Lancement du worker pour {now_iso()}")
+        result = subprocess.run(["python", "/app/pipeline_medication.py"], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=result.stderr)
+        return {"status": "success", "output": result.stdout}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    

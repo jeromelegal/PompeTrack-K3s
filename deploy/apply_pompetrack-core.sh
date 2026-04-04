@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# helm -n pompetrack-core uninstall pompetrack-core || true
-# kubectl delete namespace pompetrack-core
+helm -n pompetrack-core uninstall pompetrack-core || true
+kubectl delete namespace pompetrack-core
 
 apply_dir_ordered() {
   local dir="$1"

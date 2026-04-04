@@ -8,6 +8,7 @@ import time
 import requests
 from fhir.resources.bundle import Bundle, BundleEntry, BundleEntryRequest
 from fhir.resources.observation import Observation
+from fhir.resources.medication import Medication
 
 from libs.get_medplum_token import get_token
 from fhir_custom.observation import to_fhir_observation
@@ -102,6 +103,21 @@ def _build_observation_request(obs_hash: str | None) -> BundleEntryRequest:
 
     return request
 
+# Function to build medication request
+def _build_medication_request(med_hash: str | None) -> BundleEntryRequest:
+    """
+    Builds a BundleEntryRequest for a Medication.
+    """
+    request = BundleEntryRequest(
+        method="POST",
+        url="Medication",
+    )
+
+    if med_hash:
+        request.ifNoneExist = f"identifier={HASH_SYSTEM}|{med_hash}"
+
+    return request
+
 # Function to clean observation
 def _clean_observation_for_create(obs: Observation) -> Observation:
     """
@@ -145,6 +161,29 @@ def build_bundle_fhir(observations: List[Observation]) -> Bundle:
             request=_build_observation_request(obs_hash),
         )
         bundle.entry.append(entry)
+
+    return bundle
+
+# Function to build bundle
+def build_bundle_medication(medication: Medication) -> Bundle:
+    """
+    Build a Bundle FHIR transaction from a medication.
+    """
+    bundle = Bundle(
+        resourceType="Bundle",
+        type="transaction",
+        entry=[],
+    )
+
+    med_resource = medication[0][0]
+    med_hash = _extract_hash_from_identifier(med_resource.identifier)
+
+    entry = BundleEntry(
+        fullUrl=f"urn:uuid:{uuid.uuid4()}",
+        resource=med_resource,
+        request=_build_medication_request(med_hash),
+    )
+    bundle.entry.append(entry)
 
     return bundle
 
