@@ -3,11 +3,9 @@ from __future__ import annotations
 import hashlib
 import logging
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, Union
 
-from dateutil import parser
 from fhir.resources.codeableconcept import CodeableConcept
 from fhir.resources.coding import Coding
 from fhir.resources.medication  import Medication
@@ -16,7 +14,7 @@ from pydantic_core import from_json
 logger = logging.getLogger(__name__)
 
 
-
+# Function to extract code
 def _extract_medication_code(
     raw: dict[str, Any], 
     parent_context: Optional[dict[str, Any]] = None
@@ -25,12 +23,12 @@ def _extract_medication_code(
     Extract the medication_code from the raw data or the parent_context.
     """
     # 1) raw format
-    medication_code = raw.get("medication_code")
+    medication_code = raw.get("code_code")
     if medication_code:
         return medication_code
 
     # 2) format FHIR / pré-FHIR
-    code = raw.get("medicationCodeableConcept")
+    code = raw.get("code")
     if hasattr(code, "coding") and code.coding:
         first = code.coding[0]
         if getattr(first, "code", None):
@@ -45,9 +43,9 @@ def _extract_medication_code(
 
     # 3) fallback parent_context
     if parent_context:
-        measurement_type = parent_context.get("medication_code")
-        if measurement_type:
-            return measurement_type
+        medication_code = parent_context.get("code_code")
+        if medication_code:
+            return medication_code
 
         code = parent_context.get("code")
         if isinstance(code, dict):
@@ -59,6 +57,81 @@ def _extract_medication_code(
 
     return None
 
+
+# Function to extract display
+def _extract_medication_display(
+    raw: dict[str, Any], 
+    parent_context: Optional[dict[str, Any]] = None
+) -> Optional[str]:
+    """
+    Extract the medication_display from the raw data or the parent_context.
+    """
+    # 1) raw format
+    medication_display = raw.get("code_display")
+    if medication_display:
+        return medication_display
+
+    # 2) format FHIR / pré-FHIR
+    code = raw.get("code")
+    if hasattr(code, "coding") and code.coding:
+        first = code.coding[0]
+        if getattr(first, "display", None):
+            return first.display
+
+    if isinstance(code, dict):
+        coding = code.get("coding")
+        if isinstance(coding, list) and coding:
+            first = coding[0]
+            if isinstance(first, dict) and first.get("display"):
+                return first["display"]
+
+    # 3) fallback parent_context
+    if parent_context:
+        medication_display = parent_context.get("code_display")
+        if medication_display:
+            return medication_display
+
+        code = parent_context.get("code")
+        if isinstance(code, dict):
+            coding = code.get("coding")
+            if isinstance(coding, list) and coding:
+                first = coding[0]
+                if isinstance(first, dict) and first.get("display"):
+                    return first["display"]
+
+    return None
+
+# Function to resolve hash fields
+def resolve_hash_fields(
+    raw: dict[str, Any],
+    parent_context: Optional[dict[str, Any]] = None,
+) -> tuple[str, str, Union[str, datetime], Optional[Union[str, float, int]]]:
+    """
+    Extract medication_code and display from the raw data or the parent_context.
+    """
+    medication_code = _extract_medication_code(raw, parent_context)
+    medication_display = _extract_medication_display(raw, parent_context)
+
+    if not medication_code:
+        raise ValueError("medication_code introuvable ni dans raw ni dans parent_context.")
+    if not medication_display:
+        raise ValueError("medication_display introuvable ni dans raw ni dans parent_context.")
+
+    return medication_code, medication_display
+
+# Function to build hash
+def build_medication_hash(
+    medication_code: str,
+    medication_display: str
+) -> str:
+    """
+    Build a hash from medication_code and medication_display.
+    """
+    medication_code_norm = medication_code.strip().lower()
+    medication_display_norm = medication_display.strip().lower()
+
+    canonical_string = f"{medication_code_norm}|{medication_display_norm}"
+    return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
 # Function to build CodeableConcept
 def _codeable(
@@ -96,74 +169,19 @@ def _build_medication_args(
     raw = raw.copy()
     med_kwargs: dict[str, Any] = {"status": raw.get("status") or "completed"}
 
-    # effectiveDateTime
-    if raw.get("effectiveDateTime") is not None:
-        med_kwargs["effective"] = to_fhir_datetime(raw.get("effectiveDateTime"))
-
-    # effectivePeriod
-    if raw.get("periodstart") is not None and raw.get("periodend") is not None:
-        start = to_fhir_datetime(raw.get("periodstart"))
-        end = to_fhir_datetime(raw.get("periodend"))
-
-        med_kwargs["effectivePeriod"] = {"start": start, "end": end}
-        delta = iso_to_dt(end) - iso_to_dt(start)
-
-    # medicationCodeableConcept
+    # code
     if (
-        raw.get("medication_system") is not None
-        or raw.get("medication_code") is not None
-        or raw.get("medication_display") is not None
-        or raw.get("medication_text") is not None
+        raw.get("code_system") is not None
+        or raw.get("code_code") is not None
+        or raw.get("code_display") is not None
+        or raw.get("code_text") is not None
     ):
-        med_kwargs["medication"] = _codeable(
-            system=raw.get("medication_system"),
-            code=raw.get("medication_code"),
-            display=raw.get("medication_display"),
-            text=raw.get("medication_text"),
+        med_kwargs["code"] = _codeable(
+            system=raw.get("code_system"),
+            code=raw.get("code_code"),
+            display=raw.get("code_display"),
+            text=raw.get("code_text"),
         )
-
-    # statusReason
-    if (
-        raw.get("status_system") is not None
-        or raw.get("status_code") is not None
-        or raw.get("status_display") is not None
-        or raw.get("status_text") is not None
-    ):
-        med_kwargs["statusReason"] = _codeable(
-            system=raw.get("status_system"),
-            code=raw.get("status_code"),
-            display=raw.get("status_display"),
-            text=raw.get("status_text"),
-        )
-
-    # subject
-    if raw.get("patient_id") is not None:
-        med_kwargs["subject"] = {"reference": f"Patient/{raw.get('patient_id')}"}
-
-    # performer
-    if raw.get("performer_id") is not None:
-        med_kwargs["performer"] = [{"reference": f"Patient/{raw.get('performer_id')}"}]
-
-    # note
-    if raw.get("note_text") is not None:
-        note_text = raw.get("note_text")
-
-        if isinstance(note_text, str):
-            med_kwargs["note"] = [{"text": note_text}]
-        elif isinstance(note_text, list):
-            med_kwargs["note"] = [{"text": str(note)} for note in note_text]
-        else:
-            raise TypeError(
-                f"note_text doit être une str ou une liste, reçu {type(note_text)}"
-            )
-
-    # dosage
-    if raw.get("dose_value") is not None:
-        med_kwargs["dosage"] = {"dose": {"value": raw.get("dose_value"), "unit": "count"}}
-
-    # device
-    if raw.get("device_id") is not None:
-        med_kwargs["device"] = {"reference": f"Device/{raw.get('device_id')}"}
 
     # meta.tag
     if raw.get("tag_system") is not None or raw.get("tag_code") is not None:
@@ -176,21 +194,15 @@ def _build_medication_args(
             }
         )
 
-    # hasMember
-    if raw.get("hasMember") is not None:
-        med_kwargs["hasMember"] = raw.get("hasMember")
-
     # Makes hash
-    patient_id, medication_code, hash_timestamp, value_for_hash = resolve_hash_fields(
+    medication_code, medication_display = resolve_hash_fields(
         raw=raw,
         parent_context=parent_context,
     )
 
     med_hash = build_medication_hash(
-        patient_id=patient_id,
         medication_code=medication_code,
-        timestamp=hash_timestamp,
-        value=value_for_hash,
+        medication_display=medication_display,
     )
 
     med_kwargs["identifier"] = [
@@ -202,13 +214,13 @@ def _build_medication_args(
 
     return med_kwargs
 
-# Function to build a FHIR MedicationAdministration
+# Function to build a FHIR Medication
 def to_fhir_medication(
     raw: Union[dict[str, Any], str],
     parent_context: Optional[dict[str, Any]] = None,
-) -> MedicationAdministration:
+) -> Medication:
     """
-    Build a FHIR MedicationAdministration from:
+    Build a FHIR Medication from:
     - a raw dict
     - a JSON file path
     """
@@ -232,15 +244,15 @@ def to_fhir_medication(
         raise TypeError("raw doit être un dict ou le chemin d’un fichier JSON.")
 
     med_kwargs = _build_medication_args(data, parent_context=parent_context)
-    return MedicationAdministration(**med_kwargs)
+    return Medication(**med_kwargs)
 
 # Function to build a list of FHIR Medications
 def list_to_fhir_medication(
     raw: list[dict[str, Any]],
     total_created: int = 0,
-) -> tuple[list[MedicationAdministration], int]:
+) -> tuple[list[Medication], int]:
     """
-    Build a list of FHIR MedicationAdministration from a list of dict inputs.
+    Build a list of FHIR Medication from a list of dict inputs.
 
     Returns:
         (med_list, total_created)
@@ -248,21 +260,21 @@ def list_to_fhir_medication(
     if not isinstance(raw, list):
         raise TypeError("raw doit être une liste de dictionnaires.")
 
-    med_list: list[MedicationAdministration] = []
+    med_list: list[Medication] = []
 
     for data in raw:
         if not isinstance(data, dict):
-            logger.exception("Élément ignoré car ce n'est pas un dict: %r", data)
+            logger.exception(f"Élément ignoré car ce n'est pas un dict: {data}")
             total_created += 1
             continue
 
         try:
-            med_kwargs = _build_obs_args(data)
+            med_kwargs = _build_medication_args(data)
             med_kwargs["id"] = str(uuid.uuid4())
-            med_list.append(MedicationAdministration(**med_kwargs))
+            med_list.append(Medication(**med_kwargs))
         except Exception:
             logger.exception(
-                f"Validation error for medicationadministration #{total_created} with data={data}")
+                f"Validation error for medication #{total_created} with data={data}")
 
         total_created += 1
 

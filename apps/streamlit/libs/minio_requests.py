@@ -22,6 +22,7 @@ ENDPOINT_DOWNLOAD_GENERIC = os.getenv("ENDPOINT_DOWNLOAD_GENERIC", "/download/")
 ENDPOINT_SPIROMETER = os.getenv("ENDPOINT_SPIROMETER", "/ingest/spirometer/")
 ENDPOINT_IPHONE = os.getenv("ENDPOINT_IPHONE", "/ingest/iphone/")
 ENDPOINT_INGEST_SQLITE = os.getenv("ENDPOINT_INGEST_SQLITE", "/ingest/sqlite/")
+ENDPOINT_INGEST_MEDICATION = os.getenv("ENDPOINT_INGEST_MEDICATION", "/ingest/medication/")
 
 DEFAULT_TIMEOUT = float(os.getenv("MINIO_API_TIMEOUT", "30"))
 
@@ -159,6 +160,28 @@ def upload_iphone_json(object_file: Any, scope: str = "ingest:iphone") -> reques
         return resp
     except requests.RequestException as e:
         logger.error("upload_iphone_json failed err=%s", e)
+        raise
+
+# Function to upload Medication json
+def upload_medication_json(object_file: Any, scope: str = "ingest:medication") -> requests.Response:
+    """
+    Upload Medication JSON.
+    """
+    url = _url(ENDPOINT_INGEST_MEDICATION)
+    headers = _auth_headers(scope, extra={"Content-Type": "application/json"})
+
+    raw = object_file.getvalue()
+    payload = json.loads(raw.decode("utf-8"))
+
+    if not isinstance(payload, dict):
+        raise ValueError("Le JSON doit être un objet (racine = { ... }).")
+
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=DEFAULT_TIMEOUT)
+        resp.raise_for_status()
+        return resp
+    except requests.RequestException as e:
+        logger.error(f"upload_medication_json failed err={e}")
         raise
 
 # Function to upload sqlite file

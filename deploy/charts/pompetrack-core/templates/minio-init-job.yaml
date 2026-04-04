@@ -129,6 +129,7 @@ spec:
               mc mb --ignore-existing local/raw-strength
               mc mb --ignore-existing local/fhir-logs
               mc mb --ignore-existing local/medplum-storage
+              mc mb --ignore-existing local/raw-medication
 
               echo "==> Enable versioning on selected buckets (ignore errors if already enabled)"
               mc version enable local/pg-backups || true
@@ -245,7 +246,8 @@ spec:
                       "arn:aws:s3:::blood-test",
                       "arn:aws:s3:::reports",
                       "arn:aws:s3:::raw-strength",
-                      "arn:aws:s3:::fhir-logs"
+                      "arn:aws:s3:::fhir-logs",
+                      "arn:aws:s3:::raw-medication"
                     ]
                   },
                   {
@@ -265,7 +267,8 @@ spec:
                       "arn:aws:s3:::blood-test/*",
                       "arn:aws:s3:::reports/*",
                       "arn:aws:s3:::raw-strength/*",
-                      "arn:aws:s3:::fhir-logs/*"
+                      "arn:aws:s3:::fhir-logs/*",
+                      "arn:aws:s3:::raw-medication/*"
                     ]
                   }
                 ]

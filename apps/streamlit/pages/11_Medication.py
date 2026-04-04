@@ -1,7 +1,8 @@
 import json
 import pandas as pd
 import streamlit as st
-
+from libs.worker_utils import 
+from libs.minio_requests import upload_medication_json
 from libs.db_service import get_connection
 
 st.set_page_config(page_title="RxNorm → FHIR Medication", layout="wide")
@@ -23,7 +24,7 @@ def search_rxnorm(keyword: str, tty_values: tuple[str, ...]) -> pd.DataFrame:
         WHERE str ILIKE %s
           AND tty IN ({placeholders})
         ORDER BY tty, str;
-    """
+    """ 
     params = [f"%{keyword.strip()}%", *tty_values]
     return pd.read_sql_query(query, conn, params=params)
 
@@ -31,37 +32,11 @@ def search_rxnorm(keyword: str, tty_values: tuple[str, ...]) -> pd.DataFrame:
 def build_medication_json(rxcui: str, display: str) -> dict:
     """Build a minimal FHIR Medication resource."""
     return {
-        "resourceType": "Medication",
-        "code": {
-            "coding": [
-                {
-                    "system": RXNORM_SYSTEM,
-                    "code": str(rxcui),
-                    "display": display,
-                }
-            ],
-            "text": display,
-        },
+        "code_system": RXNORM_SYSTEM,
+        "code_code": str(rxcui),
+        "code_display": display,
+        "code_text": display
     }
-
-
-def build_medplum_transaction_bundle(rxcui: str, display: str) -> dict:
-    """Build a transaction Bundle for Medplum."""
-    medication = build_medication_json(rxcui=rxcui, display=display)
-    return {
-        "resourceType": "Bundle",
-        "type": "transaction",
-        "entry": [
-            {
-                "resource": medication,
-                "request": {
-                    "method": "POST",
-                    "url": "Medication",
-                },
-            }
-        ],
-    }
-
 
 # Initialisation du state
 if "rxnorm_results" not in st.session_state:
@@ -177,34 +152,45 @@ if results is not None:
         st.json(medication_json)
 
         medication_text = json.dumps(medication_json, indent=2, ensure_ascii=False)
-        st.download_button(
-            label="Télécharger le Medication JSON",
-            data=medication_text,
-            file_name=f"medication_{selected_row['rxcui']}.json",
-            mime="application/json",
-        )
+        # st.upload_button(
+        #     label="Upload le Medication JSON",
+        #     data=medication_text,
+        #     file_name=f"medication_{selected_row['rxcui']}.json",
+        #     mime="application/json",
+        # )
+
+        if medication_text is not None:
+            if st.button("Envoyer JSON"):
+                try:
+                    r = upload_medication_json(medication_text)
+                except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
+                    st.error(str(e))
+                except requests.RequestException as e:
+                    st.error(f"Erreur réseau: {e}")
+                else:
+                    show_response(r)
 
         with st.expander("Medication JSON à copier"):
             st.code(medication_text, language="json")
 
-        transaction_bundle = build_medplum_transaction_bundle(
-            rxcui=str(selected_row["rxcui"]),
-            display=str(selected_row["str"]),
-        )
+        # transaction_bundle = build_medplum_transaction_bundle(
+        #     rxcui=str(selected_row["rxcui"]),
+        #     display=str(selected_row["str"]),
+        # )
 
-        st.subheader("Bundle transaction Medplum")
-        st.json(transaction_bundle)
+        # st.subheader("Bundle transaction Medplum")
+        # st.json(transaction_bundle)
 
-        bundle_text = json.dumps(transaction_bundle, indent=2, ensure_ascii=False)
-        st.download_button(
-            label="Télécharger le Bundle transaction",
-            data=bundle_text,
-            file_name=f"bundle_medication_{selected_row['rxcui']}.json",
-            mime="application/json",
-        )
+        # bundle_text = json.dumps(transaction_bundle, indent=2, ensure_ascii=False)
+        # st.download_button(
+        #     label="Télécharger le Bundle transaction",
+        #     data=bundle_text,
+        #     file_name=f"bundle_medication_{selected_row['rxcui']}.json",
+        #     mime="application/json",
+        # )
 
-        with st.expander("Bundle transaction à copier"):
-            st.code(bundle_text, language="json")
+        # with st.expander("Bundle transaction à copier"):
+        #     st.code(bundle_text, language="json")
 
     else:
         st.info("Aucun résultat trouvé pour ce mot clé.")

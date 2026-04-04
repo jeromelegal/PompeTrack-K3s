@@ -494,7 +494,7 @@ class CreatePreFHIR_symptoms:
         children_indices = []
         return observations, parent_index, children_indices
  
-class CreatePreFHIR_medications:
+class CreatePreFHIR_medicationadministration:
     """
     Class for medications
     """
