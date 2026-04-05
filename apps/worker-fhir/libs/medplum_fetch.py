@@ -404,35 +404,19 @@ def fetch_fhir_medications(
     if max_records is not None:
         all_medications = all_medications[:max_records]
 
-    med_index = {
-        f"Medication/{med['id']}": med
-        for med in all_medications
-        if "id" in med
-    }
+    # med_index = {
+    #     f"Medication/{med['id']}": med
+    #     for med in all_medications
+    #     if "id" in med
+    # }
 
-    # results = []
-    # for med in all_medications:
-    #     resolved_members = []
+    results = []
+    for med in all_medications:
+        resolved_members = []
+        results.append(med)
 
-    #     for member_ref in med.get("hasMember", []):
-    #         ref = member_ref.get("reference")
-    #         member_med = med_index.get(ref)
-    #         if not member_med:
-    #             continue
+    return results
 
-    #         resolved_members.append({
-    #             "reference": ref,
-    #             "effectiveDateTime": member_med.get("effectiveDateTime"),
-    #             "valueQuantity": member_med.get("valueQuantity"),
-    #         })
-
-    #     if resolved_members:
-    #         med["resolvedHasMember"] = resolved_members
-
-    #     results.append(med)
-
-    # return results
-    return med_index
 
 
 
