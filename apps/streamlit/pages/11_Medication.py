@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import requests
 import streamlit as st
 from libs.minio_requests import upload_medication_json
 from libs.db_service import get_connection
@@ -152,12 +153,6 @@ if results is not None:
         st.json(medication_json)
 
         medication_text = json.dumps(medication_json, indent=2, ensure_ascii=False)
-        # st.upload_button(
-        #     label="Upload le Medication JSON",
-        #     data=medication_text,
-        #     file_name=f"medication_{selected_row['rxcui']}.json",
-        #     mime="application/json",
-        # )
 
         if medication_text is not None:
             if st.button("Envoyer JSON"):
@@ -172,25 +167,6 @@ if results is not None:
 
         with st.expander("Medication JSON à copier"):
             st.code(medication_text, language="json")
-
-        # transaction_bundle = build_medplum_transaction_bundle(
-        #     rxcui=str(selected_row["rxcui"]),
-        #     display=str(selected_row["str"]),
-        # )
-
-        # st.subheader("Bundle transaction Medplum")
-        # st.json(transaction_bundle)
-
-        # bundle_text = json.dumps(transaction_bundle, indent=2, ensure_ascii=False)
-        # st.download_button(
-        #     label="Télécharger le Bundle transaction",
-        #     data=bundle_text,
-        #     file_name=f"bundle_medication_{selected_row['rxcui']}.json",
-        #     mime="application/json",
-        # )
-
-        # with st.expander("Bundle transaction à copier"):
-        #     st.code(bundle_text, language="json")
 
     else:
         st.info("Aucun résultat trouvé pour ce mot clé.")
