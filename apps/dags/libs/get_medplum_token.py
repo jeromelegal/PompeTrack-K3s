@@ -13,9 +13,9 @@ from libs.secrets_utils import read_secret_from_file
 
 logger = logging.getLogger("get_medplum_token")
 
-# Reading client ID and secret from environment variables or secrets
-CLIENT_ID = read_secret_from_file("MEDPLUM_CLIENT_ID")
-CLIENT_SECRET = read_secret_from_file("MEDPLUM_CLIENT_SECRET")
+# Retrieve client ID and secret from environment variables or secrets
+CLIENT_ID = os.getenv("MEDPLUM_CLIENT_ID")
+CLIENT_SECRET = os.getenv("MEDPLUM_CLIENT_SECRET")
 
 # Base URL of the Medplum API
 BASE_URL = os.getenv(

@@ -39,6 +39,22 @@ def build_medication_json(rxcui: str, display: str) -> dict:
         "code_text": display
     }
 
+# Function to show request response
+def show_response(r: requests.Response):
+    st.write("Status:", r.status_code)
+    ct = (r.headers.get("content-type") or "").lower()
+    if "application/json" in ct:
+        try:
+            st.json(r.json())
+        except ValueError:
+            st.write(r.text)
+    else:
+        st.write(r.text)
+    if r.ok:
+        st.success("Ingestion OK ✅")
+    else:
+        st.error("Ingestion KO ❌")
+        
 # Initialisation du state
 if "rxnorm_results" not in st.session_state:
     st.session_state.rxnorm_results = None
