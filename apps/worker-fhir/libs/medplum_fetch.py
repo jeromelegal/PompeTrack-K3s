@@ -313,6 +313,7 @@ def fetch_fhir_medications(
     session = create_session()
 
     payload = payload or {}
+    code = payload.get("code")
 
     max_records = payload.get("max_records", 1000)
     page_count = int(payload.get("page_count", 100))
