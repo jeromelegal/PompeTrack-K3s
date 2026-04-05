@@ -152,12 +152,10 @@ if results is not None:
         st.subheader("FHIR Medication JSON")
         st.json(medication_json)
 
-        medication_text = json.dumps(medication_json, indent=2, ensure_ascii=False)
-
-        if medication_text is not None:
+        if medication_json is not None:
             if st.button("Envoyer JSON"):
                 try:
-                    r = upload_medication_json(medication_text)
+                    r = upload_medication_json(medication_json)
                 except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
                     st.error(str(e))
                 except requests.RequestException as e:
@@ -166,7 +164,7 @@ if results is not None:
                     show_response(r)
 
         with st.expander("Medication JSON à copier"):
-            st.code(medication_text, language="json")
+            st.code(medication_json, language="json")
 
     else:
         st.info("Aucun résultat trouvé pour ce mot clé.")
