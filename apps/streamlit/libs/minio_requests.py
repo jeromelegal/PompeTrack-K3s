@@ -163,21 +163,18 @@ def upload_iphone_json(object_file: Any, scope: str = "ingest:iphone") -> reques
         raise
 
 # Function to upload Medication json
-def upload_medication_json(object_file: Any, scope: str = "ingest:medication") -> requests.Response:
+def upload_medication_json(json_file: Any, scope: str = "ingest:medication") -> requests.Response:
     """
     Upload Medication JSON.
     """
     url = _url(ENDPOINT_INGEST_MEDICATION)
     headers = _auth_headers(scope, extra={"Content-Type": "application/json"})
 
-    raw = object_file.getvalue()
-    payload = json.loads(raw.decode("utf-8"))
-
-    if not isinstance(payload, dict):
+    if not isinstance(json_file, dict):
         raise ValueError("Le JSON doit être un objet (racine = { ... }).")
 
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=DEFAULT_TIMEOUT)
+        resp = requests.post(url, json=json_file, headers=headers, timeout=DEFAULT_TIMEOUT)
         resp.raise_for_status()
         return resp
     except requests.RequestException as e:
