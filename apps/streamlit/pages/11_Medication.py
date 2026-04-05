@@ -179,8 +179,8 @@ if results is not None:
                 else:
                     show_response(r)
 
-        with st.expander("Medication JSON à copier"):
-            st.code(medication_json, language="json")
+        # with st.expander("Medication JSON à copier"):
+        #     st.code(medication_json, language="json")
 
     else:
         st.info("Aucun résultat trouvé pour ce mot clé.")
