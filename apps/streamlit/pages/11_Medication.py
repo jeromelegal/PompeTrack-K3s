@@ -31,6 +31,7 @@ def search_rxnorm(keyword: str, tty_values: tuple[str, ...]) -> pd.DataFrame:
 def build_medication_json(rxcui: str, display: str) -> dict:
     """Build a minimal FHIR Medication resource."""
     return {
+        "name": "medication",
         "code_system": RXNORM_SYSTEM,
         "code_code": str(rxcui),
         "code_display": display,
