@@ -327,7 +327,6 @@ def fetch_fhir_medications(
     ])
 
     params = {
-        "patient": patient_full,
         "_count": page_count,
         "_elements": elements,
     }
