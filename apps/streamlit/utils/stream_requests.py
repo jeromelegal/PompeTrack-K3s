@@ -110,7 +110,7 @@ def get_medication():
     token = get_token(["stream:fhir"])
     url = MEDICATION_ENDPOINT
     headers = {"Authorization": f"Bearer {token}"}
-    resp = requests.post(url, headers=headers, timeout=30)
+    resp = requests.post(url, json={}, headers=headers, timeout=30)
 
     logger.info("worker-stream status=%s content-type=%s", resp.status_code, resp.headers.get("content-type"))
     logger.info("worker-stream body (first 500)=%r", resp.text[:500])
