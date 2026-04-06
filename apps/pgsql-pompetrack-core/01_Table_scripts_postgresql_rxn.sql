@@ -59,3 +59,31 @@ CREATE TABLE rxnsat
    suppress          varchar(1),
    cvf               varchar(50)
 );
+
+CREATE TABLE IF NOT EXISTS medication_map
+(
+   source_system           varchar(50)  NOT NULL,  -- ex: 'iphone'
+   canonical_key           varchar(255) NOT NULL,  -- ex: 'iphone|duloxetine|30mg|capsule'
+   raw_name                varchar(255),           -- nom brut venant de l'iPhone
+   normalized_name         varchar(255),           -- nom normalisé pour recherche simple
+   medplum_medication_id   varchar(64)  NOT NULL,  -- id FHIR Medication dans Medplum
+   code_system             varchar(255),           -- ex: RxNorm system
+   code_value              varchar(100),           -- ex: rxcui
+   display                 varchar(500),           -- display FHIR
+   strength_value          varchar(50),            -- ex: 30
+   strength_unit           varchar(50),            -- ex: mg
+   dose_form               varchar(100),           -- ex: capsule, tablet
+   last_seen_at            timestamptz  NOT NULL DEFAULT now(),
+   created_at              timestamptz  NOT NULL DEFAULT now(),
+   updated_at              timestamptz  NOT NULL DEFAULT now(),
+   PRIMARY KEY (source_system, canonical_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_medication_map_normalized_name
+   ON medication_map (source_system, normalized_name);
+
+CREATE INDEX IF NOT EXISTS idx_medication_map_medplum_id
+   ON medication_map (medplum_medication_id);
+
+CREATE INDEX IF NOT EXISTS idx_medication_map_code_value
+   ON medication_map (code_system, code_value);

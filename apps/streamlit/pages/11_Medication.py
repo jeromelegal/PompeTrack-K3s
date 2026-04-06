@@ -29,14 +29,15 @@ def search_rxnorm(keyword: str, tty_values: tuple[str, ...]) -> pd.DataFrame:
     return pd.read_sql_query(query, conn, params=params)
 
 
-def build_medication_json(rxcui: str, display: str) -> dict:
+def build_medication_json(rxcui: str, display: str, identifier_value: str) -> dict:
     """Build a minimal FHIR Medication resource."""
     return {
         "name": "medication",
         "code_system": RXNORM_SYSTEM,
         "code_code": str(rxcui),
         "code_display": display,
-        "code_text": display
+        "code_text": display,
+        "identifier_value": identifier_value
     }
 
 # Function to show request response
@@ -159,10 +160,17 @@ if results is not None:
         c2.metric("TTY", str(selected_row["tty"]))
         c3.metric("Code", str(selected_row["code"]))
         c4.metric("Display", str(selected_row["str"]))
+        
+        medication_name = st.text_input(
+            "Identifier de la Medication",
+            value=str(selected_row["str"]),
+            key="medication_name",
+        )
 
         medication_json = build_medication_json(
             rxcui=str(selected_row["rxcui"]),
             display=str(selected_row["str"]),
+            identifier_value=str(medication_name.strip()),
         )
 
         st.subheader("FHIR Medication JSON")
@@ -178,9 +186,6 @@ if results is not None:
                     st.error(f"Erreur réseau: {e}")
                 else:
                     show_response(r)
-
-        # with st.expander("Medication JSON à copier"):
-        #     st.code(medication_json, language="json")
 
     else:
         st.info("Aucun résultat trouvé pour ce mot clé.")
