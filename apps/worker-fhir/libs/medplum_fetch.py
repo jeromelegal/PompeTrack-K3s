@@ -404,21 +404,12 @@ def fetch_fhir_medications(
     if max_records is not None:
         all_medications = all_medications[:max_records]
 
-    # med_index = {
-    #     f"Medication/{med['id']}": med
-    #     for med in all_medications
-    #     if "id" in med
-    # }
-
     results = []
     for med in all_medications:
         resolved_members = []
         results.append(med)
 
     return results
-
-
-
 
 if __name__ == "__main__":
     rows = fetch_fhir_observation(

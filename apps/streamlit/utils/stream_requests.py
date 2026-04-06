@@ -34,20 +34,22 @@ logging.basicConfig(
 logger = logging.getLogger("Streamlit")
 
 MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
+OBSERVATION_ENDPOINT = f"http://worker-stream/data/observation/{MEDPLUM_PATIENT_ID}"
+MEDICATION_ENDPOINT = "http://worker-stream/data/medication"
 
 def _date_today():
     return pd.Timestamp.now().date()
 
 # Generic request
 def _stream_request(
-    patient_id: str, 
-    payload: dict
+    url: str, 
+    payload: dict = None
     ):
     """
     Generic request
     """
     token = get_token(["stream:fhir"])
-    url = f"http://worker-stream/data/observation/{patient_id}"
+    # url = f"http://worker-stream/data/observation/{patient_id}"
     headers = {"Authorization": f"Bearer {token}"}
     resp = requests.post(url, headers=headers, json=payload, timeout=30)
 
@@ -77,7 +79,7 @@ def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
     }
     logger.info(f"Payload is : {payload}")
 
-    raw_data = _stream_request(MEDPLUM_PATIENT_ID, payload)
+    raw_data = _stream_request(OBSERVATION_ENDPOINT, payload)
 
     if raw_data is None:
         logger.info("No data retrieved.")
@@ -99,6 +101,22 @@ def tag_stream_request(tag, lookback_days, max_records=5000, page_count=1000):
         )
 
     return data
+
+# Medication request
+def get_medication():
+    """
+    Medication request
+    """
+    token = get_token(["stream:fhir"])
+    url = MEDICATION_ENDPOINT
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.post(url, headers=headers, timeout=30)
+
+    logger.info("worker-stream status=%s content-type=%s", resp.status_code, resp.headers.get("content-type"))
+    logger.info("worker-stream body (first 500)=%r", resp.text[:500])
+
+    resp.raise_for_status()  
+    return resp.json()
 
 if __name__ == "__main__":
     data = tag_stream_request("metrics", 90)

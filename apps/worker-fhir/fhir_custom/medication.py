@@ -167,7 +167,7 @@ def _build_medication_args(
         raise TypeError(f"raw doit être un dict, reçu {type(raw)}")
 
     raw = raw.copy()
-    med_kwargs: dict[str, Any] = {"status": raw.get("status") or "completed"}
+    med_kwargs: dict[str, Any] = {"status": raw.get("status") or "active"}
 
     # code
     if (
@@ -205,12 +205,21 @@ def _build_medication_args(
         medication_display=medication_display,
     )
 
-    med_kwargs["identifier"] = [
+    if raw.get("identifier_value") is not None:
+        med_kwargs["identifier"] = [
         {
-            "system": "https://medplum.phylcero.fr/medication-hash",
-            "value": med_hash,
+            "system": "https://phylcero.fr/fhir/identifier/source-medication",
+            "value": raw.get("identifier_value"),
         }
     ]
+    else:
+        med_kwargs["identifier"] = [
+            {
+                "system": "https://phylcero.fr/fhir/identifier/source-medication",
+                "value": med_hash,
+            }
+        ]
+    
 
     return med_kwargs
 

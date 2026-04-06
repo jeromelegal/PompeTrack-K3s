@@ -296,6 +296,119 @@ def fetch_fhir_observation(
 
     return results
 
+# Function to fetch FHIR medication
+def fetch_fhir_medication(
+    payload: Optional[dict] = None
+) -> list[dict]:
+    """
+    Fetch FHIR medication.
+    """
+    token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/fhir+json",
+    }
+
+    session = create_session()
+
+    payload = payload or {}
+    code = payload.get("code")
+
+    max_records = payload.get("max_records", 1000)
+    page_count = int(payload.get("page_count", 100))
+    max_pages = int(payload.get("max_pages", 1000))
+
+    if page_count <= 0:
+        page_count = 100
+
+    elements = ",".join([
+        "id",
+        "code",
+    ])
+
+    params = {
+        "_count": page_count,
+        "_elements": elements,
+    }
+
+    if code:
+        params["code"] = code
+
+    all_medications: list[dict] = []
+    seen_med_refs: set[str] = set()
+    visited_urls: set[str] = set()
+
+    resource_type = "Medication"
+    url = build_search_url(FHIR_BASE, resource_type, params)
+
+    page_number = 0
+
+    while url and (max_records is None or len(all_medications) < max_records):
+        page_number += 1
+
+        if page_number > max_pages:
+            raise RuntimeError(
+                f"Pagination interrompue : plus de {max_pages} pages parcourues."
+            )
+
+        if url in visited_urls:
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
+        visited_urls.add(url)
+
+        logger.info("GET page %s: %s", page_number, url)
+        bundle = get_bundle_page(session, url, headers=headers)
+
+        page_med_count = 0
+        for entry in bundle.get("entry", []):
+            resource = entry.get("resource")
+            if not resource or resource.get("resourceType") != "Medication":
+                continue
+
+            med_id = resource.get("id")
+            med_ref = f"Medication/{med_id}" if med_id else None
+
+            if med_ref and med_ref in seen_med_refs:
+                continue
+
+            if med_ref:
+                seen_med_refs.add(med_ref)
+
+            all_medications.append(resource)
+            page_med_count += 1
+
+            if max_records is not None and len(all_medications) >= max_records:
+                break
+
+        logger.info(
+            "Page %s récupérée: %s Medications (cumul=%s)",
+            page_number,
+            page_med_count,
+            len(all_medications),
+        )
+
+        if max_records is not None and len(all_medications) >= max_records:
+            break
+
+        raw_next_url = next(
+            (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
+            None,
+        )
+
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
+    if max_records is not None:
+        all_medications = all_medications[:max_records]
+
+    results = []
+    for med in all_medications:
+        resolved_members = []
+        results.append(med)
+
+    return results
 
 if __name__ == "__main__":
     rows = fetch_fhir_observation(

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, Body
 from datetime import datetime, timezone
 from typing import Optional
-from worker import fetch_fhir_observation
+from worker import fetch_fhir_observation, fetch_fhir_medication
 from fastapi.responses import JSONResponse
 import json
 from libs.security import require_scopes
@@ -27,6 +27,19 @@ def fetch_obseration(
 ):
     try:
         results = fetch_fhir_observation(patient_id, payload)
+        data = {"data": results}
+        return data
+    except (RuntimeError, ValueError) as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
+# Endpoint to fetch medication
+@app.post("/data/medication")
+def fetch_obseration(
+    payload: Optional[dict] = Body(...),
+    device: dict = Depends(require_scopes(["stream:fhir"])),
+):
+    try:
+        results = fetch_fhir_medication(payload)
         data = {"data": results}
         return data
     except (RuntimeError, ValueError) as e:
