@@ -35,7 +35,7 @@ def fetch_observation(
 # Endpoint to fetch medication
 @app.post("/data/medication")
 def fetch_medication(
-    payload: Optional[dict] = Body(...),
+    payload: Optional[dict] = Body(None),
     device: dict = Depends(require_scopes(["stream:fhir"])),
 ):
     try:
