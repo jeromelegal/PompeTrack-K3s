@@ -20,7 +20,7 @@ async def healthz():
 
 # Endpoint to fetch observation 
 @app.post("/data/observation/{patient_id}")
-def fetch_obseration(
+def fetch_observation(
     patient_id: str,
     payload: Optional[dict] = Body(...),
     device: dict = Depends(require_scopes(["stream:fhir"])),
@@ -34,7 +34,7 @@ def fetch_obseration(
     
 # Endpoint to fetch medication
 @app.post("/data/medication")
-def fetch_obseration(
+def fetch_medication(
     payload: Optional[dict] = Body(...),
     device: dict = Depends(require_scopes(["stream:fhir"])),
 ):
