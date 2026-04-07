@@ -30,8 +30,8 @@ def create_correspondence_dict():
     
     try:
         with open("/tmp/medication_correspondence.json", "w") as f:
-        json.dump(correspondence_dict, f)
-        status = True
+            json.dump(correspondence_dict, f)
+            status = True
     except Exception as e:
         logger.error(f"Error saving medication correspondence: {e}")
         
