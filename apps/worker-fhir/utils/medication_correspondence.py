@@ -1,6 +1,6 @@
 from libs.db_service import get_id_medication, get_all_medications
 import json
-import logger
+import logging
 
 logger = logging.getLogger(__name__)
 
