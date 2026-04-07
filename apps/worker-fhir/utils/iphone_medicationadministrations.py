@@ -1,4 +1,4 @@
-from fhir_custom.medicationadministration import list_to_fhir_medicationadministration
+from fhir_custom.medicationadministration import list_to_fhir_medicationadministration, to_fhir_medicationadministration
 from fhir_custom.worker_template import CreatePreFHIR_medicationadministration
 from fhir_custom.bundle import build_bundle_fhir, upload_bundle
 from fhir_custom.bundle import build_transaction_bundle, upload_transaction_bundle
@@ -79,7 +79,7 @@ def process_global_medications(medications: Union[List, str]):
                 logger.info("Building FHIR Medication.")
                 current_medication_list = []
                 for medication in medications:
-                    med = to_fhir_medication(medication)
+                    med = to_fhir_medicationadministration(medication)
                     current_medication_list.append(med)
 
                 logger.info(f"Uploading chunked bundles for medication : {i}.")
