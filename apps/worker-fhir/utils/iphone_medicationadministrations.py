@@ -1,4 +1,4 @@
-from fhir_custom.medicationadministration import list_to_fhir_medication
+from fhir_custom.medicationadministration import list_to_fhir_medicationadministration
 from fhir_custom.worker_template import CreatePreFHIR_medicationadministration
 from fhir_custom.bundle import build_bundle_fhir, upload_bundle
 from fhir_custom.bundle import build_transaction_bundle, upload_transaction_bundle
@@ -26,7 +26,7 @@ def process_global_medications(medications: Union[List, str]):
     standard_bundle_created = 0
     transaction_bundle_created = 0
 
-    for i, medication in enumerate(sympmedicationstoms):
+    for i, medication in enumerate(medications):
         if not isinstance(medication, dict):
             logger.error(f"Error on reading dict : {medication}.")
             error_report.append({

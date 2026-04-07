@@ -13,7 +13,11 @@ from fhir.resources.coding import Coding
 from fhir.resources.medicationadministration  import MedicationAdministration
 from pydantic_core import from_json
 
+from utils.medication_correspondence import get_id_medication
+
 logger = logging.getLogger(__name__)
+
+SOURCE_SYSTEM = "iphone" 
 
 # Function to extract patient_id
 def _extract_patient_id(
@@ -48,6 +52,11 @@ def _extract_patient_id(
                 return ref.split("/", 1)[1]
 
     return None
+
+def normalize_name(value: str) -> str:
+    value = (value or "").strip().lower()
+    value = re.sub(r"\s+", " ", value)
+    return value
 
 # Function to normalize value
 def normalize_value(value: Optional[Union[str, float, int]]) -> str:
@@ -101,47 +110,6 @@ def _extract_timestamp(
 
     return None
 
-def _extract_medication_code(
-    raw: dict[str, Any], 
-    parent_context: Optional[dict[str, Any]] = None
-) -> Optional[str]:
-    """
-    Extract the medication_code from the raw data or the parent_context.
-    """
-    # 1) raw format
-    medication_code = raw.get("medication_code")
-    if medication_code:
-        return medication_code
-
-    # 2) format FHIR / pré-FHIR
-    code = raw.get("medicationCodeableConcept")
-    if hasattr(code, "coding") and code.coding:
-        first = code.coding[0]
-        if getattr(first, "code", None):
-            return first.code
-
-    if isinstance(code, dict):
-        coding = code.get("coding")
-        if isinstance(coding, list) and coding:
-            first = coding[0]
-            if isinstance(first, dict) and first.get("code"):
-                return first["code"]
-
-    # 3) fallback parent_context
-    if parent_context:
-        measurement_type = parent_context.get("medication_code")
-        if measurement_type:
-            return measurement_type
-
-        code = parent_context.get("code")
-        if isinstance(code, dict):
-            coding = code.get("coding")
-            if isinstance(coding, list) and coding:
-                first = coding[0]
-                if isinstance(first, dict) and first.get("code"):
-                    return first["code"]
-
-    return None
 
 # Function to resolve hash fields
 def resolve_hash_fields(
@@ -149,10 +117,10 @@ def resolve_hash_fields(
     parent_context: Optional[dict[str, Any]] = None,
 ) -> tuple[str, str, Union[str, datetime], Optional[Union[str, float, int]]]:
     """
-    Extract patient_id, medication_code and timestamp from the raw data or the parent_context.
+    Extract patient_id, medication_id and timestamp from the raw data or the parent_context.
     """
     patient_id = _extract_patient_id(raw, parent_context)
-    medication_code = _extract_medication_code(raw, parent_context)
+    medication_id = get_id_medication(SOURCE_SYSTEM, raw.get("medication_code"))
     timestamp = _extract_timestamp(raw, parent_context)
     value = raw.get("dose_value")
 
@@ -161,12 +129,12 @@ def resolve_hash_fields(
 
     if not patient_id:
         raise ValueError("patient_id introuvable ni dans raw ni dans parent_context.")
-    if not medication_code:
-        raise ValueError("medication_code introuvable ni dans raw ni dans parent_context.")
+    if not medication_id:
+        raise ValueError("medication_id introuvable ni dans raw ni dans parent_context.")
     if timestamp is None:
         raise ValueError("timestamp introuvable ni dans raw ni dans parent_context.")
 
-    return patient_id, medication_code, timestamp, value
+    return patient_id, medication_id, timestamp, value
 
 # Function to convert timestamp
 def to_fhir_datetime(value: Union[str, datetime]) -> str:
@@ -193,19 +161,19 @@ def to_fhir_datetime(value: Union[str, datetime]) -> str:
 # Function to build hash
 def build_medication_hash(
     patient_id: str,
-    medication_code: str,
+    build_medication_hash: str,
     timestamp: Union[str, datetime],
     value: Optional[Union[str, float, int]] = None,
 ) -> str:
     """
-    Build a hash from patient_id, medication_code, timestamp and value.
+    Build a hash from patient_id, medication_id, timestamp and value.
     """
     patient_id_norm = patient_id.strip().lower()
-    medication_code_norm = medication_code.strip().lower()
+    medication_id_norm = normalize_name(medication_id)
     timestamp_norm = to_fhir_datetime(timestamp)
     value_norm = normalize_value(value)
 
-    canonical_string = f"{patient_id_norm}|{medication_code_norm}|{timestamp_norm}|{value_norm}"
+    canonical_string = f"{patient_id_norm}|{medication_id_norm}|{timestamp_norm}|{value_norm}"
     return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()
 
 # Function to build CodeableConcept
@@ -252,6 +220,16 @@ def _coding_list(codings: Optional[Union[list[str], str]] = None) -> dict[str, l
 
     return {"coding": coding}
 
+def normalize_status(status: str) -> str:
+    status_normalized = status.strip().lower()
+    if status_normalized == "pris":
+        return "completed"
+    elif status_normalized == "Non Interagi":
+        return "not-done"
+    else:
+        raise ValueError(f"status non supporté: {status}")
+
+
 
 # Function to build Medication kwargs
 def _build_medication_args(
@@ -265,7 +243,7 @@ def _build_medication_args(
         raise TypeError(f"raw doit être un dict, reçu {type(raw)}")
 
     raw = raw.copy()
-    med_kwargs: dict[str, Any] = {"status": raw.get("status") or "completed"}
+    med_kwargs: dict[str, Any] = {"status": normalize_status(raw.get("status"))}
 
     # effectiveDateTime
     if raw.get("effectiveDateTime") is not None:
@@ -279,19 +257,10 @@ def _build_medication_args(
         med_kwargs["effectivePeriod"] = {"start": start, "end": end}
         delta = iso_to_dt(end) - iso_to_dt(start)
 
-    # medicationCodeableConcept
-    if (
-        raw.get("medication_system") is not None
-        or raw.get("medication_code") is not None
-        or raw.get("medication_display") is not None
-        or raw.get("medication_text") is not None
-    ):
-        med_kwargs["medication"] = _codeable(
-            system=raw.get("medication_system"),
-            code=raw.get("medication_code"),
-            display=raw.get("medication_display"),
-            text=raw.get("medication_text"),
-        )
+    # medicationReference
+    if raw.get("medication_code") is not None:
+        med_id = get_id_medication(SOURCE_SYSTEM, raw.get("medication_code"))
+        med_kwargs["medicationReference"] = {"reference": f"Medication/{med_id}"}
 
     # statusReason
     if (
@@ -352,14 +321,14 @@ def _build_medication_args(
         med_kwargs["hasMember"] = raw.get("hasMember")
 
     # Makes hash
-    patient_id, medication_code, hash_timestamp, value_for_hash = resolve_hash_fields(
+    patient_id, medication_id, hash_timestamp, value_for_hash = resolve_hash_fields(
         raw=raw,
         parent_context=parent_context,
     )
 
     med_hash = build_medication_hash(
         patient_id=patient_id,
-        medication_code=medication_code,
+        medication_id=medication_id,
         timestamp=hash_timestamp,
         value=value_for_hash,
     )
@@ -374,7 +343,7 @@ def _build_medication_args(
     return med_kwargs
 
 # Function to build a FHIR MedicationAdministration
-def to_fhir_medication(
+def to_fhir_medicationadministration(
     raw: Union[dict[str, Any], str],
     parent_context: Optional[dict[str, Any]] = None,
 ) -> MedicationAdministration:
@@ -406,7 +375,7 @@ def to_fhir_medication(
     return MedicationAdministration(**med_kwargs)
 
 # Function to build a list of FHIR Medications
-def list_to_fhir_medication(
+def list_to_fhir_medicationadministration(
     raw: list[dict[str, Any]],
     total_created: int = 0,
 ) -> tuple[list[MedicationAdministration], int]:

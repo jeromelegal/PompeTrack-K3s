@@ -498,7 +498,7 @@ class CreatePreFHIR_medicationadministration:
     """
     Class for medications
     """
-    TEMPLATE_NAME = "medication"
+    TEMPLATE_NAME = "medicationadmin"
 
     def process(self, medication: Dict[str, Any]):
         payload = copy.deepcopy(medication)
