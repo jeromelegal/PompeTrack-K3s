@@ -12,4 +12,7 @@ if [ -n "$TOKEN_AUDIENCE_AIRFLOW_FILE" ] && [ -f "$TOKEN_AUDIENCE_AIRFLOW_FILE" 
   export TOKEN_AUDIENCE_AIRFLOW="$(tr -d '\r\n' < "$TOKEN_AUDIENCE_AIRFLOW_FILE")"
 fi
 
+# Create medication_correspondence file
+touch /tmp/medication_correspondence.json
+
 exec "$@"
