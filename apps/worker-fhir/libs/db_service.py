@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 from datetime import datetime
 
@@ -227,36 +228,20 @@ def get_medication_by_canonical_key(canonical_key):
 # Function to get all medication
 def get_all_medications():
     """
-    Returns all medications.
+    Returns all medications as a list of dicts.
     """
     with get_connection() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
                 SELECT canonical_key, source_system, raw_name, normalized_name, 
-                      medplum_medication_id, code_system, code_value, display, 
-                      strength_value, strength_unit, dose_form, last_seen_at, 
-                      updated_at
+                       medplum_medication_id, code_system, code_value, display, 
+                       strength_value, strength_unit, dose_form, last_seen_at, 
+                       updated_at
                 FROM medication_map
             """)
-            row = cur.fetchone()
+            rows = cur.fetchall()
 
-    if row:
-        return {
-            "canonical_key": row[0],
-            "source_system": row[1], 
-            "raw_name": row[2], 
-            "normalized_name": row[3], 
-            "medplum_medication_id": row[4], 
-            "code_system": row[5], 
-            "code_value": row[6], 
-            "display": row[7], 
-            "strength_value": row[8], 
-            "strength_unit": row[9], 
-            "dose_form": row[10], 
-            "last_seen_at": row[11], 
-            "updated_at": row[12],
-        }
-    return None
+    return rows or []
 
 # Function to get ids medication
 def get_id_medication():
