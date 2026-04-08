@@ -46,6 +46,20 @@ spec:
 
             - name: TOKEN_AUDIENCE_AIRFLOW_FILE
               value: /var/run/secrets/medplum-audiences/TOKEN_AUDIENCE_AIRFLOW
+              
+            - name: DB_HOST
+              value: pompetrack-core-postgresql
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: pompetrack
+            - name: DB_USER
+              value: pompetrack-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-auth
+                  key: password
 
           envFrom:
             - configMapRef:
