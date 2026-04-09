@@ -63,6 +63,8 @@ def get_id_medication(source_system, name):
     """
     Returns the MedPLUM medication id for a given source system and canonical key.
     """
+    # update correspondence dictionary
+    update_correspondence_dict()
     normalized_name = normalize_name(name)
     with open("/tmp/medication_correspondence.json", "r") as f:
         correspondence_dict = json.load(f)    
