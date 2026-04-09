@@ -247,7 +247,7 @@ def build_bundle_medicationadministration(medicationadministration: MedicationAd
         entry=[],
     )
 
-    med_resource = medicationadministration[0][0]
+    med_resource = medicationadministration[0]
     med_hash = _extract_hash_from_identifier(med_resource.identifier)
 
     entry = BundleEntry(
