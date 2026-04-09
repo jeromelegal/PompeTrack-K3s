@@ -237,7 +237,7 @@ def build_bundle_medication(medication: Medication) -> Bundle:
     return bundle
 
 # Function to build bundle
-def build_bundle_medicationadministration(medicationadministration: MedicationAdminstrication) -> Bundle:
+def build_bundle_medicationadministration(medicationadministration: MedicationAdministration) -> Bundle:
     """
     Build a Bundle FHIR transaction from a medicationAdministration.
     """
