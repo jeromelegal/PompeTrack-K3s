@@ -9,6 +9,7 @@ import requests
 from fhir.resources.bundle import Bundle, BundleEntry, BundleEntryRequest
 from fhir.resources.observation import Observation
 from fhir.resources.medication import Medication
+from fhir.resources.medicationadministration import MedicationAdministration
 
 from libs.get_medplum_token import get_token
 from fhir_custom.observation import to_fhir_observation
