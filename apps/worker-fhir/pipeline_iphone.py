@@ -19,6 +19,7 @@ def split_json(json_file):
     workouts = None
     stateofmind = None
     symptoms = None
+    medications = None
 
     for k in json_file["data"].keys():
         if k == "metrics":
