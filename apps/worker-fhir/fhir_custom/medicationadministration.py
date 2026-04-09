@@ -231,13 +231,13 @@ def normalize_status(status: str) -> str:
 
 
 
-# Function to build Medication kwargs
-def _build_medication_args(
+# Function to build MedicationAdministration kwargs
+def _build_MedicationAdministration_args(
     raw: dict[str, Any],
     parent_context: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
-    Retrieve raw data and build the Medication kwargs.
+    Retrieve raw data and build the MedicationAdministration kwargs.
     """
     if not isinstance(raw, dict):
         raise TypeError(f"raw doit être un dict, reçu {type(raw)}")
@@ -247,7 +247,7 @@ def _build_medication_args(
 
     # effectiveDateTime
     if raw.get("effectiveDateTime") is not None:
-        med_kwargs["effective"] = to_fhir_datetime(raw.get("effectiveDateTime"))
+        med_kwargs["effectiveDateTime"] = to_fhir_datetime(raw.get("effectiveDateTime"))
 
     # effectivePeriod
     if raw.get("periodstart") is not None and raw.get("periodend") is not None:
@@ -260,7 +260,9 @@ def _build_medication_args(
     # medicationReference
     if raw.get("medication_code") is not None:
         med_id = get_id_medication(SOURCE_SYSTEM, raw.get("medication_code"))
-        med_kwargs["medicationReference"] = {"reference": f"Medication/{med_id}"}
+        med_kwargs["medication"] = {"reference":
+            {"reference": f"Medication/{med_id}"}
+            }
 
     # statusReason
     if (
@@ -371,7 +373,7 @@ def to_fhir_medicationadministration(
     else:
         raise TypeError("raw doit être un dict ou le chemin d’un fichier JSON.")
 
-    med_kwargs = _build_medication_args(data, parent_context=parent_context)
+    med_kwargs = _build_MedicationAdministration_args(data, parent_context=parent_context)
     return MedicationAdministration(**med_kwargs)
 
 # Function to build a list of FHIR Medications
@@ -397,7 +399,7 @@ def list_to_fhir_medicationadministration(
             continue
 
         try:
-            med_kwargs = _build_obs_args(data)
+            med_kwargs = _build_MedicationAdministration_args(data)
             med_kwargs["id"] = str(uuid.uuid4())
             med_list.append(MedicationAdministration(**med_kwargs))
         except Exception:
