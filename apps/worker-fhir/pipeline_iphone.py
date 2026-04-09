@@ -1,4 +1,5 @@
 import os
+import json
 from utils.iphone_metrics import pipeline_metrics
 from utils.iphone_workouts import pipeline_workouts
 from utils.iphone_stateofminds import pipeline_stateofminds
@@ -7,13 +8,33 @@ from utils.iphone_medicationadministrations import pipeline_medications
 from libs.minio_requests import get_object_list, get_object_json, move_object
 import logging
 
+from metrics import (
+    UNKNOWN_CATEGORY_TOTAL,
+    IPHONE_PIPELINE_RUN_TOTAL,
+    IPHONE_PIPELINE_RUN_SUCCESS_TOTAL,
+    IPHONE_PIPELINE_RUN_FAILURE_TOTAL,
+    IPHONE_PIPELINE_OBJECT_TOTAL,
+    IPHONE_PIPELINE_OBJECT_SUCCESS_TOTAL,
+    IPHONE_PIPELINE_OBJECT_FAILURE_TOTAL,
+    IPHONE_SUBPIPELINE_RUN_TOTAL,
+    IPHONE_SUBPIPELINE_SUCCESS_TOTAL,
+    IPHONE_SUBPIPELINE_FAILURE_TOTAL,
+    SPLIT_JSON_DURATION_SECONDS,
+    IPHONE_PIPELINE_DURATION_SECONDS,
+    IPHONE_SUBPIPELINE_DURATION_SECONDS,
+    IPHONE_PIPELINE_LAST_SUCCESS_UNIXTIME,
+)
+
 logger = logging.getLogger("Worker-fhir")
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_RAW = "raw-iphone"
 BUCKET_PROCESSED = "processed-fhir"
 
+KNOWN_CATEGORIES = json.loads(os.environ["CATEGORIES_MAP"])
+
 # Function to split json
+@SPLIT_JSON_DURATION_SECONDS.time()
 def split_json(json_file):
     metrics = None
     workouts = None
@@ -34,6 +55,7 @@ def split_json(json_file):
             medications = json_file["data"]["medications"]
         else:
             print(f"Nouvelle catégorie: {k}.")
+            UNKNOWN_CATEGORY_TOTAL.labels(category=k).inc()
 
     return metrics, workouts, stateofmind, symptoms, medications
 
@@ -44,13 +66,39 @@ def _run_pipeline(name, pipeline_func, data, obj_id):
     """
     if not data:
         return None
+    
+    IPHONE_SUBPIPELINE_RUN_TOTAL.labels(stage=name).inc()
+    start = time.perf_counter()
+    
     try:
-        return pipeline_func(data)
+        result = pipeline_func(data)
+        IPHONE_SUBPIPELINE_SUCCESS_TOTAL.labels(stage=name).inc()
+        return result
     except Exception as exc:
+        IPHONE_SUBPIPELINE_FAILURE_TOTAL.labels(
+            stage=name,
+            error_type=type(exc).__name__,
+        ).inc()
         logger.error(f"Erreur de pipeline_{name} sur {obj_id} : {exc}")
-        raise   
+        raise
+    finally:
+        IPHONE_SUBPIPELINE_DURATION_SECONDS.labels(stage=name).observe(
+            time.perf_counter() - start
+        ) 
+
+def process_payload_service(payload: dict) -> dict:
+    result = split_json(payload)
+
+    PROCESSED_PAYLOAD_TOTAL.inc()
+    LAST_SUCCESS_UNIXTIME.set_to_current_time()
+
+    return {
+        "status": "ok",
+        "result": result,
+    }
 
 # Main pipeline    
+@IPHONE_PIPELINE_DURATION_SECONDS.time()
 def iphone_json_pipeline():
     """
     Pipeline iphone :
@@ -58,6 +106,7 @@ def iphone_json_pipeline():
     2 – Transform FHIR file and upload 
     3 – Move raw_file to BUCKET_PROCESSED
     """
+    IPHONE_PIPELINE_RUN_TOTAL.inc()
     logger.info("Début du pipeline iphone_json")
     objects_list = get_object_list(bucket=BUCKET_RAW)
     logger.info(f"Liste des objets dans le bucket : {objects_list}")
@@ -69,6 +118,7 @@ def iphone_json_pipeline():
     success = False
 
     for obj_id in objects_list:
+        IPHONE_PIPELINE_OBJECT_TOTAL.inc()
         logger.info(f"Traitement de l'objet : {obj_id}")
 
         json_file = get_object_json(bucket=BUCKET_RAW, object_name=obj_id)
@@ -96,11 +146,19 @@ def iphone_json_pipeline():
                     destination_bucket=BUCKET_PROCESSED
                 )
                 logger.info("Object moved in processed-fhir bucket.")
+                IPHONE_PIPELINE_OBJECT_SUCCESS_TOTAL.inc()
+                IPHONE_PIPELINE_LAST_SUCCESS_UNIXTIME.set_to_current_time()
                 success = True
 
         except Exception as exc:
             logger.error(f"Fail in process ({obj_id}): {exc}")
+            IPHONE_PIPELINE_OBJECT_FAILURE_TOTAL.inc()
             raise
+        
+    if success:
+        IPHONE_PIPELINE_RUN_SUCCESS_TOTAL.inc()
+    else:
+        IPHONE_PIPELINE_RUN_FAILURE_TOTAL.inc() 
 
     return success
 

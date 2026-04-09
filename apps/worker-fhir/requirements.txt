@@ -15,4 +15,5 @@ responses
 pytest-asyncio
 psycopg2-binary
 PyJWT[crypto]
+prometheus-client
 
