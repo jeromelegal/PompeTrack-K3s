@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-import uuid
+import uuid, re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, Union
