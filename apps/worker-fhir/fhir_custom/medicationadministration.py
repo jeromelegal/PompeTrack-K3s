@@ -161,7 +161,7 @@ def to_fhir_datetime(value: Union[str, datetime]) -> str:
 # Function to build hash
 def build_medication_hash(
     patient_id: str,
-    build_medication_hash: str,
+    medication_id: str,
     timestamp: Union[str, datetime],
     value: Optional[Union[str, float, int]] = None,
 ) -> str:
