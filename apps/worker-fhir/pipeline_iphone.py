@@ -34,7 +34,7 @@ def split_json(json_file):
         else:
             print(f"Nouvelle catégorie: {k}.")
 
-    return metrics, workouts, stateofmind, symptoms
+    return metrics, workouts, stateofmind, symptoms, medications
 
 def _run_pipeline(name, pipeline_func, data, obj_id):
     """
@@ -79,7 +79,7 @@ def iphone_json_pipeline():
             logger.info(
                 f"Découpe du fichier en parties : metrics, workouts, stateOfMinds."
             )
-            metrics, workouts, stateofminds, symptoms = split_json(json_file)
+            metrics, workouts, stateofminds, symptoms, medications = split_json(json_file)
 
             result_metrics = _run_pipeline("metrics", pipeline_metrics, metrics, obj_id)
             result_workouts = _run_pipeline("workouts", pipeline_workouts, workouts, obj_id)
