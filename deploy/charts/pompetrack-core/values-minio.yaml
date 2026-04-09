@@ -25,10 +25,7 @@ minio:
 
 postgresql:
   fullnameOverride: pompetrack-core-postgresql
-  image:
-    registry: docker.io
-    repository: postgres
-    tag: "16"
+  image: registry.phylcero.fr/garth/pompetrack/pgsql-pompetrack-core:latest
   auth:
       existingSecret: postgresql-auth
       username: pompetrack-user

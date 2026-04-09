@@ -73,7 +73,7 @@ airflow:
     enabled: true
 
   triggerer:
-    enabled: false  # <-- Optionnel, désactivé pour simplifier
+    enabled: false
 
   ingress:
     enabled: false

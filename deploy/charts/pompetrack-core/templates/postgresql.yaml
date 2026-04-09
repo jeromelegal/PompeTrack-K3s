@@ -13,18 +13,23 @@ spec:
       labels:
         app: {{ .Values.postgresql.fullnameOverride }}
     spec:
+      imagePullSecrets:
+        - name: gitlab-regcred
+
       containers:
         - name: postgres
-          image: "{{ .Values.postgresql.image.registry }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          image: registry.phylcero.fr/garth/pompetrack/pgsql-pompetrack-core:latest
+          imagePullPolicy: Always
+
           ports:
             - containerPort: 5432
 
           env:
             - name: POSTGRES_DB
-              value: {{ .Values.postgresql.auth.database }}
+              value: {{ .Values.postgresql.auth.database | quote }}
 
             - name: POSTGRES_USER
-              value: {{ .Values.postgresql.auth.username }}
+              value: {{ .Values.postgresql.auth.username | quote }}
 
             - name: POSTGRES_PASSWORD
               valueFrom:
@@ -45,6 +50,28 @@ spec:
             - name: data
               mountPath: /var/lib/postgresql/data
 
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -54,3 +81,6 @@ spec:
         resources:
           requests:
             storage: {{ .Values.postgresql.primary.persistence.size }}
+        {{- if .Values.postgresql.primary.persistence.storageClass }}
+        storageClassName: {{ .Values.postgresql.primary.persistence.storageClass | quote }}
+        {{- end }}

@@ -294,10 +294,10 @@ EOF
 # === Clients ===
 ensure_client "worker-fhir"    "$WORKER_FHIR_OUT_FILE"    "PompeTrack worker-fhir (machine-to-machine)"    "ingest:fhir object:list download:json object:move fhir:logs ingest:generic"
 ensure_client "worker-stream"  "$WORKER_STREAM_OUT_FILE"  "PompeTrack worker-stream (machine-to-machine)"  "stream:fhir stream:generic"
-ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual ingest:generic download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite"
+ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual ingest:generic download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite ingest:medication"
 ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sqlite (machine-to-machine)"  "object:list object:move object:delete download:object ingest:spirometer"
 ensure_client "ingestion"      "$INGESTION_OUT_FILE"     "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
-ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list airflow:iphone airflow:manual airflow:spirometer airflow:strength fhir:logs"
+ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list airflow:iphone airflow:manual airflow:spirometer airflow:strength fhir:logs airflow:medication"
 ensure_client "provider"       "$PROVIDER_OUT_FILE"       "Provider frontend login"                        "openid profile email medplum:base"  "https://provider.phylcero.fr/auth/callback"  "https://provider.phylcero.fr"
 
 # === Write global Client IDs file ===

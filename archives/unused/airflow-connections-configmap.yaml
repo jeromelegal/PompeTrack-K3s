@@ -1,9 +1,0 @@
-# templates/airflow-connections-configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: airflow-connections  # Nom du ConfigMap
-data:
-  AIRFLOW_CONN_INGESTION: "http://ingestion.pompetrack-core.svc.cluster.local"
-  AIRFLOW_CONN_WORKER_FHIR: "http://worker-fhir.pompetrack-core.svc.cluster.local"
-  AIRFLOW_CONN_WORKER_SQLITE: "http://worker-sqlite.pompetrack-core.svc.cluster.local"  

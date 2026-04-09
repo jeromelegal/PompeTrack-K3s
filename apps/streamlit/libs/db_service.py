@@ -114,3 +114,171 @@ def get_event_by_google_id(google_event_id):
             "end_datetime": row[4],
         }
     return None
+
+# Function to upsert medication
+def upsert_medication(source_system, canonical_key, raw_name, normalized_name, 
+                      medplum_medication_id, code_system, code_value, display, 
+                      strength_value, strength_unit, dose_form, start_datetime, 
+                      end_datetime
+):
+    """
+    Inserts or updates a medication.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO medication_map
+                (
+                    source_system,
+                    canonical_key,
+                    raw_name,
+                    normalized_name,
+                    medplum_medication_id,
+                    code_system,
+                    code_value,
+                    display,
+                    strength_value,
+                    strength_unit,
+                    dose_form,
+                    last_seen_at,
+                    updated_at
+                )
+                VALUES
+                (
+                    %(source_system)s,
+                    %(canonical_key)s,
+                    %(raw_name)s,
+                    %(normalized_name)s,
+                    %(medplum_medication_id)s,
+                    %(code_system)s,
+                    %(code_value)s,
+                    %(display)s,
+                    %(strength_value)s,
+                    %(strength_unit)s,
+                    %(dose_form)s,
+                    now(),
+                    now()
+                )
+                ON CONFLICT (source_system, canonical_key)
+                DO UPDATE SET
+                    raw_name              = EXCLUDED.raw_name,
+                    normalized_name       = EXCLUDED.normalized_name,
+                    medplum_medication_id = EXCLUDED.medplum_medication_id,
+                    code_system           = EXCLUDED.code_system,
+                    code_value            = EXCLUDED.code_value,
+                    display               = EXCLUDED.display,
+                    strength_value        = EXCLUDED.strength_value,
+                    strength_unit         = EXCLUDED.strength_unit,
+                    dose_form             = EXCLUDED.dose_form,
+                    last_seen_at          = now(),
+                    updated_at            = now();
+            """, (source_system, canonical_key, raw_name, normalized_name, 
+                      medplum_medication_id, code_system, code_value, display, 
+                      strength_value, strength_unit, dose_form, start_datetime, 
+                      end_datetime))
+        conn.commit()
+        
+# Function to delete a medication
+def delete_event(canonical_key):
+    """
+    Deletes a medication.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                DELETE FROM medication_map WHERE canonical_key = %s
+            """, (canonical_key,))
+        conn.commit()
+        
+# Function to get a medication
+def get_medication_by_canonical_key(canonical_key):
+    """
+    Returns a medication by canonical_key.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT canonical_key, source_system, raw_name, normalized_name, 
+                      medplum_medication_id, code_system, code_value, display, 
+                      strength_value, strength_unit, dose_form, last_seen_at, 
+                      updated_at
+                FROM medication_map WHERE canonical_key = %s
+            """, (canonical_key,))
+            row = cur.fetchone()
+
+    if row:
+        return {
+            "canonical_key": row[0],
+            "source_system": row[1], 
+            "canonical_key": row[2], 
+            "raw_name": row[3], 
+            "normalized_name": row[4], 
+            "medplum_medication_id": row[5], 
+            "code_system": row[6], 
+            "code_value": row[7], 
+            "display": row[8], 
+            "strength_value": row[9], 
+            "strength_unit": row[10], 
+            "dose_form": row[11], 
+            "last_seen_at": row[12], 
+            "updated_at": row[13],
+        }
+    return None
+
+# Function to get all medication
+def get_all_medications():
+    """
+    Returns all medications.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT canonical_key, source_system, raw_name, normalized_name, 
+                      medplum_medication_id, code_system, code_value, display, 
+                      strength_value, strength_unit, dose_form, last_seen_at, 
+                      updated_at
+                FROM medication_map
+            """)
+            row = cur.fetchone()
+
+    if row:
+        return {
+            "canonical_key": row[0],
+            "source_system": row[1], 
+            "canonical_key": row[2], 
+            "raw_name": row[3], 
+            "normalized_name": row[4], 
+            "medplum_medication_id": row[5], 
+            "code_system": row[6], 
+            "code_value": row[7], 
+            "display": row[8], 
+            "strength_value": row[9], 
+            "strength_unit": row[10], 
+            "dose_form": row[11], 
+            "last_seen_at": row[12], 
+            "updated_at": row[13],
+        }
+    return None
+
+# Function to get ids medication
+def get_id_medication():
+    """
+    Returns id medication from source_system and canonical_key.
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT medplum_medication_id, 
+                      display
+                FROM medication_map
+                WHERE source_system = %(source_system)s
+                AND canonical_key = %(canonical_key)s;
+            """, (source_system, canonical_key))
+            row = cur.fetchone()
+
+    if row:
+        return {
+            "medplum_medication_id": row[0], 
+            "display": row[1], 
+        }
+    return None

@@ -13,5 +13,6 @@ pytest
 pytest-mock
 responses
 pytest-asyncio
+psycopg2-binary
 PyJWT[crypto]
 

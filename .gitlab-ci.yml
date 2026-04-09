@@ -87,3 +87,12 @@ build_pg_backup:
   rules:
     - changes:
         - apps/pg-backup/**
+
+build_pg_pompetrack:
+  extends: .build_app
+  variables:
+    APP_NAME: pgsql-pompetrack-core
+    APP_PATH: apps/pgsql-pompetrack-core
+  rules:
+    - changes:
+        - apps/pgsql-pompetrack-core/**

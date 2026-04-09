@@ -470,7 +470,10 @@ class CreatePreFHIR_symptoms:
             filler = FillResource(
                 creator.constants,
                 entry,
-                MEDPLUM_IDS,
+                {
+                            "patient_id": MEDPLUM_PATIENT_ID,
+                            "device_id": MEDPLUM_DEVICE_ID_IPHONE_GARTH,
+                        },
                 {"units": creator.units},
             )
             filler.update_codeable(
@@ -490,7 +493,38 @@ class CreatePreFHIR_symptoms:
         parent_index = 0
         children_indices = []
         return observations, parent_index, children_indices
-    
+ 
+class CreatePreFHIR_medicationadministration:
+    """
+    Class for medications
+    """
+    TEMPLATE_NAME = "medicationadmin"
+
+    def process(self, medication: Dict[str, Any]):
+        payload = copy.deepcopy(medication)
+        creator = CreatePreFHIR_name(payload=payload, name=self.TEMPLATE_NAME)
+        rendered = []
+
+        normalized_data = creator._normalize(creator.data)
+        entries = [normalized_data] if isinstance(normalized_data, dict) else normalized_data
+
+        for entry in entries:
+            resource = copy.deepcopy(creator.template)
+
+            filler = FillResource(
+                creator.constants,
+                entry,
+                {
+                            "patient_id": MEDPLUM_PATIENT_ID
+                        }
+            )
+
+            rendered.append(filler.build(resource))
+
+        medications = rendered
+        parent_index = 0
+        children_indices = []
+        return medications, parent_index, children_indices   
     
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO) 

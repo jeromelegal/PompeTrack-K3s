@@ -3,6 +3,7 @@ from utils.iphone_metrics import pipeline_metrics
 from utils.iphone_workouts import pipeline_workouts
 from utils.iphone_stateofminds import pipeline_stateofminds
 from utils.iphone_symptoms import pipeline_symptoms
+from utils.iphone_medicationadministrations import pipeline_medications
 from libs.minio_requests import get_object_list, get_object_json, move_object
 import logging
 
@@ -18,6 +19,7 @@ def split_json(json_file):
     workouts = None
     stateofmind = None
     symptoms = None
+    medications = None
 
     for k in json_file["data"].keys():
         if k == "metrics":
@@ -28,10 +30,12 @@ def split_json(json_file):
             stateofmind = json_file["data"]["stateOfMind"]
         elif k == "symptoms":
             symptoms = json_file["data"]["symptoms"]
+        elif k =="medications":
+            medications = json_file["data"]["medications"]
         else:
             print(f"Nouvelle catégorie: {k}.")
 
-    return metrics, workouts, stateofmind, symptoms
+    return metrics, workouts, stateofmind, symptoms, medications
 
 def _run_pipeline(name, pipeline_func, data, obj_id):
     """
@@ -76,14 +80,15 @@ def iphone_json_pipeline():
             logger.info(
                 f"Découpe du fichier en parties : metrics, workouts, stateOfMinds."
             )
-            metrics, workouts, stateofminds, symptoms = split_json(json_file)
+            metrics, workouts, stateofminds, symptoms, medications = split_json(json_file)
 
             result_metrics = _run_pipeline("metrics", pipeline_metrics, metrics, obj_id)
             result_workouts = _run_pipeline("workouts", pipeline_workouts, workouts, obj_id)
             result_stateofminds = _run_pipeline("stateofminds", pipeline_stateofminds, stateofminds, obj_id)
             result_symptoms = _run_pipeline("symptoms", pipeline_symptoms, symptoms, obj_id)
+            result_medications = _run_pipeline("medications", pipeline_medications, medications, obj_id)
 
-            if any([result_metrics, result_workouts, result_stateofminds, result_symptoms]):
+            if any([result_metrics, result_workouts, result_stateofminds, result_symptoms, result_medications]):
                 logger.info("Upload status is OK.")
                 move_object(
                     object_name=obj_id,

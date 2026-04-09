@@ -8,6 +8,8 @@ import time
 import requests
 from fhir.resources.bundle import Bundle, BundleEntry, BundleEntryRequest
 from fhir.resources.observation import Observation
+from fhir.resources.medication import Medication
+from fhir.resources.medicationadministration import MedicationAdministration
 
 from libs.get_medplum_token import get_token
 from fhir_custom.observation import to_fhir_observation
@@ -35,30 +37,63 @@ def chunk_list(items, chunk_size: int):
 
 # Function to upload a bundle
 def upload_bundles_in_chunks(
-    observations, 
+    items, 
     chunk_size: int = 10, 
     delay_seconds: float = 1
 ) -> bool:
     """
-    Upload a list of observations in chunks.
+    Upload a list of items in chunks.
     """
     overall_success = True
 
-    for idx, obs_chunk in enumerate(chunk_list(observations, chunk_size), start=1):
-        bundle = build_bundle_fhir(obs_chunk)
+    for idx, items_chunk in enumerate(chunk_list(items, chunk_size), start=1):
+        bundle = build_bundle_fhir(items_chunk)
         success = upload_bundle(bundle)
 
         if success:
             logger.info(
-                "Sous-bundle %s uploadé avec succès (%s observations)",
+                "Sous-bundle %s uploadé avec succès (%s items)",
                 idx,
-                len(obs_chunk),
+                len(items_chunk),
             )
         else:
             logger.warning(
-                "Sous-bundle %s en échec (%s observations)",
+                "Sous-bundle %s en échec (%s items)",
                 idx,
-                len(obs_chunk),
+                len(items_chunk),
+            )
+            overall_success = False
+
+        time.sleep(delay_seconds)
+
+    return overall_success
+
+# Function to upload a bundle
+def upload_medicationadministration_bundles_in_chunks(
+    items, 
+    chunk_size: int = 10, 
+    delay_seconds: float = 1
+) -> bool:
+    """
+    Upload a list of items in chunks.
+    """
+    overall_success = True
+
+    for idx, items_chunk in enumerate(chunk_list(items, chunk_size), start=1):
+        bundle = build_bundle_medicationadministration(items_chunk)
+        success = upload_bundle(bundle)
+
+        if success:
+            logger.info(
+                "Sous-bundle %s uploadé avec succès (%s items)",
+                idx,
+                len(items_chunk),
+            )
+        else:
+            logger.warning(
+                "Sous-bundle %s en échec (%s items)",
+                idx,
+                len(items_chunk),
             )
             overall_success = False
 
@@ -99,6 +134,36 @@ def _build_observation_request(obs_hash: str | None) -> BundleEntryRequest:
 
     if obs_hash:
         request.ifNoneExist = f"identifier={HASH_SYSTEM}|{obs_hash}"
+
+    return request
+
+# Function to build medication request
+def _build_medication_request(med_hash: str | None) -> BundleEntryRequest:
+    """
+    Builds a BundleEntryRequest for a Medication.
+    """
+    request = BundleEntryRequest(
+        method="POST",
+        url="Medication",
+    )
+
+    if med_hash:
+        request.ifNoneExist = f"identifier={HASH_SYSTEM}|{med_hash}"
+
+    return request
+
+# Function to build medication request
+def _build_medicationadministration_request(med_hash: str | None) -> BundleEntryRequest:
+    """
+    Builds a BundleEntryRequest for a MedicationAdministration.
+    """
+    request = BundleEntryRequest(
+        method="POST",
+        url="MedicationAdministration",
+    )
+
+    if med_hash:
+        request.ifNoneExist = f"identifier={HASH_SYSTEM}|{med_hash}"
 
     return request
 
@@ -145,6 +210,52 @@ def build_bundle_fhir(observations: List[Observation]) -> Bundle:
             request=_build_observation_request(obs_hash),
         )
         bundle.entry.append(entry)
+
+    return bundle
+
+# Function to build bundle
+def build_bundle_medication(medication: Medication) -> Bundle:
+    """
+    Build a Bundle FHIR transaction from a medication.
+    """
+    bundle = Bundle(
+        resourceType="Bundle",
+        type="transaction",
+        entry=[],
+    )
+
+    med_resource = medication[0][0]
+    med_hash = _extract_hash_from_identifier(med_resource.identifier)
+
+    entry = BundleEntry(
+        fullUrl=f"urn:uuid:{uuid.uuid4()}",
+        resource=med_resource,
+        request=_build_medication_request(med_hash),
+    )
+    bundle.entry.append(entry)
+
+    return bundle
+
+# Function to build bundle
+def build_bundle_medicationadministration(medicationadministration: MedicationAdministration) -> Bundle:
+    """
+    Build a Bundle FHIR transaction from a medicationAdministration.
+    """
+    bundle = Bundle(
+        resourceType="Bundle",
+        type="transaction",
+        entry=[],
+    )
+
+    med_resource = medicationadministration[0]
+    med_hash = _extract_hash_from_identifier(med_resource.identifier)
+
+    entry = BundleEntry(
+        fullUrl=f"urn:uuid:{uuid.uuid4()}",
+        resource=med_resource,
+        request=_build_medicationadministration_request(med_hash),
+    )
+    bundle.entry.append(entry)
 
     return bundle
 
