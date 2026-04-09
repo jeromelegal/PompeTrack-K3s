@@ -247,7 +247,7 @@ def _build_MedicationAdministration_args(
 
     # effectiveDateTime
     if raw.get("effectiveDateTime") is not None:
-        med_kwargs["effectiveDateTime"] = to_fhir_datetime(raw.get("effectiveDateTime"))
+        med_kwargs["occurrenceDateTime"] = to_fhir_datetime(raw.get("effectiveDateTime"))
 
     # effectivePeriod
     if raw.get("periodstart") is not None and raw.get("periodend") is not None:
