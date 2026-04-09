@@ -10,7 +10,7 @@ from typing import Any, Optional, Union
 from dateutil import parser
 from fhir.resources.codeableconcept import CodeableConcept
 from fhir.resources.coding import Coding
-from fhir.resources.medicationadministration  import MedicationAdministration
+from fhir.resources.R4B.medicationadministration  import MedicationAdministration
 from pydantic_core import from_json
 
 from utils.medication_correspondence import get_id_medication
@@ -247,7 +247,7 @@ def _build_MedicationAdministration_args(
 
     # effectiveDateTime
     if raw.get("effectiveDateTime") is not None:
-        med_kwargs["occurenceDateTime"] = to_fhir_datetime(raw.get("effectiveDateTime"))
+        med_kwargs["effectiveDateTime"] = to_fhir_datetime(raw.get("effectiveDateTime"))
 
     # effectivePeriod
     if raw.get("periodstart") is not None and raw.get("periodend") is not None:
@@ -260,9 +260,7 @@ def _build_MedicationAdministration_args(
     # medicationReference
     if raw.get("medication_code") is not None:
         med_id = get_id_medication(SOURCE_SYSTEM, raw.get("medication_code"))
-        med_kwargs["medication"] = {"reference":
-            {"reference": f"Medication/{med_id}"}
-            }
+        med_kwargs["medicationReference"] = {"reference": f"Medication/{med_id}"}
 
     # statusReason
     if (
