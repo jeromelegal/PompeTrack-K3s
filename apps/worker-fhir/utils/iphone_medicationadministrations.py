@@ -2,7 +2,7 @@ from fhir_custom.medicationadministration import list_to_fhir_medicationadminist
 from fhir_custom.worker_template import CreatePreFHIR_medicationadministration
 from fhir_custom.bundle import build_bundle_fhir, upload_bundle
 from fhir_custom.bundle import build_transaction_bundle, upload_transaction_bundle
-from fhir_custom.bundle import upload_bundles_in_chunks
+from fhir_custom.bundle import upload_medicationadministration_bundles_in_chunks
 from typing import Any, Union, List
 import logging
 import json
@@ -83,7 +83,7 @@ def process_global_medications(medications: Union[List, str]):
                     current_medication_list.append(med)
 
                 logger.info(f"Uploading chunked bundles for medication : {i}.")
-                success = upload_bundles_in_chunks(current_medication_list, chunk_size=5)
+                success = upload_medicationadministration_bundles_in_chunks(current_medication_list, chunk_size=5)
                 logger.info(f"Upload bundle {i} is {success}.")
                 if success:
                     standard_bundle_created += 1
