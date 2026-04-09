@@ -12,7 +12,7 @@ def create_correspondence_dict():
     Returns a dictionary with the following structure:
     {
         "source_system": {
-            "normalized_name ": "medplum_medication_id",
+            "normalized_name": "medplum_medication_id",
             ...
         },
         ...
@@ -23,11 +23,11 @@ def create_correspondence_dict():
     correspondence_dict = {}
     for medication in all_medications:
         source_system = medication["source_system"]
-        normalized_name  = medication["normalized_name "]
+        normalized_name  = medication["normalized_name"]
         medplum_medication_id = medication["medplum_medication_id"]
         if source_system not in correspondence_dict:
             correspondence_dict[source_system] = {}
-        correspondence_dict[source_system][normalized_name ] = medplum_medication_id
+        correspondence_dict[source_system][normalized_name] = medplum_medication_id
     
     try:
         with open("/tmp/medication_correspondence.json", "w") as f:
@@ -44,7 +44,7 @@ def update_correspondence_dict():
     Returns a dictionary with the following structure:
     {
         "source_system": {
-            "normalized_name ": "medplum_medication_id",
+            "normalized_name": "medplum_medication_id",
             ...
         },
         ...
@@ -66,14 +66,14 @@ def get_id_medication(source_system, name):
     normalized_name = normalize_name(name)
     with open("/tmp/medication_correspondence.json", "r") as f:
         correspondence_dict = json.load(f)    
-    if source_system in correspondence_dict and normalized_name  in correspondence_dict[source_system]:
-        return correspondence_dict[source_system][normalized_name ]
+    if source_system in correspondence_dict and normalized_name in correspondence_dict[source_system]:
+        return correspondence_dict[source_system][normalized_name]
     else:
         update_correspondence_dict()
         if source_system in correspondence_dict and normalized_name  in correspondence_dict[source_system]:
-            return correspondence_dict[source_system][normalized_name ]
+            return correspondence_dict[source_system][normalized_name]
         else:
-            logger.error(f"Medication not found for source system: {source_system} and canonical key: {normalized_name }")
+            logger.error(f"Medication not found for source system: {source_system} and canonical key: {normalized_name}")
             return None
         
     return None
