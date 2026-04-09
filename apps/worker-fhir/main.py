@@ -2,8 +2,11 @@ import os, subprocess
 from fastapi import FastAPI, HTTPException, Depends
 from datetime import datetime, timezone 
 from libs.security import require_scopes
+from prometheus_client import make_asgi_app
+from pipeline_iphone import process_payload_service
 
 app = FastAPI(title="Health Worker Controller")
+app.mount("/metrics", make_asgi_app())
 
 def now_iso(): 
     return datetime.now(timezone.utc).isoformat()
@@ -99,4 +102,15 @@ def run_worker_medication(
         return {"status": "success", "output": result.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/process")
+def process_payload(payload: dict):
+    try:
+        return process_payload_service(payload)
+    except KeyError:
+        PROCESSING_ERRORS_TOTAL.labels(type="key_error").inc()
+        raise HTTPException(status_code=400, detail="Payload invalide")
+    except Exception:
+        PROCESSING_ERRORS_TOTAL.labels(type="unexpected").inc()
+        raise HTTPException(status_code=500, detail="Erreur interne")
     

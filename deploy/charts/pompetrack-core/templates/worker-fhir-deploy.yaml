@@ -60,6 +60,12 @@ spec:
                 secretKeyRef:
                   name: postgresql-auth
                   key: password
+            # iPhone categories map
+            - name: CATEGORIES_MAP
+              valueFrom:
+                configMapKeyRef:
+                  name: iphone-categories
+                  key: CATEGORIES_MAP
 
           envFrom:
             - configMapRef:
