@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from utils.iphone_metrics import pipeline_metrics
 from utils.iphone_workouts import pipeline_workouts
 from utils.iphone_stateofminds import pipeline_stateofminds
@@ -8,7 +9,7 @@ from utils.iphone_medicationadministrations import pipeline_medications
 from libs.minio_requests import get_object_list, get_object_json, move_object
 import logging
 
-from metrics import (
+from metrics.metrics_iphone import (
     UNKNOWN_CATEGORY_TOTAL,
     IPHONE_PIPELINE_RUN_TOTAL,
     IPHONE_PIPELINE_RUN_SUCCESS_TOTAL,

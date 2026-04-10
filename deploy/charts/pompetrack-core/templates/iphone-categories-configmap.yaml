@@ -4,10 +4,10 @@ metadata:
   name: iphone-categories
 data:
   CATEGORIES_MAP: |
-    {
-      "metrics",
-      "workouts",
-      "stateOfMind",
-      "symptoms",
-      "medications",
+    { 
+    "0": "metrics",
+      "1": "workouts",
+      "2": "stateOfMind",
+      "3": "symptoms",
+      "4": "medications"
     }

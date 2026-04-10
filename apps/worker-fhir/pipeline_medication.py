@@ -1,7 +1,19 @@
 import os
+import time
 from utils.medication_create import pipeline_medication
 from libs.minio_requests import get_object_list, get_object_json, move_object
 import logging
+
+from metrics.metrics_medication import (
+    MEDICATION_PIPELINE_RUN_TOTAL,
+    MEDICATION_PIPELINE_RUN_SUCCESS_TOTAL,
+    MEDICATION_PIPELINE_RUN_FAILURE_TOTAL,
+    MEDICATION_PIPELINE_OBJECT_TOTAL,
+    MEDICATION_PIPELINE_OBJECT_SUCCESS_TOTAL,
+    MEDICATION_PIPELINE_OBJECT_FAILURE_TOTAL,
+    MEDICATION_PIPELINE_DURATION_SECONDS,
+    MEDICATION_PIPELINE_LAST_SUCCESS_UNIXTIME
+)
 
 logger = logging.getLogger("Worker-fhir")
 logging.basicConfig(level=logging.INFO)
@@ -9,7 +21,19 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_MEDICATION = "raw-medication"
 BUCKET_PROCESSED = "processed-fhir"
 
+def process_payload_service(payload: dict) -> dict:
+    result = split_json(payload)
+
+    PROCESSED_PAYLOAD_TOTAL.inc()
+    LAST_SUCCESS_UNIXTIME.set_to_current_time()
+
+    return {
+        "status": "ok",
+        "result": result,
+    }
+
 # Function to process medication metrics
+@MEDICATION_PIPELINE_DURATION_SECONDS.time()
 def medication_json_pipeline():
     """
     Pipeline 'medication' :
@@ -18,6 +42,7 @@ def medication_json_pipeline():
     3 - Move raw_file to bucket_processed
     4 - Upload FHIR_file to bucket_processed with metadata
     """
+    MEDICATION_PIPELINE_RUN_TOTAL.inc()
     logger.info("Début du pipeline medication_json")
     objects_list = get_object_list(bucket=BUCKET_MEDICATION)
     logger.info(f"Liste des objets dans le bucket : {objects_list}")
@@ -29,6 +54,7 @@ def medication_json_pipeline():
     success = False
 
     for obj in objects_list:
+        MEDICATION_PIPELINE_OBJECT_TOTAL.inc()
         logger.info(f"Traitement de l'objet : {obj}")
 
         json_file = get_object_json(bucket=BUCKET_MEDICATION, object_name=obj)
@@ -52,12 +78,21 @@ def medication_json_pipeline():
                     logger.error(f"Erreur pendant le déplacement de l'objet dans Minio : {e}")
                     raise
                 logger.info(f"Object moved in processed-fhir bucket.")
+                MEDICATION_PIPELINE_OBJECT_SUCCESS_TOTAL.inc()
+                MEDICATION_PIPELINE_LAST_SUCCESS_UNIXTIME.set_to_current_time()
                 success = True
             else:
                 logger.error(f"Erreur de pipeline_medication sur {obj}")
         except Exception as e:
             logger.error(f"Fail in process ({obj}): {e}")
+            MEDICATION_PIPELINE_OBJECT_FAILURE_TOTAL.inc()
             raise
+
+    if success:
+        MEDICATION_PIPELINE_RUN_SUCCESS_TOTAL.inc()
+    else:
+        MEDICATION_PIPELINE_RUN_FAILURE_TOTAL.inc() 
+
     return success
 
 
