@@ -44,3 +44,17 @@ def fetch_medication(
         return data
     except (RuntimeError, ValueError) as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
+# Endpoint to fetch medicationadministration 
+@app.post("/data/medicationadministration/{patient_id}")
+def fetch_medicationadministration(
+    patient_id: str,
+    payload: Optional[dict] = Body(...),
+    device: dict = Depends(require_scopes(["stream:fhir"])),
+):
+    try:
+        results = fetch_fhir_medicationadministration(patient_id, payload)
+        data = {"data": results}
+        return data
+    except (RuntimeError, ValueError) as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
