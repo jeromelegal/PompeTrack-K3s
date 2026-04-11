@@ -553,6 +553,7 @@ def fetch_fhir_medicationadministration(
 
     results = []
     for medadmin in all_medicationadministrations:
+        # Resolve hasMember
         resolved_members = []
 
         for member_ref in medadmin.get("hasMember", []):
@@ -568,6 +569,11 @@ def fetch_fhir_medicationadministration(
 
         if resolved_members:
             medadmin["resolvedHasMember"] = resolved_members
+            
+        # Resolve medicationReference
+        medication_ref = medadmin.get("medicationReference")
+        if medication_ref:
+            medadmin["medicationReference"] = medadmin_index.get(medication_ref)
 
         results.append(medadmin)
 
