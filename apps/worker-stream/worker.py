@@ -416,7 +416,9 @@ def fetch_fhir_medicationadministration(
     payload: Optional[dict] = None
 ) -> list[dict]:
     """
-    Fetch FHIR MedicationsAdministartions.
+    Fetch FHIR MedicationAdministrations and resolve:
+      - hasMember -> MedicationAdministration resources
+      - medicationReference -> full Medication resource
     """
     token = get_token()
     headers = {
@@ -432,7 +434,6 @@ def fetch_fhir_medicationadministration(
     category = payload.get("category")
     start_date = payload.get("startDate")
     end_date = payload.get("endDate")
-    code = payload.get("code")
     device = payload.get("device")
     tag = payload.get("tag")
 
@@ -551,9 +552,34 @@ def fetch_fhir_medicationadministration(
         if "id" in medadmin
     }
 
+    medication_refs: set[str] = set()
+    for medadmin in all_medicationadministrations:
+        med_ref_obj = medadmin.get("medicationReference")
+
+        if isinstance(med_ref_obj, dict):
+            ref = med_ref_obj.get("reference")
+            if isinstance(ref, str) and ref.startswith("Medication/"):
+                medication_refs.add(ref)
+        elif isinstance(med_ref_obj, str) and med_ref_obj.startswith("Medication/"):
+            medication_refs.add(med_ref_obj)
+
+    medication_index: dict[str, dict] = {}
+    if medication_refs:
+        medications = fetch_fhir_medication(
+            payload={
+                "max_records": max(len(medication_refs), 100),
+                "page_count": min(max(len(medication_refs), 100), 1000),
+                "max_pages": max_pages,
+            }
+        )
+        medication_index = {
+            f"Medication/{med['id']}": med
+            for med in medications
+            if "id" in med
+        }
+
     results = []
     for medadmin in all_medicationadministrations:
-        # Resolve hasMember
         resolved_members = []
 
         for member_ref in medadmin.get("hasMember", []):
@@ -569,11 +595,19 @@ def fetch_fhir_medicationadministration(
 
         if resolved_members:
             medadmin["resolvedHasMember"] = resolved_members
-            
-        # Resolve medicationReference
-        medication_ref = medadmin.get("medicationReference")
+
+        med_ref_obj = medadmin.get("medicationReference")
+        medication_ref = None
+
+        if isinstance(med_ref_obj, dict):
+            medication_ref = med_ref_obj.get("reference")
+        elif isinstance(med_ref_obj, str):
+            medication_ref = med_ref_obj
+
         if medication_ref:
-            medadmin["medicationReference"] = medadmin_index.get(medication_ref)
+            resolved_medication = medication_index.get(medication_ref)
+            if resolved_medication:
+                medadmin["medicationReference"] = resolved_medication
 
         results.append(medadmin)
 
