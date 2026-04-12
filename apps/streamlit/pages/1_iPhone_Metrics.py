@@ -19,7 +19,7 @@ if df is None or df.empty:
     st.warning("Aucune donnée disponible.")
     st.stop()
 
-# st.dataframe(df.tail(50))
+st.dataframe(df.tail(50))
 
 metrics_long = long_from_wide(df)
 
