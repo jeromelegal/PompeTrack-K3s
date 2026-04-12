@@ -1,0 +1,15 @@
+{
+  "name": "alcohol_consumption",
+  "template": "simple_measure.json",
+  "constants": {
+    "cat_system": "http://terminology.hl7.org/CodeSystem/observation-category",
+    "cat_code": "social-history",
+    "cat_display": "Social History",
+    "code_system": "http://loinc.org",
+    "code_code": "74013-4",
+    "code_display": "Alcoholic drinks per day",
+    "code_text": "Consommation d'alcool (verres)",
+    "tag_system": "http://phylcero.fr/fhir/StructureDefinition/observation-group",
+    "tag_code": "metrics"
+  }
+}
