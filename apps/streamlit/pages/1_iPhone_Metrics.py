@@ -36,13 +36,23 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
     st.subheader("KPI rapides")
     if metrics_long is not None:
-        recent = metrics_long[(metrics_long['timestamp'] >= start_date) & (metrics_long['timestamp'] <= end_date)]
+        recent = metrics_long[
+            (metrics_long['timestamp'] >= start_date) &
+            (metrics_long['timestamp'] <= end_date)
+        ].copy()
         def last_val(metric):
-            s = recent[recent['metric'] == metric].sort_values('timestamp', ascending=False)
+            s = recent[
+                (recent['metric'] == metric) &
+                (recent['value'].notna())
+            ].sort_values('timestamp', ascending=False)
             return s['value'].iloc[0] if not s.empty else np.nan
         last_steps = last_val(STEP_COUNT)
         last_rhr = last_val(RESTING_HEART_RATE)
-        avg_mindful = recent[recent['metric']==MINDFUL_MINUTES]['value'].mean() if not recent[recent['metric']==MINDFUL_MINUTES].empty else np.nan
+        mindful_values = recent[
+            (recent['metric'] == MINDFUL_MINUTES) &
+            (recent['value'].notna())
+        ]['value']
+        avg_mindful = mindful_values.mean() if not mindful_values.empty else np.nan
         st.metric("Pas (dernier)", f"{int(last_steps) if not pd.isna(last_steps) else '—'}")
         st.metric("RHR (dernier)", f"{last_rhr if not pd.isna(last_rhr) else '—'} bpm")
         st.metric("Méd. (moy/jour)", f"{avg_mindful:.1f}" if not pd.isna(avg_mindful) else "—")
@@ -91,7 +101,6 @@ with col3:
             if STEP_COUNT in wide.columns and WALKING_RUNNING_DISTANCE in wide.columns:
                 fig_scatter = px.scatter(wide, x=STEP_COUNT, y=WALKING_RUNNING_DISTANCE, trendline='ols', title="Pas vs Distance")
                 st.plotly_chart(fig_scatter, width='stretch')
-    st.write("Idées : corréler RHR ↔ sommeil, montrer l'impact des workouts sur active_energy.")
 
     
 st.markdown("---")
