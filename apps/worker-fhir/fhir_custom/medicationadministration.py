@@ -224,7 +224,7 @@ def normalize_status(status: str) -> str:
     status_normalized = status.strip().lower()
     if status_normalized == "pris":
         return "completed"
-    elif status_normalized == "Non Interagi":
+    elif status_normalized == "non interagi":
         return "not-done"
     else:
         raise ValueError(f"status non supporté: {status}")
