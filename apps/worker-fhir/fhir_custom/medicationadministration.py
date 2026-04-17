@@ -197,13 +197,11 @@ def _codeable(
         text=text,
     )
     
-def _resolve_dosage(raw: dict[str, Any]) -> int:
-    dosage = raw.get("dose_value")
-    if dosage is not None:
-        if isinstance(dosage, int):
-            return dosage
-        elif isinstance(dosage, str):
-            return 0
+def _resolve_dosage(dose_value: Any) -> int:
+    if isinstance(dose_value, int):
+        return dose_value
+    elif isinstance(dose_value, str):
+        return 0
                                 
 
 # Function to convert iso to datetime
