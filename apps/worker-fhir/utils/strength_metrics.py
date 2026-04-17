@@ -5,6 +5,7 @@ from fhir_custom.bundle import upload_bundles_in_chunks
 from typing import Dict, Any, Union, List
 import logging
 import json
+import os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
