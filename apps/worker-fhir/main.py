@@ -3,7 +3,12 @@ from fastapi import FastAPI, HTTPException, Depends
 from datetime import datetime, timezone 
 from libs.security import require_scopes
 from prometheus_client import make_asgi_app
-from pipeline_iphone import process_payload_service
+from pipeline_iphone import iphone_json_pipeline
+from pipeline_manual import manual_json_pipeline
+from pipeline_spirometer import spirometer_json_pipeline
+from pipeline_strength import strength_json_pipeline
+from pipeline_medication import medication_json_pipeline
+
 
 app = FastAPI(title="Health Worker Controller")
 app.mount("/metrics", make_asgi_app())
@@ -26,7 +31,7 @@ def run_worker_iphone(
 ):
     try:
         print(f"Lancement du worker pour {now_iso()}")
-        result = subprocess.run(["python", "/app/pipeline_iphone.py"], capture_output=True, text=True)
+        result = iphone_json_pipeline()
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=result.stderr)
         return {"status": "success", "output": result.stdout}
@@ -102,15 +107,4 @@ def run_worker_medication(
         return {"status": "success", "output": result.stdout}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@app.post("/process")
-def process_payload(payload: dict):
-    try:
-        return process_payload_service(payload)
-    except KeyError:
-        PROCESSING_ERRORS_TOTAL.labels(type="key_error").inc()
-        raise HTTPException(status_code=400, detail="Payload invalide")
-    except Exception:
-        PROCESSING_ERRORS_TOTAL.labels(type="unexpected").inc()
-        raise HTTPException(status_code=500, detail="Erreur interne")
     

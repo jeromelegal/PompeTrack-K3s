@@ -9,7 +9,7 @@ metadata:
   name: backup-db1
   namespace: pg-backups
 spec:
-  schedule: "0 */4 * * *"        # toutes les 4h
+  schedule: "0 */24 * * *"        # toutes les 24h
   concurrencyPolicy: Forbid       # pas de job concurrent
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
