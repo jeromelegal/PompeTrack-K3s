@@ -21,17 +21,6 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_SPIROMETER = "raw-spirometer"
 BUCKET_PROCESSED = "processed-fhir"
 
-def process_payload_service(payload: dict) -> dict:
-    result = split_json(payload)
-
-    PROCESSED_PAYLOAD_TOTAL.inc()
-    LAST_SUCCESS_UNIXTIME.set_to_current_time()
-
-    return {
-        "status": "ok",
-        "result": result,
-    }
-
 # Pipeline 'spirometer'
 @SPIROMETER_PIPELINE_DURATION_SECONDS.time()
 def spirometer_json_pipeline():

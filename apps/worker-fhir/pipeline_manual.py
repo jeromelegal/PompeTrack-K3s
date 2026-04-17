@@ -21,17 +21,6 @@ logging.basicConfig(level=logging.INFO)
 BUCKET_MANUAL = "raw-manual"
 BUCKET_PROCESSED = "processed-fhir"
 
-def process_payload_service(payload: dict) -> dict:
-    result = split_json(payload)
-
-    PROCESSED_PAYLOAD_TOTAL.inc()
-    LAST_SUCCESS_UNIXTIME.set_to_current_time()
-
-    return {
-        "status": "ok",
-        "result": result,
-    }
-
 # Function to process manual metrics
 @MANUAL_PIPELINE_DURATION_SECONDS.time()
 def manual_json_pipeline():

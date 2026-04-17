@@ -87,17 +87,6 @@ def _run_pipeline(name, pipeline_func, data, obj_id):
             time.perf_counter() - start
         ) 
 
-def process_payload_service(payload: dict) -> dict:
-    result = split_json(payload)
-
-    PROCESSED_PAYLOAD_TOTAL.inc()
-    LAST_SUCCESS_UNIXTIME.set_to_current_time()
-
-    return {
-        "status": "ok",
-        "result": result,
-    }
-
 # Main pipeline    
 @IPHONE_PIPELINE_DURATION_SECONDS.time()
 def iphone_json_pipeline():
