@@ -9,7 +9,6 @@ from pipeline_spirometer import spirometer_json_pipeline
 from pipeline_strength import strength_json_pipeline
 from pipeline_medication import medication_json_pipeline
 
-
 app = FastAPI(title="Health Worker Controller")
 app.mount("/metrics", make_asgi_app())
 
