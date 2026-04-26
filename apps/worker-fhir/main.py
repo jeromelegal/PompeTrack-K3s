@@ -8,6 +8,7 @@ from pipeline_manual import manual_json_pipeline
 from pipeline_spirometer import spirometer_json_pipeline
 from pipeline_strength import strength_json_pipeline
 from pipeline_medication import medication_json_pipeline
+from pipeline_logs import transfert_logs_pipeline
 
 app = FastAPI(title="Health Worker Controller")
 app.mount("/metrics", make_asgi_app())
@@ -44,7 +45,7 @@ def run_worker_manual(
 ):
     try:
         print(f"Lancement du worker pour {now_iso()}")
-        result = subprocess.run(["python", "/app/pipeline_manual.py"], capture_output=True, text=True)
+        result = manual_json_pipeline()
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=result.stderr)
         return {"status": "success", "output": result.stdout}
@@ -58,7 +59,7 @@ def run_worker_spirometer(
 ):
     try:
         print(f"Lancement du worker pour {now_iso()}")
-        result = subprocess.run(["python", "/app/pipeline_spirometer.py"], capture_output=True, text=True)
+        result = spirometer_json_pipeline()
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=result.stderr)
         return {"status": "success", "output": result.stdout}
@@ -72,7 +73,7 @@ def run_worker_strength(
 ):
     try:
         print(f"Lancement du worker pour {now_iso()}")
-        result = subprocess.run(["python", "/app/pipeline_strength.py"], capture_output=True, text=True)
+        result = strength_json_pipeline()
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=result.stderr)
         return {"status": "success", "output": result.stdout}
@@ -86,7 +87,7 @@ def run_logs_transfert(
 ):
     try:
         print(f"Lancement du transfert de logs {now_iso()}")
-        result = subprocess.run(["python", "/app/pipeline_logs.py"], capture_output=True, text=True)
+        result = transfert_logs_pipeline()
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=result.stderr)
         return {"status": "success", "output": result.stdout}
@@ -100,7 +101,7 @@ def run_worker_medication(
 ):
     try:
         print(f"Lancement du worker pour {now_iso()}")
-        result = subprocess.run(["python", "/app/pipeline_medication.py"], capture_output=True, text=True)
+        result = medication_json_pipeline()
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=result.stderr)
         return {"status": "success", "output": result.stdout}
