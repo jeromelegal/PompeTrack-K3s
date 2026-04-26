@@ -80,7 +80,9 @@ def process_global_medications(medications: Union[List, str]):
                 current_medication_list = []
                 for medication in medications:
                     med = to_fhir_medicationadministration(medication)
-                    current_medication_list.append(med)
+                    # Record only "completed" status
+                    if med.get("status") == "completed":
+                        current_medication_list.append(med)
 
                 logger.info(f"Uploading chunked bundles for medication : {i}.")
                 success = upload_medicationadministration_bundles_in_chunks(current_medication_list, chunk_size=5)
