@@ -31,6 +31,7 @@ apply_file_if_exists deploy/namespaces/pompetrack-core/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/airflow/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/monitoring/00-namespace.yaml
 apply_file_if_exists deploy/namespaces/pg-backups/00-namespace.yaml
+apply_file_if_exists deploy/namespaces/llm-agent/00-namespace.yaml
 # apply rbac for pg-backups
 apply_file_if_exists deploy/charts/pg-backups/00-rbac.yaml
 
@@ -40,6 +41,7 @@ kubectl get ns pompetrack-core >/dev/null 2>&1 || kubectl apply -f deploy/namesp
 kubectl get ns airflow >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/airflow/00-namespace.yaml
 kubectl get ns monitoring >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/monitoring/00-namespace.yaml
 kubectl get ns pg-backups >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/pg-backups/00-namespace.yaml
+kubectl get ns llm-agent >/dev/null 2>&1 || kubectl apply -f deploy/namespaces/llm-agent/00-namespace.yaml
 
 # Medplum services
 echo "== Services medplum =="
@@ -52,6 +54,7 @@ apply_dir_ordered deploy/namespaces/pompetrack-core/netpol
 apply_dir_ordered deploy/namespaces/airflow/netpol
 apply_dir_ordered deploy/namespaces/monitoring/netpol
 apply_dir_ordered deploy/namespaces/pg-backups/netpol
+apply_dir_ordered deploy/namespaces/llm-agent/netpol
 
 # Wait for Istio
 echo "==> Wait for istiod (validation webhook needs ready endpoints)"
@@ -66,6 +69,7 @@ apply_dir_ordered deploy/namespaces/pompetrack-core/istio
 apply_dir_ordered deploy/namespaces/airflow/istio
 apply_dir_ordered deploy/namespaces/monitoring/istio
 apply_dir_ordered deploy/namespaces/pg-backups/istio
+apply_dir_ordered deploy/namespaces/llm-agent/istio
 
 # Secrets scripts
 echo "==> Medplum secrets"
@@ -141,11 +145,25 @@ echo "==> Monitoring secrets"
 echo "==> Helm deps"
 helm dependency update deploy/charts/monitoring || true
 
-# ## Helm umbrella monitoring namespace
+## Helm umbrella monitoring namespace
 echo "==> Helm install/upgrade monitoring"
 helm upgrade --install monitoring deploy/charts/monitoring \
   -f deploy/charts/monitoring/values.yaml \
   -n monitoring 
+
+# Secrets scripts
+echo "==> Monitoring secrets"
+./deploy/secrets/llm-agent/init-secrets.sh
+
+# Helm update
+echo "==> Helm deps"
+helm dependency update deploy/charts/llm-agent || true
+
+## Helm umbrella llm-agent namespace
+echo "==> Helm install/upgrade llm-agent"
+helm upgrade --install llm-agent deploy/charts/llm-agent \
+  -f deploy/charts/llm-agent/values.yaml \
+  -n llm-agent 
 
 # Ingress policies
 echo "==> Ingress (Traefik objects - always reapplied)"
@@ -153,6 +171,7 @@ apply_dir_ordered deploy/namespaces/medplum/ingress
 apply_dir_ordered deploy/namespaces/pompetrack-core/ingress
 apply_dir_ordered deploy/namespaces/airflow/ingress
 apply_dir_ordered deploy/namespaces/monitoring/ingress
+apply_dir_ordered deploy/namespaces/llm-agent/ingress
 
 # Copy DAGs to Airflow PVC
 echo "==> Copy DAGs to Airflow PVC"

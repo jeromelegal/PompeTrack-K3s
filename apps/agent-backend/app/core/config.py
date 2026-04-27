@@ -1,0 +1,53 @@
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    app_name: str = "local-agentic-stack"
+    env: str = "dev"
+    log_level: str = "INFO"
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+    backend_api_key: str = "local-agentic-dev-key"
+    allow_origins: str = "*"
+
+    ollama_base_url: str = "http://ollama:11434"
+    default_chat_model: str = "gemma4:31b"
+    embedding_model: str = "nomic-embed-text:latest"
+    model_temperature: float = 0.0
+
+    max_iterations: int = 4
+    max_actions_per_iteration: int = 6
+    max_web_results: int = 5
+    max_rag_results: int = 5
+    max_workspace_results: int = 20
+    max_scrape_chars: int = 12000
+    max_evidence_items: int = 12
+    show_trace_in_response: bool = True
+    allow_private_network_scraping: bool = False
+
+    qdrant_url: str = "http://qdrant:6333"
+    qdrant_collection: str = "documents"
+    searxng_base_url: str = "http://searxng:8080"
+    http_timeout_seconds: float = 30.0
+
+    workspace_root: Path = Field(default=Path("/workspace"))
+    data_dir: Path = Field(default=Path("/data"))
+    upload_dir: Path = Field(default=Path("/data/uploads"))
+    checkpoint_db_path: Path = Field(default=Path("/data/langgraph-checkpoints.sqlite"))
+    state_db_path: Path = Field(default=Path("/data/app.sqlite"))
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()

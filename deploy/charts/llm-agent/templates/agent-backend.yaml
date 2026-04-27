@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-backend
+  template:
+    metadata:
+      labels:
+        app: agent-backend
+    spec:
+      serviceAccountName: agent-backend
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: agent-backend
+          image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "http://ollama.lan:11434"
+          volumeMounts:
+            - name: agent-data
+              mountPath: /data
+            - name: agent-workspace
+              mountPath: /workspace
+              readOnly: true
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: agent-backend-data
+        - name: agent-workspace
+          persistentVolumeClaim:
+            claimName: agent-backend-workspace
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-backend
+spec:
+  selector:
+    app: agent-backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
