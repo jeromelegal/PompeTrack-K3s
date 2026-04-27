@@ -1,0 +1,141 @@
+replicaCount: 1
+
+image:
+  repository: docker.io/qdrant/qdrant
+  pullPolicy: IfNotPresent
+  tag: ""
+  useUnprivilegedImage: false
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+args: ["./config/initialize.sh"]
+env: []
+  # - name: QDRANT_ALLOW_RECOVERY_MODE
+  #   value: true
+
+# checks - Readiness and liveness checks can only be enabled for either http (REST) or grpc (multiple checks not supported)
+# grpc checks are only available from k8s 1.24+ so as of per default we check http
+service:
+  type: ClusterIP
+  additionalLabels: {}
+  annotations: {}
+  loadBalancerIP: ""
+  ports:
+    - name: http
+      port: 6333
+      targetPort: 6333
+      protocol: TCP
+      checksEnabled: true
+
+ingress:
+  enabled: false
+
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 1
+  failureThreshold: 6
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 1
+  failureThreshold: 6
+  successThreshold: 1
+
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 1
+  failureThreshold: 30
+  successThreshold: 1
+
+additionalLabels: {}
+# additionalAnnotations will be added to all top-level resources (StatefulSet, Service, ConfigMap, etc.)
+additionalAnnotations: {}
+podAnnotations: {}
+podLabels: {}
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 2000
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+
+podSecurityContext:
+  fsGroup: 3000
+  fsGroupChangePolicy: Always
+
+lifecycle:
+  preStop:
+    exec:
+      # Sleeping before shutdown allows Qdrant to process requests that were
+      # in-flight before the node is removed from load-balancing.
+      # If using an external load balancer, you may need to increase this
+      # duration to be greater than the LB's health check interval.
+      command: ["sleep", "3"]
+
+# Unless .Values.image.useUnprivilegedImage is set to true, ensures that the pre-existing
+# files on the storage and snapshot volume are owned by the container's user and fsGroup.
+updateVolumeFsOwnership: true
+
+
+persistence:
+  accessModes: ["ReadWriteOnce"]
+  size: 10Gi
+  annotations: {}
+  additionalLabels: 
+    storageVolumeName: qdrant-storage
+  # storageSubPath: ""
+    storageClassName: nfs-client
+  # volumeAttributesClassName: ""
+
+metrics:
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    scrapeInterval: 30s
+    scrapeTimeout: 10s
+    targetPort: http
+    targetPath: "/metrics"
+    ## MetricRelabelConfigs to apply to samples after scraping, but before ingestion.
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+    ##
+    metricRelabelings: []
+    ## RelabelConfigs to apply to samples before scraping
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+    ##
+    relabelings: []
+    ## Authorization to apply to the metrics endpoint for the cases when the API key(s) are configured externally
+    ## ref: https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.SafeAuthorization
+    ##
+    authorization: {}
+    # authorization:
+    #   type: Bearer
+    #   credentials:
+    #     name: external-secret-with-api-key
+    #     key: api-key
+
+serviceAccount:
+  annotations: {}
+
+# We discourage changing this setting. Using the "OrderedReady" policy in a
+# multi-node cluster will cause a deadlock where nodes refuse to become
+# "Ready" until all nodes are running.
+podManagementPolicy: Parallel
+

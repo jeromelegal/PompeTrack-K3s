@@ -96,3 +96,12 @@ build_pg_pompetrack:
   rules:
     - changes:
         - apps/pgsql-pompetrack-core/**
+
+build_agent-backend:
+  extends: .build_app
+  variables:
+    APP_NAME: agent-backend
+    APP_PATH: apps/agent-backend
+  rules:
+    - changes:
+        - apps/agent-backend/**
