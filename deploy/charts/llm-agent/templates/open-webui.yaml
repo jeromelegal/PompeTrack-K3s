@@ -11,8 +11,6 @@ spec:
     metadata:
       labels:
         app: open-webui
-      annotations:
-        sidecar.istio.io/inject: "false"
     spec:
       containers:
         - name: open-webui
