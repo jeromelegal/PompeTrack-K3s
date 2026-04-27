@@ -6,6 +6,11 @@ from utils.common import ensure_datetime, rolling_trend, slope_of_trend, interpr
 import plotly.express as px
 import plotly.graph_objects as go
 
+STEP_COUNT = "Number of steps in 24 hour (count)"
+WALKING_RUNNING_DISTANCE = "Distance walked + run (km)"
+RESTING_HEART_RATE = "Heart rate --resting (count/min)"
+MINDFUL_MINUTES = "Mindful Minutes (min)"
+
 lookback_days = st.sidebar.slider(
     "Période (jours)",
     7, 365, 90,
@@ -31,13 +36,23 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
     st.subheader("KPI rapides")
     if metrics_long is not None:
-        recent = metrics_long[(metrics_long['timestamp'] >= start_date) & (metrics_long['timestamp'] <= end_date)]
+        recent = metrics_long[
+            (metrics_long['timestamp'] >= start_date) &
+            (metrics_long['timestamp'] <= end_date)
+        ].copy()
         def last_val(metric):
-            s = recent[recent['metric'] == metric].sort_values('timestamp', ascending=False)
+            s = recent[
+                (recent['metric'] == metric) &
+                (recent['value'].notna())
+            ].sort_values('timestamp', ascending=False)
             return s['value'].iloc[0] if not s.empty else np.nan
-        last_steps = last_val('step_count')
-        last_rhr = last_val('resting_heart_rate')
-        avg_mindful = recent[recent['metric']=='mindful_minutes']['value'].mean() if not recent[recent['metric']=='mindful_minutes'].empty else np.nan
+        last_steps = last_val(STEP_COUNT)
+        last_rhr = last_val(RESTING_HEART_RATE)
+        mindful_values = recent[
+            (recent['metric'] == MINDFUL_MINUTES) &
+            (recent['value'].notna())
+        ]['value']
+        avg_mindful = mindful_values.mean() if not mindful_values.empty else np.nan
         st.metric("Pas (dernier)", f"{int(last_steps) if not pd.isna(last_steps) else '—'}")
         st.metric("RHR (dernier)", f"{last_rhr if not pd.isna(last_rhr) else '—'} bpm")
         st.metric("Méd. (moy/jour)", f"{avg_mindful:.1f}" if not pd.isna(avg_mindful) else "—")
@@ -47,7 +62,7 @@ with col2:
     st.subheader("Série temporelle & Analyse")
     if metrics_long is not None:
         metric_list = sorted(metrics_long['metric'].unique().tolist())
-        default_idx = metric_list.index('step_count') if 'step_count' in metric_list else 0
+        default_idx = metric_list.index(STEP_COUNT) if STEP_COUNT in metric_list else 0
         metric_choice = st.selectbox("Choisir une métrique", options=metric_list, index=default_idx)
         metric_df = metrics_long[metrics_long['metric']==metric_choice].copy()
         metric_df = ensure_datetime(metric_df, 'timestamp')
@@ -80,13 +95,12 @@ with col2:
 with col3:
     st.subheader("Comparaisons & Corrélations")
     if metrics_long is not None:
-        subset = metrics_long[(metrics_long['metric'].isin(['step_count','walking_running_distance'])) & (metrics_long['timestamp']>=start_date)]
+        subset = metrics_long[(metrics_long['metric'].isin([STEP_COUNT,WALKING_RUNNING_DISTANCE])) & (metrics_long['timestamp']>=start_date)]
         if not subset.empty:
             wide = subset.pivot_table(index='timestamp', columns='metric', values='value', aggfunc='mean').reset_index()
-            if 'step_count' in wide.columns and 'walking_running_distance' in wide.columns:
-                fig_scatter = px.scatter(wide, x='step_count', y='walking_running_distance', trendline='ols', title="Pas vs Distance")
+            if STEP_COUNT in wide.columns and WALKING_RUNNING_DISTANCE in wide.columns:
+                fig_scatter = px.scatter(wide, x=STEP_COUNT, y=WALKING_RUNNING_DISTANCE, trendline='ols', title="Pas vs Distance")
                 st.plotly_chart(fig_scatter, width='stretch')
-    st.write("Idées : corréler RHR ↔ sommeil, montrer l'impact des workouts sur active_energy.")
 
     
 st.markdown("---")

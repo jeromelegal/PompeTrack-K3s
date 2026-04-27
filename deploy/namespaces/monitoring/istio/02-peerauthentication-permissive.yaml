@@ -72,3 +72,19 @@ metadata:
 spec:
   mtls:
     mode: PERMISSIVE
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: pompetrack-core-metrics-permissive-worker-fhir
+  namespace: pompetrack-core
+spec:
+  selector:
+    matchLabels:
+      app: worker-fhir
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    80:   
+      mode: PERMISSIVE

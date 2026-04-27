@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iphone-categories
+data:
+  CATEGORIES_MAP: |
+    { 
+    "0": "metrics",
+      "1": "workouts",
+      "2": "stateOfMind",
+      "3": "symptoms",
+      "4": "medications"
+    }

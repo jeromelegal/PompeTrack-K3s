@@ -196,6 +196,13 @@ def _codeable(
         ],
         text=text,
     )
+    
+def _resolve_dosage(dose_value: Any) -> int:
+    if isinstance(dose_value, int):
+        return dose_value
+    elif isinstance(dose_value, str):
+        return 0
+                                
 
 # Function to convert iso to datetime
 def iso_to_dt(iso_value: str) -> datetime:
@@ -224,7 +231,9 @@ def normalize_status(status: str) -> str:
     status_normalized = status.strip().lower()
     if status_normalized == "pris":
         return "completed"
-    elif status_normalized == "Non Interagi":
+    elif status_normalized == "non interagi":
+        return "not-done"
+    elif status_normalized == "ignoré":
         return "not-done"
     else:
         raise ValueError(f"status non supporté: {status}")
@@ -299,7 +308,7 @@ def _build_MedicationAdministration_args(
 
     # dosage
     if raw.get("dose_value") is not None:
-        med_kwargs["dosage"] = {"dose": {"value": raw.get("dose_value"), "unit": "count"}}
+        med_kwargs["dosage"] = {"dose": {"value": _resolve_dosage(raw.get("dose_value")), "unit": "count"}}
 
     # device
     if raw.get("device_id") is not None:

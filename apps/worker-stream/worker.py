@@ -410,6 +410,209 @@ def fetch_fhir_medication(
 
     return results
 
+# Function to fetch FHIR MedicationsAdministartion
+def fetch_fhir_medicationadministration(
+    patient: str,
+    payload: Optional[dict] = None
+) -> list[dict]:
+    """
+    Fetch FHIR MedicationAdministrations and resolve:
+      - hasMember -> MedicationAdministration resources
+      - medicationReference -> full Medication resource
+    """
+    token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/fhir+json",
+    }
+
+    session = create_session()
+
+    patient_full = f"Patient/{patient}"
+    payload = payload or {}
+
+    category = payload.get("category")
+    start_date = payload.get("startDate")
+    end_date = payload.get("endDate")
+    device = payload.get("device")
+    tag = payload.get("tag")
+
+    max_records = payload.get("max_records", 1000)
+    page_count = int(payload.get("page_count", 100))
+    max_pages = int(payload.get("max_pages", 1000))
+
+    if page_count <= 0:
+        page_count = 100
+
+    elements = ",".join([
+        "id",
+        "category",
+        "effectiveDateTime",
+        "effectivePeriod",
+        "performer",
+        "device",
+        "hasMember",
+        "status",
+        "medicationReference",
+        "dosage",
+    ])
+
+    params = {
+        "patient": patient_full,
+        "_count": page_count,
+        "_elements": elements,
+    }
+
+    if category:
+        params["category"] = category
+    if device:
+        params["device"] = device
+    if tag:
+        params["_tag"] = tag
+    if start_date or end_date:
+        dates = []
+        if start_date:
+            dates.append(f"ge{start_date}")
+        if end_date:
+            dates.append(f"le{end_date}")
+        params["date"] = dates if len(dates) > 1 else dates[0]
+
+    all_medicationadministrations: list[dict] = []
+    seen_medadmin_refs: set[str] = set()
+    visited_urls: set[str] = set()
+
+    resource_type = "MedicationAdministration"
+    url = build_search_url(FHIR_BASE, resource_type, params)
+
+    page_number = 0
+
+    while url and (max_records is None or len(all_medicationadministrations) < max_records):
+        page_number += 1
+
+        if page_number > max_pages:
+            raise RuntimeError(
+                f"Pagination interrompue : plus de {max_pages} pages parcourues."
+            )
+
+        if url in visited_urls:
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
+        visited_urls.add(url)
+
+        logger.info("GET page %s: %s", page_number, url)
+        bundle = get_bundle_page(session, url, headers=headers)
+
+        page_medadmin_count = 0
+        for entry in bundle.get("entry", []):
+            resource = entry.get("resource")
+            if not resource or resource.get("resourceType") != "MedicationAdministration":
+                continue
+
+            medadmin_id = resource.get("id")
+            medadmin_ref = f"MedicationAdministration/{medadmin_id}" if medadmin_id else None
+
+            if medadmin_ref and medadmin_ref in seen_medadmin_refs:
+                continue
+
+            if medadmin_ref:
+                seen_medadmin_refs.add(medadmin_ref)
+
+            all_medicationadministrations.append(resource)
+            page_medadmin_count += 1
+
+            if max_records is not None and len(all_medicationadministrations) >= max_records:
+                break
+
+        logger.info(
+            "Page %s récupérée: %s MedicationAdministrations (cumul=%s)",
+            page_number,
+            page_medadmin_count,
+            len(all_medicationadministrations),
+        )
+
+        if max_records is not None and len(all_medicationadministrations) >= max_records:
+            break
+
+        raw_next_url = next(
+            (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
+            None,
+        )
+
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
+    if max_records is not None:
+        all_medicationadministrations = all_medicationadministrations[:max_records]
+
+    medadmin_index = {
+        f"MedicationAdministration/{medadmin['id']}": medadmin
+        for medadmin in all_medicationadministrations
+        if "id" in medadmin
+    }
+
+    medication_refs: set[str] = set()
+    for medadmin in all_medicationadministrations:
+        med_ref_obj = medadmin.get("medicationReference")
+
+        if isinstance(med_ref_obj, dict):
+            ref = med_ref_obj.get("reference")
+            if isinstance(ref, str) and ref.startswith("Medication/"):
+                medication_refs.add(ref)
+        elif isinstance(med_ref_obj, str) and med_ref_obj.startswith("Medication/"):
+            medication_refs.add(med_ref_obj)
+
+    medication_index: dict[str, dict] = {}
+    if medication_refs:
+        medications = fetch_fhir_medication(
+            payload={
+                "max_records": max(len(medication_refs), 100),
+                "page_count": min(max(len(medication_refs), 100), 1000),
+                "max_pages": max_pages,
+            }
+        )
+        medication_index = {
+            f"Medication/{med['id']}": med
+            for med in medications
+            if "id" in med
+        }
+
+    results = []
+    for medadmin in all_medicationadministrations:
+        resolved_members = []
+
+        for member_ref in medadmin.get("hasMember", []):
+            ref = member_ref.get("reference")
+            member_medadmin = medadmin_index.get(ref)
+            if not member_medadmin:
+                continue
+
+            resolved_members.append({
+                "reference": ref,
+                "effectiveDateTime": member_medadmin.get("effectiveDateTime"),
+            })
+
+        if resolved_members:
+            medadmin["resolvedHasMember"] = resolved_members
+
+        med_ref_obj = medadmin.get("medicationReference")
+        medication_ref = None
+
+        if isinstance(med_ref_obj, dict):
+            medication_ref = med_ref_obj.get("reference")
+        elif isinstance(med_ref_obj, str):
+            medication_ref = med_ref_obj
+
+        if medication_ref:
+            resolved_medication = medication_index.get(medication_ref)
+            if resolved_medication:
+                medadmin["medicationReference"] = resolved_medication
+
+        results.append(medadmin)
+
+    return results
+
 if __name__ == "__main__":
     rows = fetch_fhir_observation(
         patient=MEDPLUM_PATIENT_ID,

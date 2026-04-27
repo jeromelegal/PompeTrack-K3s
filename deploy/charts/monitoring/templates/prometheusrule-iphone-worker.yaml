@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: iphone-worker-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: iphone-worker-alerts
+      rules:
+        - alert: IphoneUnknownCategoryDetected
+          expr: increase(iphone_unknown_category_total[10m]) > 0
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Nouvelle catégorie JSON inconnue détectée"
+            description: "La catégorie {{`{{ $labels.category }}`}} a été détectée dans les 10 dernières minutes."

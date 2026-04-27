@@ -63,9 +63,13 @@ kube-prometheus-stack:
   ## ALERTMANAGER
   ## ---------------------------
   alertmanager:
+    enabled: true
+    tplConfig: false
+
     alertmanagerSpec:
       replicas: 1
-
+      secrets:
+        - alertmanager-telegram-bot
       storage:
         volumeClaimTemplate:
           spec:
@@ -74,6 +78,41 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 2Gi
+
+    config:
+      global:
+        resolve_timeout: 5m
+
+      route:
+        receiver: "telegram-medplum"
+        group_by:
+          - alertname
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+
+      receivers:
+        - name: "null"
+
+        - name: "telegram-medplum"
+          telegram_configs:
+            - bot_token_file: /etc/alertmanager/secrets/alertmanager-telegram-bot/bot-token
+              chat_id: 1970193166
+              send_resolved: true
+              parse_mode: "HTML"
+              message: |-
+                {{ if eq .Status "firing" }}🚨 <b>ALERTE</b>{{ else }}✅ <b>RÉSOLU</b>{{ end }}
+
+                {{ range .Alerts }}
+                <b>Alerte :</b> {{ .Labels.alertname }}
+                {{ if .Labels.instance }}<b>Instance :</b> {{ .Labels.instance }}{{ end }}
+                {{ if .Labels.severity }}<b>Gravité :</b> {{ .Labels.severity }}{{ end }}
+                {{ if .Labels.category }}<b>Catégorie :</b> {{ .Labels.category }}{{ end }}
+
+                {{ if .Annotations.summary }}{{ .Annotations.summary }}{{ end }}
+                {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+
+                {{ end }}
 
   ## ---------------------------
   ## GRAFANA
