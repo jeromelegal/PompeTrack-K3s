@@ -130,7 +130,7 @@ def iphone_json_pipeline():
 
             if any([result_metrics, result_workouts, result_stateofminds, result_symptoms, result_medications]):
                 logger.info("Upload status is OK.")
-                move_object(c
+                move_object(
                     object_name=obj_id,
                     source_bucket=BUCKET_RAW,
                     destination_bucket=BUCKET_PROCESSED
