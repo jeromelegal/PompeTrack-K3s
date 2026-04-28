@@ -3,19 +3,23 @@ from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://ollama.lan:11434")
+DEFAULT_CHAT_MODEL = os.environ.get("DEFAULT_CHAT_MODEL", "medgemma:27b")
+BACKEND_API_KEY = os.environ.get("BACKEND_API_KEY")
 
 class Settings(BaseSettings):
-    app_name: str = "local-agentic-stack"
+    app_name: str = "llm-agent"
     env: str = "dev"
     log_level: str = "INFO"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    backend_api_key: str = "local-agentic-dev-key"
+    backend_api_key: str = BACKEND_API_KEY
     allow_origins: str = "*"
 
-    ollama_base_url: str = "http://ollama:11434"
-    default_chat_model: str = "gemma4:31b"
+    ollama_base_url: str = OLLAMA_BASE_URL
+    default_chat_model: str = DEFAULT_CHAT_MODEL
     embedding_model: str = "nomic-embed-text:latest"
     model_temperature: float = 0.0
 
