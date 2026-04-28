@@ -24,6 +24,8 @@ spec:
           env:
             - name: OLLAMA_BASE_URL
               value: "http://ollama.lan:11434"
+            - name: DEFAULT_CHAT_MODEL
+              value: "medgemma:27b"
             - name: BACKEND_API_KEY
               valueFrom:
                 secretKeyRef:
