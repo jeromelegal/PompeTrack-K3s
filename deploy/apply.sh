@@ -193,4 +193,5 @@ kubectl get pods -n medplum
 kubectl get pods -n pompetrack-core
 kubectl get pods -n airflow
 kubectl get pods -n monitoring
+kubectl get pods -n llm-agent
 kubectl -n pg-backups get cronjob

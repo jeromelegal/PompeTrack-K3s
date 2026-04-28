@@ -38,7 +38,7 @@ spec:
             - name: CHECKPOINT_DB_PATH
               value: "/data/langgraph-checkpoints.sqlite"
             - name: QDRANT_URL
-              value: "http://qdrant:6333"
+              value: "http://llm-agent-qdrant:6333"
             - name: QDRANT_COLLECTION
               value: "documents"
           volumeMounts:
@@ -75,17 +75,3 @@ spec:
         - name: agent-workspace
           persistentVolumeClaim:
             claimName: agent-backend-workspace
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: streamlit-agent-llm
-spec:
-  selector:
-    app: streamlit-agent-llm
-  ports:
-    - name: http
-      port: 8501
-      targetPort: 8501
-  type: ClusterIP

@@ -18,7 +18,8 @@ env: []
 # grpc checks are only available from k8s 1.24+ so as of per default we check http
 service:
   type: ClusterIP
-  additionalLabels: {}
+  additionalLabels: 
+    name: qdrant
   annotations: {}
   loadBalancerIP: ""
   ports:
