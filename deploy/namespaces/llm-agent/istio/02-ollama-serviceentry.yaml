@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: ollama-lan
+  namespace: llm-agent
+spec:
+  hosts:
+    - ollama.lan
+  location: MESH_EXTERNAL
+  resolution: DNS
+  ports:
+    - number: 11434
+      name: http-ollama
+      protocol: HTTP

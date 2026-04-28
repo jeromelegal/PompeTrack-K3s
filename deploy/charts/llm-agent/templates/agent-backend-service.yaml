@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-backend
+  namespace: llm-agent
+  labels:
+    app: agent-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: agent-backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

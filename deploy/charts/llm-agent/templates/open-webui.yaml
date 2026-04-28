@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: open-webui
+  labels:
+    allow-external-ollama: "true"
 spec:
   replicas: 1
   selector:
@@ -11,6 +13,7 @@ spec:
     metadata:
       labels:
         app: open-webui
+        allow-external-ollama: "true"
     spec:
       containers:
         - name: open-webui
@@ -27,8 +30,10 @@ spec:
                   name: open-webui-key
                   key: secret
           volumeMounts:
-            - name: open-webui-data
+            - name: agent-data
               mountPath: /app/backend/data
+            - name: webui-data
+              mountPath: /data
           resources:
             requests:
               cpu: 250m
@@ -43,37 +48,26 @@ spec:
               path: /health
               port: 8080
             periodSeconds: 5
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 24
           readinessProbe:
             httpGet:
               path: /health
               port: 8080
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /health
               port: 8080
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 6
       volumes:
-        - name: open-webui-data
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: agent-backend-data
+        - name: webui-data
           persistentVolumeClaim:
             claimName: open-webui-data
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: open-webui
-spec:
-  selector:
-    app: open-webui
-  ports:
-    - name: http
-      port: 8080
-      targetPort: 8080
-  type: ClusterIP

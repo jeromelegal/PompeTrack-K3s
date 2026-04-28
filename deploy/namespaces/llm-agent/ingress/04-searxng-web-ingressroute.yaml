@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: searxng-web
+  namespace: llm-agent
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`ingestion.lan`) && PathPrefix(`/ingest/strength`)
+      kind: Rule
+      services:
+        - name: ingestion
+          port: 80

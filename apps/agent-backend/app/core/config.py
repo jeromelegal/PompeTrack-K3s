@@ -8,6 +8,8 @@ import os
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://ollama.lan:11434")
 DEFAULT_CHAT_MODEL = os.environ.get("DEFAULT_CHAT_MODEL", "medgemma:27b")
 BACKEND_API_KEY = os.environ.get("BACKEND_API_KEY")
+QDRANT_URL = os.environ.get("QDRANT_URL", "http://llm-agent-qdrant:6333")
+SEARXNG_BASE_URL = os.environ.get("SEARXNG_BASE_URL", "http://searxng:8080")
 
 class Settings(BaseSettings):
     app_name: str = "llm-agent"
@@ -33,9 +35,9 @@ class Settings(BaseSettings):
     show_trace_in_response: bool = True
     allow_private_network_scraping: bool = False
 
-    qdrant_url: str = "http://qdrant:6333"
+    qdrant_url: str = QDRANT_URL
     qdrant_collection: str = "documents"
-    searxng_base_url: str = "http://searxng:8080"
+    searxng_base_url: str = SEARXNG_BASE_URL
     http_timeout_seconds: float = 30.0
 
     workspace_root: Path = Field(default=Path("/workspace"))
