@@ -119,6 +119,12 @@ Attention: les Tools Open WebUI sont optionnels. Le modele peut les ignorer, et 
 http://agent-backend:8000/v1
 ```
 
+Si l'URL est saisie depuis un ecran utilisateur qui appelle depuis le navigateur, utiliser plutot l'URL Traefik:
+
+```text
+http://agent-backend.192.168.2.88.nip.io/v1
+```
+
 Les modeles exposes par ce provider sont prefixes par `agent-` pour les distinguer des modeles Ollama directs, par exemple `agent-medgemma:27b`. Choisir ce modele force le passage par le graphe agentique planner/researcher/executor/critic, qui peut appeler Qdrant via `rag_search`.
 
 ---
