@@ -62,10 +62,10 @@ data:
     fi
     echo "[3/4] Upload terminé avec succès"
 
-    # ── Nettoyage des anciens backups (rétention 7 jours) ───────────────────
-    echo "[4/4] Nettoyage des backups > 7 jours..."
+    # ── Nettoyage des anciens backups (rétention 3 jours) ───────────────────
+    echo "[4/4] Nettoyage des backups > 3 jours..."
     mc find minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ \
-      --older-than 168h \
+      --older-than 72h \
       --insecure | while read -r old_file; do
         echo "  Suppression : ${old_file}"
         mc rm "${old_file}" --insecure

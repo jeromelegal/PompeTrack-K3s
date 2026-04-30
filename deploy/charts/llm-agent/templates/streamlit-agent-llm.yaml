@@ -46,7 +46,6 @@ spec:
               mountPath: /data
             - name: agent-workspace
               mountPath: /workspace
-              readOnly: true
           startupProbe:
             httpGet:
               path: /health
