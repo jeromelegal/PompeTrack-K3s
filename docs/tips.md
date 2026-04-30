@@ -77,6 +77,30 @@ Exemple pour Airflow
 helm show values apache-airflow/airflow > default-values.yaml
 ```
 
+## Open WebUI tools via mcpo
+
+L'agent backend expose aussi ses outils internes en serveur MCP stdio:
+
+```bash
+python -m app.mcp_server
+```
+
+Le chart `llm-agent` lance `agent-backend-mcpo`, qui enveloppe ce serveur avec `mcpo` et publie un serveur OpenAPI compatible avec l'onglet Tools d'Open WebUI:
+
+```text
+http://agent-backend-mcpo:8000
+```
+
+Dans Open WebUI:
+
+1. Aller dans Admin Settings -> Tools.
+2. Ajouter un serveur de type OpenAPI.
+3. Utiliser l'URL `http://agent-backend-mcpo:8000`.
+4. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
+5. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
+
+Les outils exposes sont `web_search`, `scrape_url`, `rag_search`, `workspace_list` et `workspace_read`.
+
 ---
 
 ## Verifs istio :

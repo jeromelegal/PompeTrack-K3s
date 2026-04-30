@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-backend-mcpo
+  labels:
+    app: agent-backend-mcpo
+    allow-external-ollama: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-backend-mcpo
+  template:
+    metadata:
+      labels:
+        app: agent-backend-mcpo
+        allow-external-ollama: "true"
+    spec:
+      serviceAccountName: agent-backend
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: mcpo
+          image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - exec mcpo --host 0.0.0.0 --port 8000 --api-key "$BACKEND_API_KEY" -- python -m app.mcp_server
+          ports:
+            - containerPort: 8000
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "http://ollama.lan:11434"
+            - name: DEFAULT_CHAT_MODEL
+              value: "medgemma:27b"
+            - name: QDRANT_URL
+              value: "http://llm-agent-qdrant:6333"
+            - name: SEARXNG_BASE_URL
+              value: "http://searxng:8080"
+            - name: BACKEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-api-key
+                  key: secret_key
+          volumeMounts:
+            - name: agent-data
+              mountPath: /data
+            - name: agent-workspace
+              mountPath: /workspace
+              readOnly: true
+          startupProbe:
+            tcpSocket:
+              port: 8000
+            periodSeconds: 5
+            timeoutSeconds: 10
+            failureThreshold: 12
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 6
+      volumes:
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: agent-backend-data
+        - name: agent-workspace
+          persistentVolumeClaim:
+            claimName: agent-backend-workspace

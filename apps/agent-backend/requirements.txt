@@ -16,3 +16,5 @@ trafilatura
 beautifulsoup4
 pypdf
 streamlit
+mcp
+mcpo
