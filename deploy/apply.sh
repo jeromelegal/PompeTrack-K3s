@@ -152,8 +152,15 @@ helm upgrade --install monitoring deploy/charts/monitoring \
   -n monitoring 
 
 # Secrets scripts
-echo "==> Monitoring secrets"
+echo "==> LLM-  agent secrets"
 ./deploy/secrets/llm-agent/init-secrets.sh
+
+# ==> Publish IDs as ConfigMap (non-secret) for llm-agent
+echo "==> Publish Medplum IDs (ConfigMap)"
+kubectl -n llm-agent create configmap medplum-ids \
+  --from-env-file=deploy/outputs/pompetrack-core/medplum-ids.env \
+  -o yaml --dry-run=client \
+| kubectl apply -f -
 
 # Helm update
 echo "==> Helm deps"

@@ -38,6 +38,26 @@ spec:
                 secretKeyRef:
                   name: backend-api-key
                   key: secret_key
+
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_SECRET
+
+            # config Medplum api
+            - name: MEDPLUM_BASE_URL
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
+            - name: MEDPLUM_TOKEN_ENDPOINT
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
+            - name: MEDPLUM_SCOPE
+              value: "system/*.*"
+            - name: FHIR_BASE
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+
+          envFrom:
+            - configMapRef:
+                name: medplum-ids
+
           volumeMounts:
             - name: agent-data
               mountPath: /data
@@ -72,3 +92,12 @@ spec:
         - name: agent-workspace
           persistentVolumeClaim:
             claimName: agent-backend-workspace
+        - name: medplum-creds-agent
+          secret:
+            secretName: agent-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET
