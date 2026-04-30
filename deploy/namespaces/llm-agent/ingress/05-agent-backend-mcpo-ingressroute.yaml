@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: agent-backend-mcpo-lan
+  namespace: llm-agent
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`agent-tools.lan`) || Host(`agent-tools.192.168.2.88.nip.io`)
+      kind: Rule
+      middlewares:
+        - name: lan-only
+          namespace: llm-agent
+      services:
+        - name: agent-backend-mcpo
+          port: 8000

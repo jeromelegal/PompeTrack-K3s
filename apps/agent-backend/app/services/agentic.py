@@ -120,7 +120,9 @@ class AgenticService:
             models = [{"name": self.settings.default_chat_model, "model": self.settings.default_chat_model}]
         data = [
             {
-                "id": model.get("name") or model.get("model") or self.settings.default_chat_model,
+                "id": self._agent_model_id(
+                    model.get("name") or model.get("model") or self.settings.default_chat_model
+                ),
                 "object": "model",
                 "created": int(time.time()),
                 "owned_by": "local-agentic-stack",
@@ -163,6 +165,7 @@ class AgenticService:
         if self.graph is None:
             raise RuntimeError("Agent graph is not initialized.")
 
+        ollama_model = self._ollama_model_id(selected_model)
         goal = self._extract_goal(messages)
         thread_id = session_id or user_id or f"session-{uuid.uuid4().hex}"
         run_id = f"run-{uuid.uuid4().hex}"
@@ -171,7 +174,7 @@ class AgenticService:
             run_id=run_id,
             session_id=thread_id,
             user_id=user_id,
-            model=selected_model,
+            model=ollama_model,
             goal=goal,
         )
 
@@ -181,7 +184,7 @@ class AgenticService:
             "user_id": user_id,
             "goal": goal,
             "messages": messages,
-            "selected_model": selected_model,
+            "selected_model": ollama_model,
             "iteration": 0,
             "max_iterations": self.settings.max_iterations,
             "plan": {},
@@ -467,6 +470,16 @@ class AgenticService:
             if message.get("role") == "user" and message.get("content"):
                 return str(message["content"])
         return "No explicit user goal provided."
+
+    @staticmethod
+    def _agent_model_id(model_name: str) -> str:
+        model_name = str(model_name).strip()
+        return model_name if model_name.startswith("agent-") else f"agent-{model_name}"
+
+    @staticmethod
+    def _ollama_model_id(model_name: str) -> str:
+        model_name = str(model_name).strip()
+        return model_name.removeprefix("agent-")
 
     @staticmethod
     def _event(node: str, summary: str, payload: dict[str, Any]) -> dict[str, Any]:

@@ -91,15 +91,35 @@ Le chart `llm-agent` lance `agent-backend-mcpo`, qui enveloppe ce serveur avec `
 http://agent-backend-mcpo:8000
 ```
 
-Dans Open WebUI:
+Pour un tool server global, ajoute-le dans Open WebUI depuis Admin Settings -> Tools:
 
-1. Aller dans Admin Settings -> Tools.
-2. Ajouter un serveur de type OpenAPI.
-3. Utiliser l'URL `http://agent-backend-mcpo:8000`.
-4. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
-5. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
+1. Ajouter un serveur de type OpenAPI.
+2. Utiliser l'URL interne `http://agent-backend-mcpo:8000`.
+3. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
+4. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
+
+Pour un tool server utilisateur ajoute depuis Settings -> Tools, les requetes partent du navigateur. Il faut donc utiliser l'URL exposee par Traefik, pas le DNS Kubernetes:
+
+```text
+http://agent-tools.192.168.2.88.nip.io
+```
+
+Dans ce mode:
+
+1. Ajouter un serveur de type OpenAPI.
+2. Utiliser `http://agent-tools.192.168.2.88.nip.io`.
+3. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
+4. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
 
 Les outils exposes sont `web_search`, `scrape_url`, `rag_search`, `workspace_list` et `workspace_read`.
+
+Attention: les Tools Open WebUI sont optionnels. Le modele peut les ignorer, et certains modeles gerent mal le tool calling. Pour utiliser le backend agentique complet, configure aussi l'agent comme provider OpenAI-compatible avec l'URL interne:
+
+```text
+http://agent-backend:8000/v1
+```
+
+Les modeles exposes par ce provider sont prefixes par `agent-` pour les distinguer des modeles Ollama directs, par exemple `agent-medgemma:27b`. Choisir ce modele force le passage par le graphe agentique planner/researcher/executor/critic, qui peut appeler Qdrant via `rag_search`.
 
 ---
 
