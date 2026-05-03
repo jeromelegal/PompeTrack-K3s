@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from fetch_queries import (
+from app.medplum.fetch_queries import (
     fetch_fhir_condition,
     fetch_fhir_medicationadministration,
     fetch_fhir_observation,
