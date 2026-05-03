@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional, Tuple, Iterable, Union
 import requests
 from requests.auth import HTTPBasicAuth
 
-from secrets_utils import read_secret_from_file
+from app.medplum.secrets_utils import read_secret_from_file
 
 logger = logging.getLogger("get_medplum_token")
 
