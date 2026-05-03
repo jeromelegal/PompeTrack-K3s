@@ -6,7 +6,7 @@ from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from get_medplum_token import get_token
+from app.medplum.get_medplum_token import get_token
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Agent-LLM")

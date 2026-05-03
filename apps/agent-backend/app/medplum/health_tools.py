@@ -1,9 +1,9 @@
 from datetime import date, datetime, timedelta, timezone
 
-from serializers import get_recent_metrics as fetch_recent_metrics
-from serializers import get_recent_symptoms as fetch_recent_symptoms
-from serializers import get_medication_intake_history
-from serializers import simplify_observation
+from app.medplum.serializers import get_recent_metrics as fetch_recent_metrics
+from app.medplum.serializers import get_recent_symptoms as fetch_recent_symptoms
+from app.medplum.serializers import get_medication_intake_history
+from app.medplum.serializers import simplify_observation
 
 
 
