@@ -169,10 +169,14 @@ def fetch_fhir_observation(
         "effectivePeriod",
         "performer",
         "valueQuantity",
+        "valueString",
+        "valueCodeableConcept",
         "device",
         "hasMember",
         "component",
         "interpretation",
+        "bodySite",
+        "note",
     ])
 
     params = {
