@@ -133,6 +133,13 @@ class RAGService:
 
     def search(self, query: str, k: int | None = None) -> dict[str, Any]:
         limit = min(k or self.settings.max_rag_results, self.settings.max_rag_results)
+        if not self.client.collection_exists(self.settings.qdrant_collection):
+            return {
+                "query": query,
+                "results": [],
+                "warning": f"collection `{self.settings.qdrant_collection}` does not exist",
+            }
+
         vector = self.embeddings.embed_query(query)
         response = self.client.query_points(
             collection_name=self.settings.qdrant_collection,
