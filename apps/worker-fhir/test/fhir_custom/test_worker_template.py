@@ -1,7 +1,7 @@
 import json
 import pytest
 from pathlib import Path
-from fhir_custom.worker_template import normalize_name, FillResource, CreatePreFHIR, CreatePreFHIR_name, CreatePreFHIR_workouts
+from fhir_custom.worker_template import normalize_name, FillResource, CreatePreFHIR, CreatePreFHIR_name, CreatePreFHIR_workouts, drop_unresolved_components
 import fhir_custom.worker_template
 
 @pytest.fixture
@@ -54,6 +54,46 @@ def test_fill_resource_not_found_keeps_string():
     template = {"a": "missing"}
     result = FillResource({}).build(template)
     assert result["a"] == "missing"
+
+def test_drop_unresolved_components_removes_optional_unresolved_values():
+    resource = {
+        "component": [
+            {
+                "code_code[0]": "41981-2",
+                "value_value[0]": "activeEnergyBurned.qty",
+                "value_unit[0]": "activeEnergyBurned.units",
+            },
+            {
+                "code_code[1]": "ok",
+                "value_value[1]": 12,
+                "value_unit[1]": "kcal",
+            },
+        ]
+    }
+
+    result = drop_unresolved_components(resource)
+
+    assert result["component"] == [
+        {
+            "code_code[1]": "ok",
+            "value_value[1]": 12,
+            "value_unit[1]": "kcal",
+        }
+    ]
+
+def test_drop_unresolved_components_removes_empty_component_list():
+    resource = {
+        "component": [
+            {
+                "code_code[0]": "41981-2",
+                "value_value[0]": "activeEnergyBurned.qty",
+            }
+        ]
+    }
+
+    result = drop_unresolved_components(resource)
+
+    assert "component" not in result
     
 
 # Tests for "CreatePreFHIR"

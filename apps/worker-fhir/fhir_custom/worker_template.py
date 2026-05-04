@@ -56,6 +56,36 @@ def normalize_name(raw_name: str) -> str:
 
     return name
 
+def drop_unresolved_components(resource: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Remove optional Observation components whose template placeholders could not
+    be resolved from the source payload.
+    """
+    components = resource.get("component")
+    if not isinstance(components, list):
+        return resource
+
+    resolved_components = []
+    for component in components:
+        if not isinstance(component, dict):
+            continue
+
+        unresolved_value = False
+        for key, value in component.items():
+            if key.startswith("value_") and isinstance(value, str) and "." in value:
+                unresolved_value = True
+                break
+
+        if not unresolved_value:
+            resolved_components.append(component)
+
+    if resolved_components:
+        resource["component"] = resolved_components
+    else:
+        resource.pop("component", None)
+
+    return resource
+
 # Function to fill the template
 class FillResource:
     """
@@ -382,6 +412,7 @@ class CreatePreFHIR_workouts():
         parent_creator = CreatePreFHIR(payload=payload)
 
         parent_obs = parent_creator.render()[0]
+        parent_obs = drop_unresolved_components(parent_obs)
         observations.append(parent_obs)
         parent_index = 0
 
