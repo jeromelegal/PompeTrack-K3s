@@ -5,6 +5,18 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from app.dependencies import get_services
+from app.medplum.health_coach import build_daily_health_features, generate_daily_health_review
+from app.medplum.health_tools import (
+    create_health_summary,
+    get_health_timeline,
+    get_recent_manual_monthly,
+    get_recent_medication,
+    get_recent_metrics,
+    get_recent_spirometry,
+    get_recent_stateofminds,
+    get_recent_symptoms,
+    get_recent_workouts,
+)
 
 
 mcp = FastMCP("pompetrack-agent-tools")
@@ -52,6 +64,81 @@ def workspace_read(path: str) -> dict[str, Any]:
     """Read a UTF-8 text file from the read-only agent workspace."""
     services = get_services()
     return services.workspace.read_file(path)
+
+
+@mcp.tool()
+def recent_metrics(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent simplified FHIR metric observations from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_metrics(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def recent_medication(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent medication intake history from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_medication(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def recent_symptoms(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent symptoms from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_symptoms(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def recent_stateofminds(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent state-of-mind observations from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_stateofminds(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def recent_workouts(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent workouts from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_workouts(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def recent_spirometry(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent spirometry observations from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_spirometry(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def recent_manual_monthly(days: int | None = None) -> dict[str, Any]:
+    """Fetch recent monthly manual observations from Medplum."""
+    return {"days": _limit(days, 30, 90), "items": get_recent_manual_monthly(days=_limit(days, 30, 90))}
+
+
+@mcp.tool()
+def health_timeline(days: int | None = None) -> dict[str, Any]:
+    """Build a combined health timeline from Medplum data."""
+    return get_health_timeline(days=_limit(days, 14, 90))
+
+
+@mcp.tool()
+def health_summary(days: int | None = None) -> dict[str, Any]:
+    """Build a compact health summary from Medplum data."""
+    return create_health_summary(days=_limit(days, 30, 90))
+
+
+@mcp.tool()
+def daily_health_features(days: int | None = None) -> dict[str, Any]:
+    """Compute deterministic health coach features before LLM synthesis."""
+    return build_daily_health_features(days=_limit(days, 30, 90))
+
+
+@mcp.tool()
+async def generate_health_review(days: int | None = None, store: bool = True) -> dict[str, Any]:
+    """Generate a health coach review with the configured LLM."""
+    return await generate_daily_health_review(days=_limit(days, 30, 90), store=store)
+
+
+@mcp.tool()
+def health_reviews(limit: int | None = None) -> dict[str, Any]:
+    """List previously generated health coach reviews."""
+    services = get_services()
+    services.state_store.init_db()
+    k = _limit(limit, 10, 50)
+    return {"limit": k, "items": services.state_store.list_health_reviews(limit=k)}
 
 
 if __name__ == "__main__":

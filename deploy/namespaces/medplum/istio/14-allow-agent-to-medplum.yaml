@@ -15,8 +15,13 @@ spec:
         matchLabels:
           kubernetes.io/metadata.name: llm-agent
       podSelector:
-        matchLabels:
-          app: agent-backend
+        matchExpressions:
+          - key: app
+            operator: In
+            values:
+              - agent-backend
+              - agent-backend-mcpo
+              - health-coach
     ports:
     - protocol: TCP
       port: 80

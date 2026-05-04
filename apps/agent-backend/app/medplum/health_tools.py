@@ -1,12 +1,12 @@
 from datetime import date, datetime, timedelta, timezone
 from typing import Callable
 
-from app.medplum.serializers import get_recent_metrics
-from app.medplum.serializers import get_recent_manual_monthly
-from app.medplum.serializers import get_recent_spirometry
-from app.medplum.serializers import get_recent_stateofminds
-from app.medplum.serializers import get_recent_symptoms
-from app.medplum.serializers import get_recent_workouts
+from app.medplum.serializers import get_recent_metrics as fetch_recent_metrics
+from app.medplum.serializers import get_recent_manual_monthly as fetch_recent_manual_monthly
+from app.medplum.serializers import get_recent_spirometry as fetch_recent_spirometry
+from app.medplum.serializers import get_recent_stateofminds as fetch_recent_stateofminds
+from app.medplum.serializers import get_recent_symptoms as fetch_recent_symptoms
+from app.medplum.serializers import get_recent_workouts as fetch_recent_workouts
 from app.medplum.serializers import get_medication_intake_history
 from app.medplum.serializers import simplify_observation
 
@@ -24,36 +24,36 @@ def _get_recent_for_model(
     return [serializer(row) for row in rows]
 
 
-def tool_get_recent_metrics(days: int = 30) -> list[dict]:
+def get_recent_metrics(days: int = 30) -> list[dict]:
     return _get_recent_for_model(
-        get_recent_metrics,
+        fetch_recent_metrics,
         days=days,
         serializer=simplify_observation,
     )
 
 
-def tool_get_recent_medication(days: int = 30) -> list[dict]:
+def get_recent_medication(days: int = 30) -> list[dict]:
     return _get_recent_for_model(get_medication_intake_history, days=days)
 
 
-def tool_get_recent_stateofminds(days: int = 30) -> list[dict]:
-    return _get_recent_for_model(get_recent_stateofminds, days=days)
+def get_recent_stateofminds(days: int = 30) -> list[dict]:
+    return _get_recent_for_model(fetch_recent_stateofminds, days=days)
 
 
-def tool_get_recent_workouts(days: int = 30) -> list[dict]:
-    return _get_recent_for_model(get_recent_workouts, days=days)
+def get_recent_workouts(days: int = 30) -> list[dict]:
+    return _get_recent_for_model(fetch_recent_workouts, days=days)
 
 
-def tool_get_recent_spirometry(days: int = 30) -> list[dict]:
-    return _get_recent_for_model(get_recent_spirometry, days=days)
+def get_recent_spirometry(days: int = 30) -> list[dict]:
+    return _get_recent_for_model(fetch_recent_spirometry, days=days)
 
 
-def tool_get_recent_manual_monthly(days: int = 30) -> list[dict]:
-    return _get_recent_for_model(get_recent_manual_monthly, days=days)
+def get_recent_manual_monthly(days: int = 30) -> list[dict]:
+    return _get_recent_for_model(fetch_recent_manual_monthly, days=days)
 
 
-def tool_get_recent_symptoms(days: int = 30) -> list[dict]:
-    return _get_recent_for_model(get_recent_symptoms, days=days)
+def get_recent_symptoms(days: int = 30) -> list[dict]:
+    return _get_recent_for_model(fetch_recent_symptoms, days=days)
 
 
 def _parse_date(value: str | None) -> datetime:
