@@ -13,6 +13,8 @@ def mock_external(monkeypatch):
     from utils.iphone_metrics import pipeline_metrics
     from utils.iphone_workouts import pipeline_workouts
     from utils.iphone_stateofminds import pipeline_stateofminds
+    from utils.iphone_symptoms import pipeline_symptoms
+    from utils.iphone_medicationadministrations import pipeline_medications
 
     mocks = {
         'get_object_list': MagicMock(),
@@ -21,6 +23,8 @@ def mock_external(monkeypatch):
         'pipeline_metrics': MagicMock(),
         'pipeline_workouts': MagicMock(),
         'pipeline_stateofminds': MagicMock(),
+        'pipeline_symptoms': MagicMock(),
+        'pipeline_medications': MagicMock(),
     }
 
     monkeypatch.setattr('pipeline_iphone.get_object_list', mocks['get_object_list'])
@@ -29,6 +33,8 @@ def mock_external(monkeypatch):
     monkeypatch.setattr('pipeline_iphone.pipeline_metrics', mocks['pipeline_metrics'])
     monkeypatch.setattr('pipeline_iphone.pipeline_workouts', mocks['pipeline_workouts'])
     monkeypatch.setattr('pipeline_iphone.pipeline_stateofminds', mocks['pipeline_stateofminds'])
+    monkeypatch.setattr('pipeline_iphone.pipeline_symptoms', mocks['pipeline_symptoms'])
+    monkeypatch.setattr('pipeline_iphone.pipeline_medications', mocks['pipeline_medications'])
 
     return mocks
 
@@ -43,11 +49,13 @@ def test_split_json_basic():
         }
     }
 
-    metrics, workouts, stateofminds = split_json(input_file)
+    metrics, workouts, stateofminds, symptoms, medications = split_json(input_file)
 
     assert metrics == {'heart_rate': 80}
     assert workouts == [{'name': 'run', 'duration': 30}]
     assert stateofminds == [{'mood': 'happy'}]
+    assert symptoms is None
+    assert medications is None
     
 
 # Tests for `iphone_json_pipeline`   
@@ -60,7 +68,9 @@ def test_pipeline_success(mock_external):
         'data': {
             'metrics':     {'hr': 70},
             'workouts':    [{'type': 'swim'}],
-            'stateOfMind': [{'mood': 'calm'}]
+            'stateOfMind': [{'mood': 'calm'}],
+            'symptoms':    [{'name': 'fatigue'}],
+            'medications': [{'name': 'test'}],
         }
     }
     mock_external['get_object_json'].return_value = mock_obj
@@ -69,6 +79,8 @@ def test_pipeline_success(mock_external):
     mock_external['pipeline_metrics'].return_value = 'metrics_result'
     mock_external['pipeline_workouts'].return_value = 'workouts_result'
     mock_external['pipeline_stateofminds'].return_value = 'state_result'
+    mock_external['pipeline_symptoms'].return_value = 'symptoms_result'
+    mock_external['pipeline_medications'].return_value = 'medications_result'
     
     result = iphone_json_pipeline()
     assert result is True
@@ -79,6 +91,8 @@ def test_pipeline_success(mock_external):
     mock_external['pipeline_metrics'].assert_called_once_with({'hr': 70})
     mock_external['pipeline_workouts'].assert_called_once_with([{'type': 'swim'}])
     mock_external['pipeline_stateofminds'].assert_called_once_with([{'mood': 'calm'}])
+    mock_external['pipeline_symptoms'].assert_called_once_with([{'name': 'fatigue'}])
+    mock_external['pipeline_medications'].assert_called_once_with([{'name': 'test'}])
 
     # Verify `move_object` called once
     mock_external['move_object'].assert_called_once_with(
