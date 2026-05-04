@@ -44,6 +44,10 @@ def upload_bundles_in_chunks(
     """
     Upload a list of items in chunks.
     """
+    if not items:
+        logger.warning("Aucun item à uploader en bundle chunké.")
+        return False
+
     overall_success = True
 
     for idx, items_chunk in enumerate(chunk_list(items, chunk_size), start=1):
@@ -77,6 +81,10 @@ def upload_medicationadministration_bundles_in_chunks(
     """
     Upload a list of items in chunks.
     """
+    if not items:
+        logger.warning("Aucune MedicationAdministration à uploader en bundle chunké.")
+        return False
+
     overall_success = True
 
     for idx, items_chunk in enumerate(chunk_list(items, chunk_size), start=1):

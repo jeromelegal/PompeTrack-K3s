@@ -3,7 +3,13 @@ import uuid
 from unittest import mock
 import pytest
 
-from fhir_custom.bundle import build_bundle_fhir, upload_bundle, FHIR_BASE
+from fhir_custom.bundle import (
+    build_bundle_fhir,
+    upload_bundle,
+    upload_bundles_in_chunks,
+    upload_medicationadministration_bundles_in_chunks,
+    FHIR_BASE,
+)
 
 from fhir.resources.observation import Observation
 
@@ -93,3 +99,11 @@ def test_upload_bundle_exception(mocker, dummy_payload):
     mocker.patch("fhir_custom.bundle.get_token", return_value="tok")
     mocker.patch("fhir_custom.bundle.requests.post", side_effect=Exception("boom"))
     assert upload_bundle(dummy_payload) is False
+
+
+def test_upload_bundles_in_chunks_empty_returns_false():
+    assert upload_bundles_in_chunks([]) is False
+
+
+def test_upload_medicationadministration_bundles_in_chunks_empty_returns_false():
+    assert upload_medicationadministration_bundles_in_chunks([]) is False
