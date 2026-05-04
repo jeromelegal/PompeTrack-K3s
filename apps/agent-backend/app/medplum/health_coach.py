@@ -108,6 +108,58 @@ def _top_counts(items: list[dict[str, Any]], limit: int = 10) -> list[dict[str, 
     return [{"label": label, "count": count} for label, count in counts.most_common(limit)]
 
 
+def _trend_snapshot(features: dict[str, Any], key: str, limit: int = 8) -> list[dict[str, Any]]:
+    trends = features.get(key)
+    if not isinstance(trends, list):
+        return []
+
+    snapshot = []
+    for trend in trends[:limit]:
+        if not isinstance(trend, dict):
+            continue
+        snapshot.append(
+            {
+                "label": trend.get("label"),
+                "recentAverage": trend.get("recentAverage"),
+                "previousAverage": trend.get("previousAverage"),
+                "delta": trend.get("delta"),
+                "unit": trend.get("unit"),
+            }
+        )
+
+    return snapshot
+
+
+def _compact_review_text(text: str | None, max_chars: int = 900) -> str | None:
+    if not text:
+        return None
+    cleaned = " ".join(text.split())
+    if len(cleaned) <= max_chars:
+        return cleaned
+    return cleaned[: max_chars - 3].rstrip() + "..."
+
+
+def build_review_history_context(history: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    context = []
+    for review in history:
+        features = review.get("features") or {}
+        context.append(
+            {
+                "reviewId": review.get("review_id"),
+                "reviewDate": review.get("review_date"),
+                "createdAt": review.get("created_at"),
+                "periodDays": review.get("period_days"),
+                "counts": features.get("counts"),
+                "metricTrends": _trend_snapshot(features, "metricTrends"),
+                "stateOfMindTrends": _trend_snapshot(features, "stateOfMindTrends"),
+                "topSymptoms": features.get("topSymptoms", [])[:5],
+                "reviewSummary": _compact_review_text(review.get("review_text")),
+            }
+        )
+
+    return context
+
+
 def build_daily_health_features(days: int = 30) -> dict[str, Any]:
     days = max(1, min(days, 90))
 
@@ -151,21 +203,37 @@ def _system_prompt() -> str:
     )
 
 
-def _user_prompt(features: dict[str, Any]) -> str:
+def _user_prompt(features: dict[str, Any], review_history: list[dict[str, Any]] | None = None) -> str:
+    history = review_history or []
+    history_section = (
+        "Historique des revues précédentes:\n"
+        f"{json.dumps(history, ensure_ascii=False, indent=2)}\n\n"
+        if history
+        else "Historique des revues précédentes: aucune revue précédente disponible.\n\n"
+    )
+
     return (
         "Produis une revue santé quotidienne en français, concise et actionnable.\n"
+        "Compare explicitement les nouvelles données avec l'historique lorsque c'est possible. "
+        "Indique si une tendance se confirme, s'améliore, s'inverse ou reste incertaine.\n"
         "Structure attendue:\n"
         "1. Résumé du jour\n"
         "2. Tendances notables\n"
         "3. Points de vigilance\n"
         "4. Conseils concrets pour les prochaines 24-48h\n"
         "5. Questions utiles à poser à l'utilisateur\n\n"
+        f"{history_section}"
         "Données structurées:\n"
         f"{json.dumps(features, ensure_ascii=False, indent=2)}"
     )
 
 
-async def generate_daily_health_review(days: int = 30, *, store: bool = True) -> dict[str, Any]:
+async def generate_daily_health_review(
+    days: int = 30,
+    *,
+    store: bool = True,
+    history_limit: int = 7,
+) -> dict[str, Any]:
     settings = get_settings()
     services = get_services()
     services.state_store.init_db()
@@ -174,6 +242,9 @@ async def generate_daily_health_review(days: int = 30, *, store: bool = True) ->
     model = settings.health_coach_model or settings.default_chat_model
     review_id = f"health-review-{uuid.uuid4().hex}"
     features = build_daily_health_features(days=days)
+    review_history = build_review_history_context(
+        services.state_store.list_health_review_context(limit=max(0, min(history_limit, 14)))
+    )
 
     if store:
         services.state_store.create_health_review(
@@ -188,7 +259,7 @@ async def generate_daily_health_review(days: int = 30, *, store: bool = True) ->
         review_text = await services.ollama.plain_invoke(
             model_name=model,
             system_prompt=_system_prompt(),
-            user_prompt=_user_prompt(features),
+            user_prompt=_user_prompt(features, review_history),
         )
     except Exception as exc:
         if store:
@@ -212,6 +283,7 @@ async def generate_daily_health_review(days: int = 30, *, store: bool = True) ->
         "periodDays": days,
         "model": model,
         "features": features,
+        "history": review_history,
         "review": review_text,
     }
 
@@ -219,10 +291,15 @@ async def generate_daily_health_review(days: int = 30, *, store: bool = True) ->
 async def _async_main() -> None:
     parser = argparse.ArgumentParser(description="Generate the daily PompeTrack health coach review.")
     parser.add_argument("--days", type=int, default=get_settings().health_coach_days)
+    parser.add_argument("--history-limit", type=int, default=7)
     parser.add_argument("--no-store", action="store_true")
     args = parser.parse_args()
 
-    result = await generate_daily_health_review(days=args.days, store=not args.no_store)
+    result = await generate_daily_health_review(
+        days=args.days,
+        store=not args.no_store,
+        history_limit=args.history_limit,
+    )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

@@ -223,3 +223,24 @@ class StateStore:
                 (limit,),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def list_health_review_context(self, limit: int = 7) -> list[dict[str, Any]]:
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                """
+                SELECT review_id, review_date, period_days, model, status, features_json, review_text, created_at
+                FROM health_reviews
+                WHERE status = 'completed'
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+
+        items = []
+        for row in rows:
+            item = dict(row)
+            item["features"] = json.loads(item.pop("features_json"))
+            items.append(item)
+
+        return items

@@ -13,8 +13,12 @@ async def health_features(days: int = 30) -> dict:
 
 
 @router.post("/daily-review", dependencies=[Depends(require_api_key)])
-async def run_daily_review(days: int = 30, store: bool = True) -> dict:
-    return await generate_daily_health_review(days=days, store=store)
+async def run_daily_review(days: int = 30, store: bool = True, history_limit: int = 7) -> dict:
+    return await generate_daily_health_review(
+        days=days,
+        store=store,
+        history_limit=history_limit,
+    )
 
 
 @router.get("/reviews", dependencies=[Depends(require_api_key)])
