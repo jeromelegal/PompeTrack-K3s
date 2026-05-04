@@ -1,6 +1,6 @@
-import os, subprocess
 from fastapi import FastAPI, HTTPException, Depends
 from datetime import datetime, timezone 
+from typing import Callable
 from libs.security import require_scopes
 from prometheus_client import make_asgi_app
 from pipeline_iphone import iphone_json_pipeline
@@ -16,6 +16,27 @@ app.mount("/metrics", make_asgi_app())
 def now_iso(): 
     return datetime.now(timezone.utc).isoformat()
 
+
+def run_pipeline_endpoint(name: str, pipeline_func: Callable[[], bool]) -> dict[str, str]:
+    print(f"Lancement du worker {name} pour {now_iso()}")
+    try:
+        success = pipeline_func()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if not success:
+        raise HTTPException(
+            status_code=500,
+            detail=f"{name} pipeline failed or no object processed",
+        )
+
+    return {
+        "status": "success",
+        "output": f"{name} pipeline completed",
+    }
+
 @app.get("/")
 def root():
     return {"message": "Worker API ready."}
@@ -29,82 +50,40 @@ async def healthz():
 def run_worker_iphone(
     device: dict = Depends(require_scopes(["airflow:iphone"])),
 ):
-    try:
-        print(f"Lancement du worker pour {now_iso()}")
-        result = iphone_json_pipeline()
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return run_pipeline_endpoint("iphone", iphone_json_pipeline)
 
 # Endpoint running manual pipeline    
 @app.get("/run/manual")
 def run_worker_manual(
     device: dict = Depends(require_scopes(["airflow:manual"])),
 ):
-    try:
-        print(f"Lancement du worker pour {now_iso()}")
-        result = manual_json_pipeline()
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return run_pipeline_endpoint("manual", manual_json_pipeline)
 
 # Endpoint running spirometer pipeline    
 @app.get("/run/spirometer")
 def run_worker_spirometer(
     device: dict = Depends(require_scopes(["airflow:spirometer"])),
 ):
-    try:
-        print(f"Lancement du worker pour {now_iso()}")
-        result = spirometer_json_pipeline()
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return run_pipeline_endpoint("spirometer", spirometer_json_pipeline)
 
 # Endpoint running strength pipeline    
 @app.get("/run/strength")
 def run_worker_strength(
     device: dict = Depends(require_scopes(["airflow:strength"])),
 ):
-    try:
-        print(f"Lancement du worker pour {now_iso()}")
-        result = strength_json_pipeline()
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return run_pipeline_endpoint("strength", strength_json_pipeline)
 
 # Endpoint running logs transfert    
 @app.get("/run/logs")
 def run_logs_transfert(
     device: dict = Depends(require_scopes(["fhir:logs"])),
 ):
-    try:
-        print(f"Lancement du transfert de logs {now_iso()}")
-        result = transfert_logs_pipeline()
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return run_pipeline_endpoint("logs", transfert_logs_pipeline)
     
 # Endpoint running medication pipeline    
 @app.get("/run/medication")
 def run_worker_medication(
     device: dict = Depends(require_scopes(["airflow:medication"])),
 ):
-    try:
-        print(f"Lancement du worker pour {now_iso()}")
-        result = medication_json_pipeline()
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr)
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return run_pipeline_endpoint("medication", medication_json_pipeline)
     
