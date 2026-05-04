@@ -34,6 +34,8 @@ spec:
               args:
                 - --days
                 - "30"
+                - --history-limit
+                - "7"
               env:
                 - name: OLLAMA_BASE_URL
                   value: "http://ollama.lan:11434"

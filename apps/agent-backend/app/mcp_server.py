@@ -127,9 +127,17 @@ def daily_health_features(days: int | None = None) -> dict[str, Any]:
 
 
 @mcp.tool()
-async def generate_health_review(days: int | None = None, store: bool = True) -> dict[str, Any]:
+async def generate_health_review(
+    days: int | None = None,
+    store: bool = True,
+    history_limit: int | None = None,
+) -> dict[str, Any]:
     """Generate a health coach review with the configured LLM."""
-    return await generate_daily_health_review(days=_limit(days, 30, 90), store=store)
+    return await generate_daily_health_review(
+        days=_limit(days, 30, 90),
+        store=store,
+        history_limit=_limit(history_limit, 7, 14),
+    )
 
 
 @mcp.tool()
