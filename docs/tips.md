@@ -129,6 +129,73 @@ Les modeles exposes par ce provider sont prefixes par `agent-` pour les distingu
 
 ---
 
+## Telegram bot pour le coach santé et le LLM
+
+Créer le bot Telegram:
+
+1. Ouvrir Telegram et parler à `@BotFather`.
+2. Envoyer `/newbot`.
+3. Choisir un nom, puis un username qui finit par `bot`.
+4. Garder le token donné par BotFather.
+5. Dans Telegram, ouvrir une conversation avec le bot et envoyer `/start`.
+
+Pour trouver le `chat_id`, deux options:
+
+```bash
+curl "https://api.telegram.org/bot<TOKEN_DU_BOT>/getUpdates"
+```
+
+Ou déployer temporairement le bot sans `allowed_chat_ids`, puis envoyer `/id`.
+
+Créer le secret Kubernetes initial:
+
+```bash
+kubectl -n llm-agent create secret generic telegram-bot \
+  --from-literal=bot_token='<TOKEN_DU_BOT>'
+```
+
+Après récupération du `chat_id`, verrouiller le bot:
+
+```bash
+kubectl -n llm-agent create secret generic telegram-bot \
+  --dry-run=client -o yaml \
+  --from-literal=bot_token='<TOKEN_DU_BOT>' \
+  --from-literal=allowed_chat_ids='<CHAT_ID_AUTORISE>' \
+  --from-literal=notify_chat_ids='<CHAT_ID_NOTIFICATION>' \
+  | kubectl apply -f -
+```
+
+Activer le bot dans `deploy/charts/llm-agent/values.yaml`:
+
+```yaml
+telegramBot:
+  enabled: true
+
+healthCoach:
+  telegramDailyReviewEnabled: true
+```
+
+Puis redéployer:
+
+```bash
+helm upgrade llm-agent deploy/charts/llm-agent -n llm-agent
+kubectl -n llm-agent apply -f deploy/namespaces/llm-agent/netpol/14-allow-telegram-egress.yaml
+```
+
+Commandes du bot:
+
+```text
+/id
+/latest
+/features
+/coach
+/ask <question>
+```
+
+Une question envoyée sans commande est traitée comme une requête LLM via `agent-backend`.
+
+---
+
 ## Verifs istio :
 
 ```bash

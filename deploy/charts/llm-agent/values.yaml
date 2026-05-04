@@ -142,8 +142,21 @@ healthCoach:
   days: 30
   historyLimit: 7
   model: "medgemma:27b"
+  telegramDailyReviewEnabled: true
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
+
+telegramBot:
+  enabled: true
+  tokenSecretName: telegram-bot
+  tokenSecretKey: bot_token
+  allowedChatIdsSecretName: telegram-bot
+  allowedChatIdsSecretKey: allowed_chat_ids
+  notifyChatIdsSecretName: telegram-bot
+  notifyChatIdsSecretKey: notify_chat_ids
+  pollTimeoutSeconds: 25
+  commandTimeoutSeconds: 180
+  backendBaseUrl: "http://agent-backend:8000"
 
 # We discourage changing this setting. Using the "OrderedReady" policy in a
 # multi-node cluster will cause a deadlock where nodes refuse to become

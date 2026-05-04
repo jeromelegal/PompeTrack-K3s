@@ -6,6 +6,9 @@ metadata:
   labels:
     app: health-coach
     allow-external-ollama: "true"
+    {{- if .Values.healthCoach.telegramDailyReviewEnabled }}
+    allow-telegram-egress: "true"
+    {{- end }}
 spec:
   schedule: {{ .Values.healthCoach.schedule | quote }}
   suspend: {{ .Values.healthCoach.suspend | default false }}
@@ -20,6 +23,9 @@ spec:
           labels:
             app: health-coach
             allow-external-ollama: "true"
+            {{- if .Values.healthCoach.telegramDailyReviewEnabled }}
+            allow-telegram-egress: "true"
+            {{- end }}
         spec:
           serviceAccountName: agent-backend
           restartPolicy: Never
@@ -47,6 +53,27 @@ spec:
                   value: {{ .Values.healthCoach.model | quote }}
                 - name: HEALTH_COACH_DAYS
                   value: {{ .Values.healthCoach.days | quote }}
+                - name: TELEGRAM_DAILY_REVIEW_ENABLED
+                  value: {{ .Values.healthCoach.telegramDailyReviewEnabled | quote }}
+                {{- if .Values.healthCoach.telegramDailyReviewEnabled }}
+                - name: TELEGRAM_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.tokenSecretName | quote }}
+                      key: {{ .Values.telegramBot.tokenSecretKey | quote }}
+                - name: TELEGRAM_ALLOWED_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.allowedChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.allowedChatIdsSecretKey | quote }}
+                      optional: true
+                - name: TELEGRAM_NOTIFY_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.notifyChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.notifyChatIdsSecretKey | quote }}
+                      optional: true
+                {{- end }}
                 - name: QDRANT_URL
                   value: "http://llm-agent-qdrant:6333"
                 - name: SEARXNG_BASE_URL
