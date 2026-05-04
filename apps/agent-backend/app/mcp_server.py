@@ -149,5 +149,14 @@ def health_reviews(limit: int | None = None) -> dict[str, Any]:
     return {"limit": k, "items": services.state_store.list_health_reviews(limit=k)}
 
 
+@mcp.tool()
+def latest_health_review() -> dict[str, Any]:
+    """Return the latest generated health coach review."""
+    services = get_services()
+    services.state_store.init_db()
+    review = services.state_store.get_latest_health_review()
+    return {"item": review}
+
+
 if __name__ == "__main__":
     mcp.run()

@@ -1,3 +1,4 @@
+{{- if .Values.healthCoach.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -6,10 +7,11 @@ metadata:
     app: health-coach
     allow-external-ollama: "true"
 spec:
-  schedule: "30 6 * * *"
+  schedule: {{ .Values.healthCoach.schedule | quote }}
+  suspend: {{ .Values.healthCoach.suspend | default false }}
   concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: {{ .Values.healthCoach.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.healthCoach.failedJobsHistoryLimit }}
   jobTemplate:
     spec:
       backoffLimit: 1
@@ -33,18 +35,18 @@ spec:
                 - app.medplum.health_coach
               args:
                 - --days
-                - "30"
+                - {{ .Values.healthCoach.days | quote }}
                 - --history-limit
-                - "7"
+                - {{ .Values.healthCoach.historyLimit | quote }}
               env:
                 - name: OLLAMA_BASE_URL
                   value: "http://ollama.lan:11434"
                 - name: DEFAULT_CHAT_MODEL
-                  value: "medgemma:27b"
+                  value: {{ .Values.healthCoach.model | quote }}
                 - name: HEALTH_COACH_MODEL
-                  value: "medgemma:27b"
+                  value: {{ .Values.healthCoach.model | quote }}
                 - name: HEALTH_COACH_DAYS
-                  value: "30"
+                  value: {{ .Values.healthCoach.days | quote }}
                 - name: QDRANT_URL
                   value: "http://llm-agent-qdrant:6333"
                 - name: SEARXNG_BASE_URL
@@ -99,3 +101,4 @@ spec:
                     path: MEDPLUM_CLIENT_ID
                   - key: MEDPLUM_CLIENT_SECRET
                     path: MEDPLUM_CLIENT_SECRET
+{{- end }}

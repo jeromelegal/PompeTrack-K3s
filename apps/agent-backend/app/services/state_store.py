@@ -58,6 +58,7 @@ class StateStore:
                     model TEXT NOT NULL,
                     status TEXT NOT NULL,
                     features_json TEXT NOT NULL,
+                    structured_json TEXT,
                     review_text TEXT,
                     error TEXT,
                     created_at TEXT NOT NULL
@@ -70,6 +71,12 @@ class StateStore:
                 ON health_reviews(created_at DESC)
                 """
             )
+            existing_columns = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(health_reviews)").fetchall()
+            }
+            if "structured_json" not in existing_columns:
+                conn.execute("ALTER TABLE health_reviews ADD COLUMN structured_json TEXT")
 
     def create_run(self, run_id: str, session_id: str, user_id: str | None, model: str, goal: str) -> None:
         now = datetime.now(timezone.utc).isoformat()
@@ -186,15 +193,21 @@ class StateStore:
         status: str,
         review_text: str | None = None,
         error: str | None = None,
+        structured_review: dict[str, Any] | None = None,
     ) -> None:
+        structured_json = (
+            json.dumps(structured_review, ensure_ascii=False)
+            if structured_review is not None
+            else None
+        )
         with closing(self._connect()) as conn, conn:
             conn.execute(
                 """
                 UPDATE health_reviews
-                SET status = ?, review_text = ?, error = ?
+                SET status = ?, review_text = ?, error = ?, structured_json = ?
                 WHERE review_id = ?
                 """,
-                (status, review_text, error, review_id),
+                (status, review_text, error, structured_json, review_id),
             )
 
     def get_health_review(self, review_id: str) -> dict[str, Any] | None:
@@ -209,26 +222,54 @@ class StateStore:
 
         item = dict(row)
         item["features"] = json.loads(item.pop("features_json"))
+        structured_json = item.pop("structured_json", None)
+        item["structuredReview"] = json.loads(structured_json) if structured_json else None
         return item
 
     def list_health_reviews(self, limit: int = 20) -> list[dict[str, Any]]:
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 """
-                SELECT review_id, review_date, period_days, model, status, review_text, error, created_at
+                SELECT review_id, review_date, period_days, model, status, structured_json, review_text, error, created_at
                 FROM health_reviews
                 ORDER BY created_at DESC
                 LIMIT ?
                 """,
                 (limit,),
             ).fetchall()
-        return [dict(row) for row in rows]
+        items = []
+        for row in rows:
+            item = dict(row)
+            structured_json = item.pop("structured_json", None)
+            item["structuredReview"] = json.loads(structured_json) if structured_json else None
+            items.append(item)
+        return items
+
+    def get_latest_health_review(self) -> dict[str, Any] | None:
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                """
+                SELECT *
+                FROM health_reviews
+                ORDER BY created_at DESC
+                LIMIT 1
+                """
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        item = dict(row)
+        item["features"] = json.loads(item.pop("features_json"))
+        structured_json = item.pop("structured_json", None)
+        item["structuredReview"] = json.loads(structured_json) if structured_json else None
+        return item
 
     def list_health_review_context(self, limit: int = 7) -> list[dict[str, Any]]:
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 """
-                SELECT review_id, review_date, period_days, model, status, features_json, review_text, created_at
+                SELECT review_id, review_date, period_days, model, status, features_json, structured_json, review_text, created_at
                 FROM health_reviews
                 WHERE status = 'completed'
                 ORDER BY created_at DESC
@@ -241,6 +282,8 @@ class StateStore:
         for row in rows:
             item = dict(row)
             item["features"] = json.loads(item.pop("features_json"))
+            structured_json = item.pop("structured_json", None)
+            item["structuredReview"] = json.loads(structured_json) if structured_json else None
             items.append(item)
 
         return items
