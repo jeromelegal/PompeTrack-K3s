@@ -28,6 +28,16 @@ async def list_reviews(limit: int = 20) -> list[dict]:
     return services.state_store.list_health_reviews(limit=limit)
 
 
+@router.get("/reviews/latest", dependencies=[Depends(require_api_key)])
+async def get_latest_review() -> dict:
+    services = get_services()
+    services.state_store.init_db()
+    review = services.state_store.get_latest_health_review()
+    if review is None:
+        raise HTTPException(status_code=404, detail="health review not found")
+    return review
+
+
 @router.get("/reviews/{review_id}", dependencies=[Depends(require_api_key)])
 async def get_review(review_id: str) -> dict:
     services = get_services()
