@@ -32,6 +32,8 @@ WORKOUT_NAME_MAP = {
     "Yoga": "yoga",
     "Entraînement de Force Fonctionnelle": "workouts",
     "Musculation": "strength_training",
+    "Flexibilité": "workouts",
+    "Flexibilite": "workouts",
 }
 
 # Function to normalize 
