@@ -64,6 +64,9 @@ spec:
             - name: agent-workspace
               mountPath: /workspace
               readOnly: true
+            - name: medplum-creds-agent
+              mountPath: /var/run/secrets
+              readOnly: true
           startupProbe:
             httpGet:
               path: /health

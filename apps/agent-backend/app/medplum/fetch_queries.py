@@ -474,7 +474,7 @@ def fetch_fhir_medicationadministration(
             dates.append(f"ge{start_date}")
         if end_date:
             dates.append(f"le{end_date}")
-        params["date"] = dates if len(dates) > 1 else dates[0]
+        params["effective-time"] = dates if len(dates) > 1 else dates[0]
 
     all_medicationadministrations: list[dict] = []
     seen_medadmin_refs: set[str] = set()
