@@ -1,59 +1,59 @@
 from datetime import date, datetime, timedelta, timezone
+from typing import Callable
 
-from app.medplum.serializers import get_recent_metrics as fetch_recent_metrics
-from app.medplum.serializers import get_recent_manual_monthly as fetch_recent_manual_monthly
-from app.medplum.serializers import get_recent_spirometry as fetch_recent_spirometry
-from app.medplum.serializers import get_recent_stateofminds as fetch_recent_stateofminds
-from app.medplum.serializers import get_recent_symptoms as fetch_recent_symptoms
-from app.medplum.serializers import get_recent_workouts as fetch_recent_workouts
+from app.medplum.serializers import get_recent_metrics
+from app.medplum.serializers import get_recent_manual_monthly
+from app.medplum.serializers import get_recent_spirometry
+from app.medplum.serializers import get_recent_stateofminds
+from app.medplum.serializers import get_recent_symptoms
+from app.medplum.serializers import get_recent_workouts
 from app.medplum.serializers import get_medication_intake_history
 from app.medplum.serializers import simplify_observation
 
 
+def _get_recent_for_model(
+    fetcher: Callable[..., list[dict]],
+    *,
+    days: int,
+    serializer: Callable[[dict], dict] | None = None,
+) -> list[dict]:
+    rows = fetcher(days=days)
+    if serializer is None:
+        return rows
+
+    return [serializer(row) for row in rows]
+
 
 def tool_get_recent_metrics(days: int = 30) -> list[dict]:
-    observations = fetch_recent_metrics(days=days)
-    return [simplify_observation(obs) for obs in observations]
+    return _get_recent_for_model(
+        get_recent_metrics,
+        days=days,
+        serializer=simplify_observation,
+    )
 
 
 def tool_get_recent_medication(days: int = 30) -> list[dict]:
-    return get_medication_intake_history(days=days)
-
-
-def get_recent_stateofminds(days: int = 30) -> list[dict]:
-    return fetch_recent_stateofminds(days=days)
+    return _get_recent_for_model(get_medication_intake_history, days=days)
 
 
 def tool_get_recent_stateofminds(days: int = 30) -> list[dict]:
-    return get_recent_stateofminds(days=days)
-
-
-def get_recent_workouts(days: int = 30) -> list[dict]:
-    return fetch_recent_workouts(days=days)
+    return _get_recent_for_model(get_recent_stateofminds, days=days)
 
 
 def tool_get_recent_workouts(days: int = 30) -> list[dict]:
-    return get_recent_workouts(days=days)
-
-
-def get_recent_spirometry(days: int = 30) -> list[dict]:
-    return fetch_recent_spirometry(days=days)
+    return _get_recent_for_model(get_recent_workouts, days=days)
 
 
 def tool_get_recent_spirometry(days: int = 30) -> list[dict]:
-    return get_recent_spirometry(days=days)
-
-
-def get_recent_manual_monthly(days: int = 30) -> list[dict]:
-    return fetch_recent_manual_monthly(days=days)
+    return _get_recent_for_model(get_recent_spirometry, days=days)
 
 
 def tool_get_recent_manual_monthly(days: int = 30) -> list[dict]:
-    return get_recent_manual_monthly(days=days)
+    return _get_recent_for_model(get_recent_manual_monthly, days=days)
 
 
-def get_recent_symptoms(days: int = 30) -> list[dict]:
-    return fetch_recent_symptoms(days=days)
+def tool_get_recent_symptoms(days: int = 30) -> list[dict]:
+    return _get_recent_for_model(get_recent_symptoms, days=days)
 
 
 def _parse_date(value: str | None) -> datetime:
@@ -163,8 +163,8 @@ def _build_health_timeline(
 def get_health_timeline(days: int = 14) -> dict:
     days = max(1, min(days, 90))
 
-    metrics = tool_get_recent_metrics(days=days)
-    medications = tool_get_recent_medication(days=days)
+    metrics = get_recent_metrics(days=days)
+    medications = get_recent_medication(days=days)
     symptoms = get_recent_symptoms(days=days)
     stateofminds = get_recent_stateofminds(days=days)
 
@@ -174,8 +174,8 @@ def get_health_timeline(days: int = 14) -> dict:
 def create_health_summary(days: int = 30) -> dict:
     days = max(1, min(days, 90))
 
-    metrics = _sort_by_date_desc(tool_get_recent_metrics(days=days))
-    medications = _sort_by_date_desc(tool_get_recent_medication(days=days))
+    metrics = _sort_by_date_desc(get_recent_metrics(days=days))
+    medications = _sort_by_date_desc(get_recent_medication(days=days))
     symptoms = _sort_by_date_desc(get_recent_symptoms(days=days))
     stateofminds = _sort_by_date_desc(get_recent_stateofminds(days=days))
 
