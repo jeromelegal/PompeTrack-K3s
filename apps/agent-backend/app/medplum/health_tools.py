@@ -1,7 +1,11 @@
 from datetime import date, datetime, timedelta, timezone
 
 from app.medplum.serializers import get_recent_metrics as fetch_recent_metrics
+from app.medplum.serializers import get_recent_manual_monthly as fetch_recent_manual_monthly
+from app.medplum.serializers import get_recent_spirometry as fetch_recent_spirometry
+from app.medplum.serializers import get_recent_stateofminds as fetch_recent_stateofminds
 from app.medplum.serializers import get_recent_symptoms as fetch_recent_symptoms
+from app.medplum.serializers import get_recent_workouts as fetch_recent_workouts
 from app.medplum.serializers import get_medication_intake_history
 from app.medplum.serializers import simplify_observation
 
@@ -14,6 +18,38 @@ def tool_get_recent_metrics(days: int = 30) -> list[dict]:
 
 def tool_get_recent_medication(days: int = 30) -> list[dict]:
     return get_medication_intake_history(days=days)
+
+
+def get_recent_stateofminds(days: int = 30) -> list[dict]:
+    return fetch_recent_stateofminds(days=days)
+
+
+def tool_get_recent_stateofminds(days: int = 30) -> list[dict]:
+    return get_recent_stateofminds(days=days)
+
+
+def get_recent_workouts(days: int = 30) -> list[dict]:
+    return fetch_recent_workouts(days=days)
+
+
+def tool_get_recent_workouts(days: int = 30) -> list[dict]:
+    return get_recent_workouts(days=days)
+
+
+def get_recent_spirometry(days: int = 30) -> list[dict]:
+    return fetch_recent_spirometry(days=days)
+
+
+def tool_get_recent_spirometry(days: int = 30) -> list[dict]:
+    return get_recent_spirometry(days=days)
+
+
+def get_recent_manual_monthly(days: int = 30) -> list[dict]:
+    return fetch_recent_manual_monthly(days=days)
+
+
+def tool_get_recent_manual_monthly(days: int = 30) -> list[dict]:
+    return get_recent_manual_monthly(days=days)
 
 
 def get_recent_symptoms(days: int = 30) -> list[dict]:
@@ -68,6 +104,14 @@ def _timeline_event(event_type: str, item: dict) -> dict:
             "clinicalStatus": item.get("clinicalStatus"),
             "source": item.get("source"),
         })
+    elif event_type == "stateofmind":
+        event.update({
+            "label": item.get("display") or item.get("code"),
+            "value": item.get("value"),
+            "unit": item.get("unit"),
+            "interpretation": item.get("interpretation"),
+            "components": item.get("components"),
+        })
 
     return event
 
@@ -85,11 +129,15 @@ def _build_health_timeline(
     metrics: list[dict],
     medications: list[dict],
     symptoms: list[dict],
+    stateofminds: list[dict] | None = None,
 ) -> dict:
+    stateofminds = stateofminds or []
+
     events = []
     events.extend(_timeline_event("metric", metric) for metric in metrics)
     events.extend(_timeline_event("medication", medication) for medication in medications)
     events.extend(_timeline_event("symptom", symptom) for symptom in symptoms)
+    events.extend(_timeline_event("stateofmind", item) for item in stateofminds)
     events = _sort_by_date_desc([event for event in events if event.get("date")])
 
     end_date = date.today()
@@ -105,6 +153,7 @@ def _build_health_timeline(
             "metrics": len(metrics),
             "medications": len(medications),
             "symptoms": len(symptoms),
+            "stateofminds": len(stateofminds),
             "events": len(events),
         },
         "events": events,
@@ -117,8 +166,9 @@ def get_health_timeline(days: int = 14) -> dict:
     metrics = tool_get_recent_metrics(days=days)
     medications = tool_get_recent_medication(days=days)
     symptoms = get_recent_symptoms(days=days)
+    stateofminds = get_recent_stateofminds(days=days)
 
-    return _build_health_timeline(days, metrics, medications, symptoms)
+    return _build_health_timeline(days, metrics, medications, symptoms, stateofminds)
 
 
 def create_health_summary(days: int = 30) -> dict:
@@ -127,6 +177,7 @@ def create_health_summary(days: int = 30) -> dict:
     metrics = _sort_by_date_desc(tool_get_recent_metrics(days=days))
     medications = _sort_by_date_desc(tool_get_recent_medication(days=days))
     symptoms = _sort_by_date_desc(get_recent_symptoms(days=days))
+    stateofminds = _sort_by_date_desc(get_recent_stateofminds(days=days))
 
     latest_metrics_by_code = {}
     for metric in metrics:
@@ -153,11 +204,19 @@ def create_health_summary(days: int = 30) -> dict:
             "metrics": len(metrics),
             "medications": len(medications),
             "symptoms": len(symptoms),
+            "stateofminds": len(stateofminds),
             "activeSymptoms": len(active_symptoms),
         },
         "latestMetrics": list(latest_metrics_by_code.values()),
+        "recentStateOfMinds": stateofminds[:10],
         "recentSymptoms": symptoms[:10],
         "activeSymptoms": active_symptoms[:10],
         "recentMedication": medications[:10],
-        "timeline": _build_health_timeline(days, metrics, medications, symptoms),
+        "timeline": _build_health_timeline(
+            days,
+            metrics,
+            medications,
+            symptoms,
+            stateofminds,
+        ),
     }
