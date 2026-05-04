@@ -34,4 +34,4 @@ def test_process_global_medications_ignores_not_done_status():
 
         assert process_global_medications(medications) is True
 
-    upload.assert_called_once_with([], chunk_size=5)
+    upload.assert_not_called()

@@ -28,6 +28,7 @@ def fake_template(tmp_path):
 # Tests for "normalize_name"
 def test_normalize_name_mapping():
     assert normalize_name("Yoga") == "yoga"
+    assert normalize_name("Flexibilité") == "workouts"
 
 def test_normalize_name_ascii_cleanup():
     assert normalize_name("Entraînement de Force") == "entrainement_de_force"
