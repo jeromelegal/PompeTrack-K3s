@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     default_chat_model: str = DEFAULT_CHAT_MODEL
     embedding_model: str = "nomic-embed-text:latest"
     model_temperature: float = 0.0
+    health_coach_model: str = os.environ.get("HEALTH_COACH_MODEL", DEFAULT_CHAT_MODEL)
+    health_coach_days: int = int(os.environ.get("HEALTH_COACH_DAYS", "30"))
 
     max_iterations: int = 4
     max_actions_per_iteration: int = 6
