@@ -10,6 +10,7 @@ DEFAULT_CHAT_MODEL = os.environ.get("DEFAULT_CHAT_MODEL", "medgemma:27b")
 BACKEND_API_KEY = os.environ.get("BACKEND_API_KEY")
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://llm-agent-qdrant:6333")
 SEARXNG_BASE_URL = os.environ.get("SEARXNG_BASE_URL", "http://searxng:8080")
+AGENT_BACKEND_BASE_URL = os.environ.get("AGENT_BACKEND_BASE_URL", "http://agent-backend:8000")
 
 class Settings(BaseSettings):
     app_name: str = "llm-agent"
@@ -26,6 +27,16 @@ class Settings(BaseSettings):
     model_temperature: float = 0.0
     health_coach_model: str = os.environ.get("HEALTH_COACH_MODEL", DEFAULT_CHAT_MODEL)
     health_coach_days: int = int(os.environ.get("HEALTH_COACH_DAYS", "30"))
+
+    agent_backend_base_url: str = AGENT_BACKEND_BASE_URL
+    telegram_bot_token: str | None = os.environ.get("TELEGRAM_BOT_TOKEN")
+    telegram_allowed_chat_ids: str = os.environ.get("TELEGRAM_ALLOWED_CHAT_IDS", "")
+    telegram_notify_chat_ids: str = os.environ.get("TELEGRAM_NOTIFY_CHAT_IDS", "")
+    telegram_daily_review_enabled: bool = (
+        os.environ.get("TELEGRAM_DAILY_REVIEW_ENABLED", "false").lower() == "true"
+    )
+    telegram_poll_timeout_seconds: int = int(os.environ.get("TELEGRAM_POLL_TIMEOUT_SECONDS", "25"))
+    telegram_command_timeout_seconds: int = int(os.environ.get("TELEGRAM_COMMAND_TIMEOUT_SECONDS", "180"))
 
     max_iterations: int = 4
     max_actions_per_iteration: int = 6

@@ -1,0 +1,56 @@
+{{- if .Values.telegramBot.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-health-bot
+  labels:
+    app: telegram-health-bot
+    allow-telegram-egress: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegram-health-bot
+  template:
+    metadata:
+      labels:
+        app: telegram-health-bot
+        allow-telegram-egress: "true"
+    spec:
+      serviceAccountName: agent-backend
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: telegram-health-bot
+          image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+          imagePullPolicy: Always
+          command:
+            - python
+            - -m
+            - app.telegram.bot
+          env:
+            - name: AGENT_BACKEND_BASE_URL
+              value: {{ .Values.telegramBot.backendBaseUrl | quote }}
+            - name: DEFAULT_CHAT_MODEL
+              value: {{ .Values.healthCoach.model | quote }}
+            - name: TELEGRAM_POLL_TIMEOUT_SECONDS
+              value: {{ .Values.telegramBot.pollTimeoutSeconds | quote }}
+            - name: TELEGRAM_COMMAND_TIMEOUT_SECONDS
+              value: {{ .Values.telegramBot.commandTimeoutSeconds | quote }}
+            - name: BACKEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-api-key
+                  key: secret_key
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.telegramBot.tokenSecretName | quote }}
+                  key: {{ .Values.telegramBot.tokenSecretKey | quote }}
+            - name: TELEGRAM_ALLOWED_CHAT_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.telegramBot.allowedChatIdsSecretName | quote }}
+                  key: {{ .Values.telegramBot.allowedChatIdsSecretKey | quote }}
+                  optional: true
+{{- end }}

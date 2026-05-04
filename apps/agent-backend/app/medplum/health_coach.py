@@ -21,6 +21,7 @@ from app.medplum.health_tools import (
     get_recent_symptoms,
     get_recent_workouts,
 )
+from app.telegram.notifier import notify_daily_health_review
 
 
 def _parse_date(value: str | None) -> datetime | None:
@@ -519,7 +520,7 @@ async def generate_daily_health_review(
             structured_review=structured_review,
         )
 
-    return {
+    result = {
         "reviewId": review_id,
         "reviewDate": date.today().isoformat(),
         "periodDays": days,
@@ -529,6 +530,9 @@ async def generate_daily_health_review(
         "structuredReview": structured_review,
         "review": review_text,
     }
+    if store:
+        await notify_daily_health_review(result)
+    return result
 
 
 async def _async_main() -> None:
