@@ -18,18 +18,21 @@ spec:
                 secretKeyRef:
                   name: airflow-postgresql-auth
                   key: postgres-password
+            - name: AIRFLOW_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-postgresql-auth
+                  key: password
           command:
             - /bin/bash
             - -c
             - |
+              set -euo pipefail
               psql -h airflow-postgresql \
                    -U postgres \
-                   -d postgres <<EOF
-              DO $$
-              BEGIN
-                 IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'airflow') THEN
-                    CREATE ROLE airflow WITH LOGIN PASSWORD '${AIRFLOW_DB_PASSWORD}';
-                 END IF;
-              END
-              $$;
-              EOF
+                   -d postgres \
+                   -v ON_ERROR_STOP=1 \
+                   -v airflow_password="$AIRFLOW_DB_PASSWORD" <<'SQL'
+              SELECT format('CREATE ROLE airflow WITH LOGIN PASSWORD %L', :'airflow_password')
+              WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'airflow') \gexec
+              SQL
