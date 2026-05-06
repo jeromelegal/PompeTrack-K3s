@@ -1,6 +1,8 @@
 minio:
   mode: standalone
 
+  airflowLogsRetentionDays: 7
+
   existingSecret: minio-root
 
   replicas: 1
