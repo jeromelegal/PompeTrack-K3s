@@ -21,6 +21,7 @@ from app.telegram.formatters import (
     format_symptoms,
     format_today,
     format_trends,
+    format_watchlist,
     format_week,
     format_workouts,
 )
@@ -36,11 +37,13 @@ HELP_TEXT = """Commandes disponibles:
 /today - synthèse déterministe des dernières 24h
 /week - synthèse déterministe des 7 derniers jours
 /trends - tendances récentes
+/watchlist - suivi personnalisé
 /meds - médicaments récents
 /symptoms - symptômes récents
 /spirometry - spirométrie récente
 /workouts - entraînements récents
 /evening - questions ciblées du soir
+/weekly-review - lance un bilan hebdomadaire maintenant
 /features - synthèse déterministe des données récentes
 /coach - lance une nouvelle revue santé maintenant
 /ask <question> - pose une question libre au LLM
@@ -159,6 +162,12 @@ class TelegramHealthBot:
             result = self.backend.run_daily_review(days=30, history_limit=7)
             self.telegram.send_message(chat_id, format_review_result_brief(result))
             return
+        if command == "/weekly-review":
+            self.telegram.send_message(chat_id, "Je lance un bilan hebdomadaire. Cela peut prendre un peu de temps.")
+            self.telegram.send_chat_action(chat_id)
+            result = self.backend.run_weekly_review(days=90, history_limit=7)
+            self.telegram.send_message(chat_id, format_review_result_brief(result))
+            return
         if command == "/ask":
             prompt = rest.strip()
             if not prompt:
@@ -177,6 +186,10 @@ class TelegramHealthBot:
         if command == "/trends":
             self.telegram.send_chat_action(chat_id)
             self.telegram.send_message(chat_id, format_trends(self.backend.health_features(days=30)))
+            return
+        if command == "/watchlist":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_watchlist(self.backend.health_features(days=30)))
             return
         if command == "/meds":
             self.telegram.send_chat_action(chat_id)

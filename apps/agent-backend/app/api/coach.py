@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.security import require_api_key
 from app.dependencies import get_services
-from app.medplum.health_coach import build_daily_health_features, generate_daily_health_review
+from app.medplum.health_coach import (
+    build_daily_health_features,
+    generate_daily_health_review,
+    generate_weekly_health_review,
+)
 
 router = APIRouter(prefix="/api/v1/health-coach", tags=["health-coach"])
 
@@ -15,6 +19,15 @@ async def health_features(days: int = 30) -> dict:
 @router.post("/daily-review", dependencies=[Depends(require_api_key)])
 async def run_daily_review(days: int = 30, store: bool = True, history_limit: int = 7) -> dict:
     return await generate_daily_health_review(
+        days=days,
+        store=store,
+        history_limit=history_limit,
+    )
+
+
+@router.post("/weekly-review", dependencies=[Depends(require_api_key)])
+async def run_weekly_review(days: int = 90, store: bool = True, history_limit: int = 7) -> dict:
+    return await generate_weekly_health_review(
         days=days,
         store=store,
         history_limit=history_limit,
