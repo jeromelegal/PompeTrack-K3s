@@ -158,6 +158,13 @@ telegramBot:
   commandTimeoutSeconds: 180
   backendBaseUrl: "http://agent-backend:8000"
 
+eveningQuestions:
+  enabled: true
+  schedule: "30 19 * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
 # We discourage changing this setting. Using the "OrderedReady" policy in a
 # multi-node cluster will cause a deadlock where nodes refuse to become
 # "Ready" until all nodes are running.

@@ -16,6 +16,28 @@ class BackendClient:
     def latest_review(self) -> dict[str, Any]:
         return self._request("GET", "/api/v1/health-coach/reviews/latest")
 
+    def list_reviews(self, *, limit: int = 20) -> list[dict[str, Any]]:
+        data = self._request("GET", f"/api/v1/health-coach/reviews?limit={limit}")
+        if isinstance(data, list):
+            return data
+        return []
+
+    def review(self, review_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/api/v1/health-coach/reviews/{urllib.parse.quote(review_id)}")
+
+    def review_by_date_or_id(self, value: str) -> dict[str, Any]:
+        item = value.strip()
+        if not item:
+            return self.latest_review()
+        if item.startswith("health-review-"):
+            return self.review(item)
+        for review in self.list_reviews(limit=50):
+            if review.get("review_date") == item or review.get("review_id") == item:
+                review_id = review.get("review_id")
+                if review_id:
+                    return self.review(str(review_id))
+        raise RuntimeError(f"Aucune revue trouvée pour {item}")
+
     def health_features(self, *, days: int = 30) -> dict[str, Any]:
         return self._request("GET", f"/api/v1/health-coach/features?days={days}")
 
