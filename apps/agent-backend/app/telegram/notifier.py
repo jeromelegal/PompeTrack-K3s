@@ -5,7 +5,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.telegram.client import TelegramClient, parse_chat_ids
-from app.telegram.formatters import format_review_result
+from app.telegram.formatters import format_review_result_brief
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ async def notify_daily_health_review(result: dict[str, Any]) -> None:
         return
 
     client = TelegramClient(settings.telegram_bot_token)
-    text = format_review_result(result)
+    text = format_review_result_brief(result)
     for chat_id in chat_ids:
         try:
             client.send_message(chat_id, text)

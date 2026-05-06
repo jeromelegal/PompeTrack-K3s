@@ -9,13 +9,38 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.telegram.backend import BackendClient
 from app.telegram.client import TelegramClient, parse_chat_ids
-from app.telegram.formatters import format_features, format_latest_review, format_review_result
+from app.telegram.formatters import (
+    format_evening_questions,
+    format_features,
+    format_latest_review,
+    format_medication,
+    format_review_brief,
+    format_review_result_brief,
+    format_reviews_list,
+    format_spirometry,
+    format_symptoms,
+    format_today,
+    format_trends,
+    format_week,
+    format_workouts,
+)
 
 logger = logging.getLogger(__name__)
 
 HELP_TEXT = """Commandes disponibles:
 /id - affiche l'ID du chat Telegram
-/latest - dernière revue santé persistée
+/latest - dernière revue santé, version courte
+/details - dernière revue santé complète
+/reviews 7 - historique des revues
+/review YYYY-MM-DD - détail d'une revue
+/today - synthèse déterministe des dernières 24h
+/week - synthèse déterministe des 7 derniers jours
+/trends - tendances récentes
+/meds - médicaments récents
+/symptoms - symptômes récents
+/spirometry - spirométrie récente
+/workouts - entraînements récents
+/evening - questions ciblées du soir
 /features - synthèse déterministe des données récentes
 /coach - lance une nouvelle revue santé maintenant
 /ask <question> - pose une question libre au LLM
@@ -105,7 +130,24 @@ class TelegramHealthBot:
             return
         if command == "/latest":
             self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_review_brief(self.backend.latest_review()))
+            return
+        if command == "/details":
+            self.telegram.send_chat_action(chat_id)
             self.telegram.send_message(chat_id, format_latest_review(self.backend.latest_review()))
+            return
+        if command == "/reviews":
+            self.telegram.send_chat_action(chat_id)
+            limit = _parse_limit(rest, default=7, maximum=30)
+            self.telegram.send_message(chat_id, format_reviews_list(self.backend.list_reviews(limit=limit), limit=limit))
+            return
+        if command == "/review":
+            query = rest.strip()
+            if not query:
+                self.telegram.send_message(chat_id, "Utilisation: /review YYYY-MM-DD ou /review <review_id>")
+                return
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_latest_review(self.backend.review_by_date_or_id(query)))
             return
         if command == "/features":
             self.telegram.send_chat_action(chat_id)
@@ -115,7 +157,7 @@ class TelegramHealthBot:
             self.telegram.send_message(chat_id, "Je lance une nouvelle revue santé. Cela peut prendre un peu de temps.")
             self.telegram.send_chat_action(chat_id)
             result = self.backend.run_daily_review(days=30, history_limit=7)
-            self.telegram.send_message(chat_id, format_review_result(result))
+            self.telegram.send_message(chat_id, format_review_result_brief(result))
             return
         if command == "/ask":
             prompt = rest.strip()
@@ -123,6 +165,38 @@ class TelegramHealthBot:
                 self.telegram.send_message(chat_id, "Utilisation: /ask ta question")
                 return
             self._ask_llm(chat_id=chat_id, user_id=user_id, prompt=prompt)
+            return
+        if command == "/today":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_today(self.backend.health_features(days=1)))
+            return
+        if command == "/week":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_week(self.backend.health_features(days=7)))
+            return
+        if command == "/trends":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_trends(self.backend.health_features(days=30)))
+            return
+        if command == "/meds":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_medication(self.backend.health_features(days=30)))
+            return
+        if command == "/symptoms":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_symptoms(self.backend.health_features(days=30)))
+            return
+        if command == "/spirometry":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_spirometry(self.backend.health_features(days=30)))
+            return
+        if command == "/workouts":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_workouts(self.backend.health_features(days=30)))
+            return
+        if command == "/evening":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_evening_questions(self.backend.health_features(days=1)))
             return
         if text.startswith("/"):
             self.telegram.send_message(chat_id, "Commande inconnue.\n\n" + HELP_TEXT)
@@ -139,6 +213,16 @@ class TelegramHealthBot:
             model=self.settings.default_chat_model,
         )
         self.telegram.send_message(chat_id, answer)
+
+
+def _parse_limit(raw: str, *, default: int, maximum: int) -> int:
+    value = raw.strip()
+    if not value:
+        return default
+    try:
+        return max(1, min(int(value), maximum))
+    except ValueError:
+        return default
 
 
 def main() -> None:

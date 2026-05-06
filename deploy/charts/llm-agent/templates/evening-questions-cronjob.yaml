@@ -1,0 +1,83 @@
+{{- if .Values.eveningQuestions.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-evening-questions
+  labels:
+    app: health-evening-questions
+    allow-telegram-egress: "true"
+spec:
+  schedule: {{ .Values.eveningQuestions.schedule | quote }}
+  suspend: {{ .Values.eveningQuestions.suspend | default false }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.eveningQuestions.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.eveningQuestions.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: health-evening-questions
+            allow-telegram-egress: "true"
+        spec:
+          serviceAccountName: agent-backend
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: gitlab-regcred
+          containers:
+            - name: evening-questions
+              image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+              imagePullPolicy: Always
+              command:
+                - python
+                - -m
+                - app.telegram.evening_questions
+              env:
+                - name: TELEGRAM_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.tokenSecretName | quote }}
+                      key: {{ .Values.telegramBot.tokenSecretKey | quote }}
+                - name: TELEGRAM_ALLOWED_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.allowedChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.allowedChatIdsSecretKey | quote }}
+                      optional: true
+                - name: TELEGRAM_NOTIFY_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.notifyChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.notifyChatIdsSecretKey | quote }}
+                      optional: true
+                - name: CLIENT_ID_FILE
+                  value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
+                - name: CLIENT_SECRET_FILE
+                  value: /var/run/secrets/medplum/MEDPLUM_CLIENT_SECRET
+                - name: MEDPLUM_BASE_URL
+                  value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
+                - name: MEDPLUM_TOKEN_ENDPOINT
+                  value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
+                - name: MEDPLUM_SCOPE
+                  value: "system/*.*"
+                - name: FHIR_BASE
+                  value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+              envFrom:
+                - configMapRef:
+                    name: medplum-ids
+              volumeMounts:
+                - name: medplum-creds-agent
+                  mountPath: /var/run/secrets
+                  readOnly: true
+          volumes:
+            - name: medplum-creds-agent
+              secret:
+                secretName: agent-medplum-client
+                defaultMode: 0400
+                items:
+                  - key: MEDPLUM_CLIENT_ID
+                    path: MEDPLUM_CLIENT_ID
+                  - key: MEDPLUM_CLIENT_SECRET
+                    path: MEDPLUM_CLIENT_SECRET
+{{- end }}
