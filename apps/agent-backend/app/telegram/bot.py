@@ -11,13 +11,17 @@ from app.telegram.backend import BackendClient
 from app.telegram.client import TelegramClient, parse_chat_ids
 from app.telegram.formatters import (
     format_evening_questions,
+    format_feedback_result,
     format_features,
+    format_guided_actions,
     format_latest_review,
     format_medication,
+    format_preferences,
     format_review_brief,
     format_review_result_brief,
     format_reviews_list,
     format_spirometry,
+    format_structured_note,
     format_symptoms,
     format_today,
     format_trends,
@@ -44,6 +48,14 @@ HELP_TEXT = """Commandes disponibles:
 /workouts - entraînements récents
 /evening - questions ciblées du soir
 /weekly-review - lance un bilan hebdomadaire maintenant
+/prefs - affiche la mémoire utilisateur
+/setpref <clé> <valeur> - modifie une préférence
+/addsymptom <nom> - ajoute un symptôme prioritaire
+/delsymptom <nom> - retire un symptôme prioritaire
+/feedback useful|long|false-positive [commentaire]
+/actions - propose des actions guidées
+/note symptom|medication <texte> - prépare une note structurée
+/why <question> - réponse clinique prudente sans diagnostic
 /features - synthèse déterministe des données récentes
 /coach - lance une nouvelle revue santé maintenant
 /ask <question> - pose une question libre au LLM
@@ -156,6 +168,42 @@ class TelegramHealthBot:
             self.telegram.send_chat_action(chat_id)
             self.telegram.send_message(chat_id, format_features(self.backend.health_features(days=30)))
             return
+        if command == "/prefs":
+            self.telegram.send_chat_action(chat_id)
+            self.telegram.send_message(chat_id, format_preferences(self.backend.preferences(_pref_user_id(chat_id))))
+            return
+        if command == "/setpref":
+            self._set_preference(chat_id=chat_id, rest=rest)
+            return
+        if command == "/addsymptom":
+            self._edit_priority_symptom(chat_id=chat_id, symptom=rest, add=True)
+            return
+        if command == "/delsymptom":
+            self._edit_priority_symptom(chat_id=chat_id, symptom=rest, add=False)
+            return
+        if command == "/feedback":
+            self._feedback(chat_id=chat_id, rest=rest)
+            return
+        if command == "/actions":
+            self.telegram.send_chat_action(chat_id)
+            features = self.backend.health_features(days=30)
+            prefs = self.backend.preferences(_pref_user_id(chat_id))
+            self.telegram.send_message(chat_id, format_guided_actions(features, prefs))
+            return
+        if command == "/note":
+            kind, _, note_text = rest.strip().partition(" ")
+            if kind not in {"symptom", "medication"} or not note_text.strip():
+                self.telegram.send_message(chat_id, "Utilisation: /note symptom fatigue intensité 6/10 après effort")
+                return
+            self.telegram.send_message(chat_id, format_structured_note(kind, note_text.strip()))
+            return
+        if command == "/why":
+            prompt = rest.strip()
+            if not prompt:
+                self.telegram.send_message(chat_id, "Utilisation: /why pourquoi je suis fatigué ?")
+                return
+            self._ask_clinical(chat_id=chat_id, user_id=user_id, prompt=prompt)
+            return
         if command == "/coach":
             self.telegram.send_message(chat_id, "Je lance une nouvelle revue santé. Cela peut prendre un peu de temps.")
             self.telegram.send_chat_action(chat_id)
@@ -215,6 +263,9 @@ class TelegramHealthBot:
             self.telegram.send_message(chat_id, "Commande inconnue.\n\n" + HELP_TEXT)
             return
 
+        if _looks_clinical_question(text):
+            self._ask_clinical(chat_id=chat_id, user_id=user_id, prompt=text)
+            return
         self._ask_llm(chat_id=chat_id, user_id=user_id, prompt=text)
 
     def _ask_llm(self, *, chat_id: int, user_id: str, prompt: str) -> None:
@@ -227,6 +278,96 @@ class TelegramHealthBot:
         )
         self.telegram.send_message(chat_id, answer)
 
+    def _ask_clinical(self, *, chat_id: int, user_id: str, prompt: str) -> None:
+        self.telegram.send_chat_action(chat_id)
+        features = self.backend.health_features(days=30)
+        prefs = self.backend.preferences(_pref_user_id(chat_id))
+        clinical_prompt = (
+            "Réponds en mode conversation clinique prudente, sans diagnostic médical. "
+            "Structure la réponse en français avec: 1) observations disponibles, "
+            "2) hypothèses prudentes non causales, 3) données manquantes, "
+            "4) signaux d'alerte qui justifient un avis médical, 5) questions utiles. "
+            "Tiens compte des préférences utilisateur suivantes, surtout les sujets sensibles et symptômes prioritaires:\n"
+            f"{prefs}\n\n"
+            "Données santé déterministes récentes:\n"
+            f"{features}\n\n"
+            f"Question utilisateur: {prompt}"
+        )
+        answer = self.backend.chat(
+            prompt=clinical_prompt,
+            session_id=f"telegram-clinical-{chat_id}",
+            user_id=f"telegram-{user_id}",
+            model=self.settings.default_chat_model,
+        )
+        self.telegram.send_message(chat_id, answer)
+
+    def _set_preference(self, *, chat_id: int, rest: str) -> None:
+        key, _, value = rest.strip().partition(" ")
+        if not key or not value:
+            self.telegram.send_message(
+                chat_id,
+                "Utilisation: /setpref tone bienveillant_concis\n"
+                "Clés: tone, answerStyle, alertSensitivity, daily, evening, weekly, sensitiveTopics",
+            )
+            return
+        patch: dict[str, Any]
+        if key in {"daily", "evening", "weekly"}:
+            prefs = self.backend.preferences(_pref_user_id(chat_id))
+            notification_times = dict(prefs.get("notificationTimes") or {})
+            notification_times[key] = value.strip()
+            patch = {"notificationTimes": notification_times}
+        elif key in {"sensitiveTopics", "activeGoals"}:
+            patch = {key: _split_list(value)}
+        elif key in {"tone", "answerStyle", "alertSensitivity"}:
+            patch = {key: value.strip()}
+        else:
+            self.telegram.send_message(chat_id, "Clé inconnue. Essaie /prefs pour voir la mémoire actuelle.")
+            return
+        prefs = self.backend.update_preferences(_pref_user_id(chat_id), patch)
+        self.telegram.send_message(chat_id, format_preferences(prefs))
+
+    def _edit_priority_symptom(self, *, chat_id: int, symptom: str, add: bool) -> None:
+        item = symptom.strip().lower()
+        if not item:
+            self.telegram.send_message(chat_id, "Utilisation: /addsymptom fatigue ou /delsymptom fatigue")
+            return
+        prefs = self.backend.preferences(_pref_user_id(chat_id))
+        symptoms = [str(value).lower() for value in prefs.get("prioritySymptoms") or []]
+        if add and item not in symptoms:
+            symptoms.append(item)
+        if not add:
+            symptoms = [value for value in symptoms if value != item]
+        prefs = self.backend.update_preferences(_pref_user_id(chat_id), {"prioritySymptoms": symptoms})
+        self.telegram.send_message(chat_id, format_preferences(prefs))
+
+    def _feedback(self, *, chat_id: int, rest: str) -> None:
+        raw_type, _, comment = rest.strip().partition(" ")
+        mapping = {
+            "useful": "useful",
+            "utile": "useful",
+            "long": "too_long",
+            "too_long": "too_long",
+            "false-positive": "false_positive",
+            "false_positive": "false_positive",
+            "faux-positif": "false_positive",
+        }
+        feedback_type = mapping.get(raw_type.lower())
+        if not feedback_type:
+            self.telegram.send_message(chat_id, "Utilisation: /feedback useful|long|false-positive [commentaire]")
+            return
+        latest = None
+        try:
+            latest = self.backend.latest_review().get("review_id")
+        except Exception:  # noqa: BLE001
+            latest = None
+        result = self.backend.submit_feedback(
+            user_id=_pref_user_id(chat_id),
+            feedback_type=feedback_type,
+            review_id=latest,
+            comment=comment.strip() or None,
+        )
+        self.telegram.send_message(chat_id, format_feedback_result(result))
+
 
 def _parse_limit(raw: str, *, default: int, maximum: int) -> int:
     value = raw.strip()
@@ -236,6 +377,35 @@ def _parse_limit(raw: str, *, default: int, maximum: int) -> int:
         return max(1, min(int(value), maximum))
     except ValueError:
         return default
+
+
+def _pref_user_id(chat_id: int) -> str:
+    return f"telegram:{chat_id}"
+
+
+def _split_list(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _looks_clinical_question(text: str) -> bool:
+    normalized = text.lower()
+    question_markers = ["pourquoi", "est-ce que", "que faire", "comment expliquer", "?"]
+    health_terms = [
+        "fatigu",
+        "douleur",
+        "souffle",
+        "respir",
+        "humeur",
+        "médicament",
+        "medicament",
+        "sympt",
+        "coeur",
+        "cardiaque",
+        "sommeil",
+    ]
+    return any(marker in normalized for marker in question_markers) and any(
+        term in normalized for term in health_terms
+    )
 
 
 def main() -> None:

@@ -41,6 +41,35 @@ class BackendClient:
     def health_features(self, *, days: int = 30) -> dict[str, Any]:
         return self._request("GET", f"/api/v1/health-coach/features?days={days}")
 
+    def preferences(self, user_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/api/v1/health-coach/preferences/{urllib.parse.quote(user_id)}")
+
+    def update_preferences(self, user_id: str, patch: dict[str, Any]) -> dict[str, Any]:
+        return self._request(
+            "PATCH",
+            f"/api/v1/health-coach/preferences/{urllib.parse.quote(user_id)}",
+            payload=patch,
+        )
+
+    def submit_feedback(
+        self,
+        *,
+        user_id: str,
+        feedback_type: str,
+        review_id: str | None = None,
+        comment: str | None = None,
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            "/api/v1/health-coach/feedback",
+            payload={
+                "userId": user_id,
+                "feedbackType": feedback_type,
+                "reviewId": review_id,
+                "comment": comment,
+            },
+        )
+
     def run_daily_review(self, *, days: int = 30, history_limit: int = 7) -> dict[str, Any]:
         query = urllib.parse.urlencode({"days": days, "store": "true", "history_limit": history_limit})
         return self._request("POST", f"/api/v1/health-coach/daily-review?{query}")
