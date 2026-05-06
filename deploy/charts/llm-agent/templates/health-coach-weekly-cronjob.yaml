@@ -1,0 +1,125 @@
+{{- if .Values.weeklyReview.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-coach-weekly
+  labels:
+    app: health-coach-weekly
+    allow-external-ollama: "true"
+    {{- if .Values.healthCoach.telegramDailyReviewEnabled }}
+    allow-telegram-egress: "true"
+    {{- end }}
+spec:
+  schedule: {{ .Values.weeklyReview.schedule | quote }}
+  suspend: {{ .Values.weeklyReview.suspend | default false }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.weeklyReview.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.weeklyReview.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: health-coach-weekly
+            allow-external-ollama: "true"
+            {{- if .Values.healthCoach.telegramDailyReviewEnabled }}
+            allow-telegram-egress: "true"
+            {{- end }}
+        spec:
+          serviceAccountName: agent-backend
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: gitlab-regcred
+          containers:
+            - name: health-coach-weekly
+              image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+              imagePullPolicy: Always
+              command:
+                - python
+                - -m
+                - app.medplum.health_coach
+              args:
+                - --weekly
+                - --days
+                - {{ .Values.weeklyReview.days | quote }}
+                - --history-limit
+                - {{ .Values.weeklyReview.historyLimit | quote }}
+              env:
+                - name: OLLAMA_BASE_URL
+                  value: "http://ollama.lan:11434"
+                - name: DEFAULT_CHAT_MODEL
+                  value: {{ .Values.healthCoach.model | quote }}
+                - name: HEALTH_COACH_MODEL
+                  value: {{ .Values.healthCoach.model | quote }}
+                - name: TELEGRAM_DAILY_REVIEW_ENABLED
+                  value: {{ .Values.healthCoach.telegramDailyReviewEnabled | quote }}
+                {{- if .Values.healthCoach.telegramDailyReviewEnabled }}
+                - name: TELEGRAM_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.tokenSecretName | quote }}
+                      key: {{ .Values.telegramBot.tokenSecretKey | quote }}
+                - name: TELEGRAM_ALLOWED_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.allowedChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.allowedChatIdsSecretKey | quote }}
+                      optional: true
+                - name: TELEGRAM_NOTIFY_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.notifyChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.notifyChatIdsSecretKey | quote }}
+                      optional: true
+                {{- end }}
+                - name: QDRANT_URL
+                  value: "http://llm-agent-qdrant:6333"
+                - name: SEARXNG_BASE_URL
+                  value: "http://searxng:8080"
+                - name: BACKEND_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backend-api-key
+                      key: secret_key
+                - name: CLIENT_ID_FILE
+                  value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
+                - name: CLIENT_SECRET_FILE
+                  value: /var/run/secrets/medplum/MEDPLUM_CLIENT_SECRET
+                - name: MEDPLUM_BASE_URL
+                  value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
+                - name: MEDPLUM_TOKEN_ENDPOINT
+                  value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
+                - name: MEDPLUM_SCOPE
+                  value: "system/*.*"
+                - name: FHIR_BASE
+                  value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+              envFrom:
+                - configMapRef:
+                    name: medplum-ids
+              volumeMounts:
+                - name: agent-data
+                  mountPath: /data
+                - name: agent-workspace
+                  mountPath: /workspace
+                  readOnly: true
+                - name: medplum-creds-agent
+                  mountPath: /var/run/secrets
+                  readOnly: true
+          volumes:
+            - name: agent-data
+              persistentVolumeClaim:
+                claimName: agent-backend-data
+            - name: agent-workspace
+              persistentVolumeClaim:
+                claimName: agent-backend-workspace
+            - name: medplum-creds-agent
+              secret:
+                secretName: agent-medplum-client
+                defaultMode: 0400
+                items:
+                  - key: MEDPLUM_CLIENT_ID
+                    path: MEDPLUM_CLIENT_ID
+                  - key: MEDPLUM_CLIENT_SECRET
+                    path: MEDPLUM_CLIENT_SECRET
+{{- end }}

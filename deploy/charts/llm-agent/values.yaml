@@ -146,6 +146,15 @@ healthCoach:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
 
+weeklyReview:
+  enabled: true
+  schedule: "0 8 * * 0"
+  suspend: false
+  days: 90
+  historyLimit: 7
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
 telegramBot:
   enabled: true
   tokenSecretName: telegram-bot

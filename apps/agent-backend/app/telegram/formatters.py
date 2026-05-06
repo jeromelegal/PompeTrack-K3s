@@ -45,6 +45,8 @@ def format_review_brief(review: dict[str, Any]) -> str:
         "Dernière revue santé",
         f"Date: {review.get('review_date')} | période: {review.get('period_days')} jours",
         format_data_confidence(structured.get("dataConfidence") or features.get("dataQuality") or {}),
+        format_personal_watchlist(structured.get("personalWatchlist") or features.get("personalWatchlist") or []),
+        format_anomalies(structured.get("anomalies") or features.get("anomalies") or []),
         format_watch_items(structured.get("watchItems") or features.get("watchItems") or []),
     ]
     if review_text:
@@ -138,6 +140,55 @@ def format_watch_items(watch_items: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def format_anomalies(anomalies: list[dict[str, Any]]) -> str:
+    if not anomalies:
+        return "Anomalies personnelles: aucun signal déterministe."
+    lines = ["Anomalies personnelles:"]
+    for item in anomalies[:8]:
+        label = item.get("label") or "signal"
+        severity = item.get("severity") or "info"
+        reason = item.get("reason") or ""
+        lines.append(f"- [{severity}] {label}: {reason}".rstrip())
+    return "\n".join(lines)
+
+
+def format_personal_watchlist(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return "Watchlist personnalisée: vide."
+    lines = ["Watchlist personnalisée:"]
+    for item in items[:8]:
+        label = item.get("label") or item.get("id") or "signal"
+        status = item.get("status") or "unknown"
+        reason = item.get("reason") or ""
+        lines.append(f"- [{status}] {label}: {reason}".rstrip())
+    return "\n".join(lines)
+
+
+def format_correlations(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return "Corrélations prudentes: aucune piste déterministe."
+    lines = ["Corrélations prudentes:"]
+    for item in items[:6]:
+        confidence = item.get("confidence") or "low"
+        reason = item.get("reason") or ""
+        lines.append(f"- [{confidence}] {reason}".rstrip())
+    return "\n".join(lines)
+
+
+def format_goals(goals: list[dict[str, Any]]) -> str:
+    if not goals:
+        return "Objectifs légers: aucun."
+    lines = ["Objectifs légers:"]
+    for goal in goals[:6]:
+        label = goal.get("label") or goal.get("id") or "objectif"
+        current = goal.get("current")
+        target = goal.get("target")
+        unit = goal.get("unit") or ""
+        status = goal.get("status") or "active"
+        lines.append(f"- [{status}] {label}: {current}/{target} {unit}".rstrip())
+    return "\n".join(lines)
+
+
 def compact_text(text: str, *, max_chars: int = 1800) -> str:
     cleaned = " ".join(text.split())
     if len(cleaned) <= max_chars:
@@ -156,6 +207,7 @@ def format_today(features: dict[str, Any]) -> str:
         format_today_counts(counts),
         format_today_events(events),
         format_watch_items(watch_items[:4]),
+        format_anomalies(features.get("anomalies") or []),
         format_data_confidence(data_quality),
     ]
     return "\n\n".join(part for part in parts if part).strip()
@@ -214,6 +266,10 @@ def format_week(features: dict[str, Any]) -> str:
             "Semaine santé",
             format_today_counts(features.get("counts") or {}),
             format_top_items("Symptômes fréquents", features.get("topSymptoms") or []),
+            format_personal_watchlist(features.get("personalWatchlist") or []),
+            format_anomalies(features.get("anomalies") or []),
+            format_correlations(features.get("cautiousCorrelations") or []),
+            format_goals(features.get("goals") or []),
             format_trend_group("Tendances mesures", features.get("metricTrends") or [], limit=6),
             format_trend_group("Tendances humeur", features.get("stateOfMindTrends") or [], limit=4),
             format_watch_items(features.get("watchItems") or []),
@@ -232,7 +288,23 @@ def format_trends(features: dict[str, Any]) -> str:
             format_trend_group("Humeur", features.get("stateOfMindTrends") or [], limit=6),
             format_trend_group("Spirométrie", features.get("spirometryTrends") or [], limit=6),
             format_trend_group("Mesures manuelles", features.get("manualMonthlyTrends") or [], limit=6),
+            format_anomalies(features.get("anomalies") or []),
+            format_correlations(features.get("cautiousCorrelations") or []),
             format_data_confidence(features.get("dataQuality") or {}),
+        ]
+        if part
+    )
+
+
+def format_watchlist(features: dict[str, Any]) -> str:
+    return "\n\n".join(
+        part
+        for part in [
+            "Suivi personnalisé",
+            format_personal_watchlist(features.get("personalWatchlist") or []),
+            format_anomalies(features.get("anomalies") or []),
+            format_correlations(features.get("cautiousCorrelations") or []),
+            format_goals(features.get("goals") or []),
         ]
         if part
     )

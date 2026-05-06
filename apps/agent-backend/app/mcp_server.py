@@ -5,7 +5,11 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from app.dependencies import get_services
-from app.medplum.health_coach import build_daily_health_features, generate_daily_health_review
+from app.medplum.health_coach import (
+    build_daily_health_features,
+    generate_daily_health_review,
+    generate_weekly_health_review,
+)
 from app.medplum.health_tools import (
     create_health_summary,
     get_health_timeline,
@@ -135,6 +139,20 @@ async def generate_health_review(
     """Generate a health coach review with the configured LLM."""
     return await generate_daily_health_review(
         days=_limit(days, 30, 90),
+        store=store,
+        history_limit=_limit(history_limit, 7, 14),
+    )
+
+
+@mcp.tool()
+async def generate_weekly_health_review_tool(
+    days: int | None = None,
+    store: bool = True,
+    history_limit: int | None = None,
+) -> dict[str, Any]:
+    """Generate a weekly health coach review focused on slow trends."""
+    return await generate_weekly_health_review(
+        days=_limit(days, 90, 90),
         store=store,
         history_limit=_limit(history_limit, 7, 14),
     )

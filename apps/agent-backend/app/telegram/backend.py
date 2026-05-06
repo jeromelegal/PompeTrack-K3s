@@ -45,6 +45,10 @@ class BackendClient:
         query = urllib.parse.urlencode({"days": days, "store": "true", "history_limit": history_limit})
         return self._request("POST", f"/api/v1/health-coach/daily-review?{query}")
 
+    def run_weekly_review(self, *, days: int = 90, history_limit: int = 7) -> dict[str, Any]:
+        query = urllib.parse.urlencode({"days": days, "store": "true", "history_limit": history_limit})
+        return self._request("POST", f"/api/v1/health-coach/weekly-review?{query}")
+
     def chat(self, *, prompt: str, session_id: str, user_id: str, model: str) -> str:
         payload = {
             "model": model,
