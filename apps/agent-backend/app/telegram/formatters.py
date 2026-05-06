@@ -51,7 +51,7 @@ def format_review_brief(review: dict[str, Any]) -> str:
     ]
     if review_text:
         lines.extend(["", "Résumé coach:", compact_text(review_text, max_chars=900)])
-    lines.extend(["", "Détail complet: /details"])
+    lines.extend(["", "Détail complet: /details", "Feedback: /feedback useful|long|false-positive"])
     return "\n".join(line for line in lines if line is not None).strip()
 
 
@@ -187,6 +187,106 @@ def format_goals(goals: list[dict[str, Any]]) -> str:
         status = goal.get("status") or "active"
         lines.append(f"- [{status}] {label}: {current}/{target} {unit}".rstrip())
     return "\n".join(lines)
+
+
+def format_preferences(prefs: dict[str, Any]) -> str:
+    lines = [
+        "Mémoire utilisateur explicite",
+        f"Ton: {prefs.get('tone')}",
+        f"Style de réponse: {prefs.get('answerStyle')}",
+        f"Sensibilité alertes: {prefs.get('alertSensitivity')}",
+        "",
+        "Horaires:",
+    ]
+    for key, value in (prefs.get("notificationTimes") or {}).items():
+        lines.append(f"- {key}: {value}")
+    lines.append("")
+    lines.append("Objectifs actifs:")
+    for goal in prefs.get("activeGoals") or []:
+        lines.append(f"- {goal}")
+    lines.append("")
+    lines.append("Symptômes prioritaires:")
+    for symptom in prefs.get("prioritySymptoms") or []:
+        lines.append(f"- {symptom}")
+    sensitive = prefs.get("sensitiveTopics") or []
+    lines.append("")
+    lines.append("Sujets sensibles: " + (", ".join(str(item) for item in sensitive) if sensitive else "aucun"))
+    lines.append("")
+    lines.append("Modifier: /setpref <clé> <valeur>")
+    lines.append("Listes: /addsymptom fatigue, /delsymptom fatigue")
+    return "\n".join(lines)
+
+
+def format_feedback_result(result: dict[str, Any]) -> str:
+    feedback_type = result.get("feedbackType")
+    lines = [f"Feedback enregistré: {feedback_type}"]
+    prefs = result.get("preferences") or {}
+    if feedback_type == "too_long":
+        lines.append("J'ai ajusté le style vers des réponses plus concises.")
+    elif feedback_type == "false_positive":
+        lines.append("J'ai abaissé la sensibilité des alertes pour limiter les faux positifs.")
+    elif feedback_type == "useful":
+        lines.append("Parfait, je garde ce niveau de détail comme référence.")
+    if prefs:
+        lines.append("")
+        lines.append(f"Style actuel: {prefs.get('answerStyle')} | sensibilité: {prefs.get('alertSensitivity')}")
+    return "\n".join(lines)
+
+
+def format_guided_actions(features: dict[str, Any], prefs: dict[str, Any]) -> str:
+    counts = features.get("counts") or {}
+    watch_items = features.get("watchItems") or []
+    anomalies = features.get("anomalies") or []
+    actions = [
+        {
+            "label": "Lancer une revue longue sur 90 jours",
+            "command": "/weekly-review",
+            "reason": "Utile pour les tendances lentes et la baseline personnelle.",
+        },
+        {
+            "label": "Poser une question clinique prudente",
+            "command": "/why pourquoi je suis fatigué ?",
+            "reason": "Réponse structurée: observations, hypothèses, données manquantes, signaux d'alerte.",
+        },
+    ]
+    if counts.get("symptoms") or any(item.get("source") == "symptoms" for item in anomalies):
+        actions.append({
+            "label": "Créer une note symptôme",
+            "command": "/note symptom fatigue intensité ? contexte ?",
+            "reason": "Je prépare une note structurée à valider, sans écrire automatiquement dans Medplum.",
+        })
+    if any(item.get("type") == "medication" for item in watch_items):
+        actions.append({
+            "label": "Clarifier une prise médicament",
+            "command": "/note medication prise confirmée ? heure ?",
+            "reason": "Utile si le suivi médicament semble incomplet.",
+        })
+    if prefs.get("prioritySymptoms"):
+        actions.append({
+            "label": "Voir la watchlist personnalisée",
+            "command": "/watchlist",
+            "reason": "Se concentrer sur les signaux prioritaires plutôt que tout surveiller.",
+        })
+
+    lines = ["Actions guidées:"]
+    for action in actions[:6]:
+        lines.append(f"- {action['label']}: {action['command']}")
+        lines.append(f"  {action['reason']}")
+    return "\n".join(lines)
+
+
+def format_structured_note(kind: str, text: str) -> str:
+    kind_label = {
+        "symptom": "note symptôme",
+        "medication": "note médicament",
+    }.get(kind, "note")
+    return "\n".join([
+        f"Brouillon de {kind_label}",
+        compact_text(text, max_chars=1200),
+        "",
+        "Je ne l'écris pas automatiquement dans Medplum pour l'instant.",
+        "Validation future possible: confirmer, compléter l'heure, intensité, contexte.",
+    ])
 
 
 def compact_text(text: str, *, max_chars: int = 1800) -> str:

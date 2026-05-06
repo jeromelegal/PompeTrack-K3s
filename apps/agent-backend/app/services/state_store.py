@@ -77,6 +77,28 @@ class StateStore:
             }
             if "structured_json" not in existing_columns:
                 conn.execute("ALTER TABLE health_reviews ADD COLUMN structured_json TEXT")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_preferences (
+                    user_id TEXT PRIMARY KEY,
+                    prefs_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS review_feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    review_id TEXT,
+                    feedback_type TEXT NOT NULL,
+                    comment TEXT,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
 
     def create_run(self, run_id: str, session_id: str, user_id: str | None, model: str, goal: str) -> None:
         now = datetime.now(timezone.utc).isoformat()
@@ -287,3 +309,94 @@ class StateStore:
             items.append(item)
 
         return items
+
+    def default_preferences(self) -> dict[str, Any]:
+        return {
+            "tone": "bienveillant_concis",
+            "answerStyle": "concise",
+            "alertSensitivity": "normal",
+            "notificationTimes": {
+                "daily": "06:30",
+                "evening": "19:30",
+                "weekly": "08:00 Sunday",
+            },
+            "activeGoals": [
+                "Bouger 3 jours dans la semaine",
+                "Renseigner symptômes ou ressenti 5 jours sur 7",
+            ],
+            "prioritySymptoms": [
+                "fatigue",
+                "douleur lombaire",
+                "spirométrie",
+                "humeur",
+                "médicament",
+                "récupération après sport",
+            ],
+            "sensitiveTopics": [],
+        }
+
+    def get_user_preferences(self, user_id: str) -> dict[str, Any]:
+        self.init_db()
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT prefs_json FROM user_preferences WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        prefs = self.default_preferences()
+        if row is not None:
+            stored = json.loads(row["prefs_json"])
+            prefs.update(stored)
+        return prefs
+
+    def update_user_preferences(self, user_id: str, patch: dict[str, Any]) -> dict[str, Any]:
+        now = datetime.now(timezone.utc).isoformat()
+        prefs = self.get_user_preferences(user_id)
+        prefs.update({key: value for key, value in patch.items() if value is not None})
+        with closing(self._connect()) as conn, conn:
+            conn.execute(
+                """
+                INSERT INTO user_preferences(user_id, prefs_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(user_id) DO UPDATE SET
+                    prefs_json = excluded.prefs_json,
+                    updated_at = excluded.updated_at
+                """,
+                (user_id, json.dumps(prefs, ensure_ascii=False), now, now),
+            )
+        return prefs
+
+    def add_review_feedback(
+        self,
+        *,
+        user_id: str,
+        feedback_type: str,
+        review_id: str | None = None,
+        comment: str | None = None,
+    ) -> dict[str, Any]:
+        self.init_db()
+        now = datetime.now(timezone.utc).isoformat()
+        with closing(self._connect()) as conn, conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO review_feedback(user_id, review_id, feedback_type, comment, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (user_id, review_id, feedback_type, comment, now),
+            )
+        patch: dict[str, Any] = {}
+        if feedback_type == "too_long":
+            patch["answerStyle"] = "tres_concis"
+        elif feedback_type == "false_positive":
+            patch["alertSensitivity"] = "lower"
+        elif feedback_type == "useful":
+            patch["alertSensitivity"] = "normal"
+        prefs = self.update_user_preferences(user_id, patch) if patch else self.get_user_preferences(user_id)
+        return {
+            "id": cursor.lastrowid,
+            "userId": user_id,
+            "reviewId": review_id,
+            "feedbackType": feedback_type,
+            "comment": comment,
+            "createdAt": now,
+            "preferences": prefs,
+        }

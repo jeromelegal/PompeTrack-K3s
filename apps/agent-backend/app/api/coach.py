@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Any
+
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.api.security import require_api_key
 from app.dependencies import get_services
@@ -59,3 +61,30 @@ async def get_review(review_id: str) -> dict:
     if review is None:
         raise HTTPException(status_code=404, detail="health review not found")
     return review
+
+
+@router.get("/preferences/{user_id}", dependencies=[Depends(require_api_key)])
+async def get_preferences(user_id: str) -> dict:
+    services = get_services()
+    return services.state_store.get_user_preferences(user_id)
+
+
+@router.patch("/preferences/{user_id}", dependencies=[Depends(require_api_key)])
+async def update_preferences(user_id: str, patch: dict[str, Any] = Body(...)) -> dict:
+    services = get_services()
+    return services.state_store.update_user_preferences(user_id, patch)
+
+
+@router.post("/feedback", dependencies=[Depends(require_api_key)])
+async def submit_feedback(payload: dict[str, Any] = Body(...)) -> dict:
+    services = get_services()
+    user_id = str(payload.get("userId") or "").strip()
+    feedback_type = str(payload.get("feedbackType") or "").strip()
+    if not user_id or not feedback_type:
+        raise HTTPException(status_code=400, detail="userId and feedbackType are required")
+    return services.state_store.add_review_feedback(
+        user_id=user_id,
+        feedback_type=feedback_type,
+        review_id=payload.get("reviewId"),
+        comment=payload.get("comment"),
+    )
