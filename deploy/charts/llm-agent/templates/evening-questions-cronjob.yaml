@@ -51,6 +51,11 @@ spec:
                       name: {{ .Values.telegramBot.notifyChatIdsSecretName | quote }}
                       key: {{ .Values.telegramBot.notifyChatIdsSecretKey | quote }}
                       optional: true
+                - name: BACKEND_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backend-api-key
+                      key: secret_key
                 - name: CLIENT_ID_FILE
                   value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
                 - name: CLIENT_SECRET_FILE

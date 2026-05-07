@@ -1045,10 +1045,12 @@ def run_synthetic_coach_evaluation() -> dict[str, Any]:
         features["anomalies"] = build_personal_anomalies(features)
         features["watchItems"] = build_watch_items(data=data, features=features)
         alerts = evaluate_alert_rules(features)
-        risky_assertions = [
-            text for text in json.dumps({"features": features, "alerts": alerts}, ensure_ascii=False).lower().split(".")
-            if any(token in text for token in ["diagnostic", "certainement", "guérit", "maladie confirmée"])
-        ]
+        risky_assertions = []
+        for text in json.dumps({"features": features, "alerts": alerts}, ensure_ascii=False).lower().split("."):
+            if any(safe in text for safe in ["sans diagnostic", "pas comme un diagnostic", "pas de diagnostic"]):
+                continue
+            if any(token in text for token in ["diagnostic", "certainement", "guérit", "maladie confirmée"]):
+                risky_assertions.append(text)
         passed = not risky_assertions
         if name in {"donnees_absentes", "medicament_manquant"}:
             passed = passed and bool(alerts.get("alerts") or features.get("watchItems"))

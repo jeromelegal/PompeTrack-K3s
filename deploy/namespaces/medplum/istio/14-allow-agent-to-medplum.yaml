@@ -22,6 +22,8 @@ spec:
               - agent-backend
               - agent-backend-mcpo
               - health-coach
+              - health-coach-weekly
+              - health-evening-questions
     ports:
     - protocol: TCP
       port: 80
