@@ -140,6 +140,21 @@ def format_watch_items(watch_items: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def format_alerts(result: dict[str, Any]) -> str:
+    alerts = result.get("alerts") or []
+    if not alerts:
+        return "Alertes configurables: aucune alerte déterministe."
+    lines = ["Alertes configurables"]
+    for alert in alerts[:8]:
+        severity = alert.get("severity") or "info"
+        label = alert.get("label") or alert.get("ruleId") or "alerte"
+        reason = alert.get("reason") or ""
+        lines.append(f"- [{severity}] {label}: {reason}".rstrip())
+    lines.append("")
+    lines.append("Notification douce: à vérifier dans le contexte réel, sans diagnostic automatique.")
+    return "\n".join(lines)
+
+
 def format_anomalies(anomalies: list[dict[str, Any]]) -> str:
     if not anomalies:
         return "Anomalies personnelles: aucun signal déterministe."

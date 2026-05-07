@@ -74,6 +74,10 @@ class BackendClient:
         with httpx.Client(timeout=180.0) as client:
             return client.post(f"{self.base_url}{path}", headers=self.headers, **kwargs)
 
+    def download(self, path: str, **kwargs: Any) -> httpx.Response:
+        with httpx.Client(timeout=180.0) as client:
+            return client.get(f"{self.base_url}{path}", headers=self.headers, **kwargs)
+
 
 
 def init_state() -> None:
@@ -245,6 +249,120 @@ def tab_endpoints(backend: BackendClient) -> None:
             st.json(read_json_response(backend.get(f"/api/v1/runs/{run_id.strip()}")))
         except Exception as exc:  # noqa: BLE001
             st.error(str(exc))
+
+
+def _as_table(items: list[dict[str, Any]], keys: list[str]) -> list[dict[str, Any]]:
+    return [{key: item.get(key) for key in keys} for item in items]
+
+
+def tab_health_coach(backend: BackendClient) -> None:
+    st.subheader("Coach santé")
+    c1, c2, c3 = st.columns([1, 1, 2])
+    with c1:
+        days = st.selectbox("Période", options=[30, 90], index=0, format_func=lambda value: f"{value} jours")
+    with c2:
+        history_limit = st.slider("Historique revues", 1, 20, 10)
+    with c3:
+        st.caption("Revue, tendances, watchlist, anomalies, historique, qualité données, exports, alertes et traçabilité.")
+
+    try:
+        dashboard = read_json_response(
+            backend.get("/api/v1/health-coach/dashboard", params={"days": days, "review_limit": history_limit})
+        )
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Coach santé indisponible: {exc}")
+        return
+
+    features = dashboard.get("features") or {}
+    structured = dashboard.get("structuredReview") or {}
+    latest = dashboard.get("latestReview") or {}
+    alerts = dashboard.get("alerts") or {}
+    counts = features.get("counts") or {}
+    quality = features.get("dataQuality") or {}
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Confiance données", quality.get("level", "unknown"), quality.get("score"))
+    m2.metric("Événements récents", sum(int(value or 0) for value in counts.values()))
+    m3.metric("Alertes", len(alerts.get("alerts") or []))
+    m4.metric("Dernière revue", latest.get("review_date") or "aucune")
+
+    a1, a2, a3, a4 = st.columns(4)
+    with a1:
+        if st.button("Générer revue 30j", use_container_width=True):
+            with st.spinner("Génération de la revue quotidienne..."):
+                st.json(read_json_response(backend.post("/api/v1/health-coach/daily-review", params={"days": 30})))
+    with a2:
+        if st.button("Générer bilan 90j", use_container_width=True):
+            with st.spinner("Génération du bilan hebdomadaire..."):
+                st.json(read_json_response(backend.post("/api/v1/health-coach/weekly-review", params={"days": 90})))
+    with a3:
+        if st.button("Évaluer alertes", use_container_width=True):
+            st.json(read_json_response(backend.post("/api/v1/health-coach/alerts/evaluate", params={"days": days})))
+    with a4:
+        if st.button("Tests synthétiques", use_container_width=True):
+            st.json(read_json_response(backend.get("/api/v1/health-coach/evaluation")))
+
+    t1, t2, t3, t4, t5, t6 = st.tabs(
+        ["Dernière revue", "Tendances", "Watchlist", "Historique", "Traçabilité", "Exports"]
+    )
+
+    with t1:
+        if latest:
+            st.markdown(f"### {latest.get('review_date')} - {latest.get('status')}")
+            st.write(latest.get("review_text") or "Revue sans texte.")
+            with st.expander("Synthèse structurée"):
+                st.json(latest.get("structuredReview") or structured)
+        else:
+            st.info("Aucune revue stockée pour l'instant.")
+        st.markdown("### Qualité des données")
+        st.json(quality)
+
+    with t2:
+        st.markdown("### Mesures")
+        st.dataframe(_as_table(features.get("metricTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), use_container_width=True, height=240)
+        st.markdown("### Spirométrie")
+        st.dataframe(_as_table(features.get("spirometryTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), use_container_width=True, height=220)
+        st.markdown("### Humeur")
+        st.dataframe(_as_table(features.get("stateOfMindTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), use_container_width=True, height=220)
+
+    with t3:
+        st.markdown("### Watchlist personnalisée")
+        st.dataframe(_as_table(features.get("personalWatchlist") or [], ["label", "status", "severity", "recentCount", "latestDate", "reason"]), use_container_width=True, height=240)
+        st.markdown("### Anomalies")
+        st.dataframe(_as_table(features.get("anomalies") or [], ["severity", "source", "label", "direction", "delta", "reason"]), use_container_width=True, height=240)
+        st.markdown("### Alertes configurables")
+        st.dataframe(_as_table(alerts.get("alerts") or [], ["severity", "ruleId", "label", "reason"]), use_container_width=True, height=220)
+
+    with t4:
+        reviews = dashboard.get("reviews") or []
+        st.dataframe(_as_table(reviews, ["review_date", "period_days", "status", "model", "review_id", "created_at"]), use_container_width=True, height=320)
+        review_id = st.text_input("Review ID à inspecter", value="")
+        if st.button("Charger la revue", use_container_width=True, disabled=not review_id.strip()):
+            st.json(read_json_response(backend.get(f"/api/v1/health-coach/reviews/{review_id.strip()}")))
+
+    with t5:
+        traces = structured.get("traceability") or []
+        st.dataframe(_as_table(traces, ["id", "conclusion", "source", "count", "periodDays", "wording"]), use_container_width=True, height=320)
+        with st.expander("Mode multi-agent spécialisé"):
+            st.json(structured.get("specializedAgents") or {})
+
+    with t6:
+        export_days = st.radio("Fenêtre export", options=[30, 90], horizontal=True, format_func=lambda value: f"{value} jours")
+        c_md, c_pdf = st.columns(2)
+        with c_md:
+            try:
+                response = backend.download("/api/v1/health-coach/export/markdown", params={"days": export_days})
+                response.raise_for_status()
+                st.download_button("Télécharger Markdown", data=response.content, file_name=f"resume-sante-{export_days}j.md", mime="text/markdown", use_container_width=True)
+            except Exception as exc:  # noqa: BLE001
+                st.warning(f"Export Markdown indisponible: {exc}")
+        with c_pdf:
+            try:
+                response = backend.download("/api/v1/health-coach/export/pdf", params={"days": export_days})
+                response.raise_for_status()
+                st.download_button("Télécharger PDF", data=response.content, file_name=f"resume-sante-{export_days}j.pdf", mime="application/pdf", use_container_width=True)
+            except Exception as exc:  # noqa: BLE001
+                st.warning(f"Export PDF indisponible: {exc}")
 
 
 
@@ -531,6 +649,7 @@ Cette interface ajoute ce qu'Open WebUI n'expose pas directement dans ton backen
 - `POST /api/v1/rag/search`
 - `GET /api/v1/runs`
 - `GET /api/v1/runs/{run_id}`
+- dashboard Coach santé, exports, alertes, traçabilité et évaluation synthétique
 - upload manuel dans `/workspace`
 - listing et lecture locale du `workspace`
 - exploration directe de Qdrant
@@ -554,9 +673,10 @@ def main() -> None:
     st.title("🧠 Local Agentic Stack Admin")
     st.caption("UI Streamlit d'administration pour le backend FastAPI agentique")
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
         [
             "Vue d'ensemble",
+            "Coach santé",
             "Endpoints backend",
             "Workspace & ingestion",
             "Qdrant",
@@ -568,14 +688,16 @@ def main() -> None:
     with tab1:
         tab_overview(backend, workspace_root, state_db_path, checkpoint_db_path)
     with tab2:
-        tab_endpoints(backend)
+        tab_health_coach(backend)
     with tab3:
-        tab_workspace(backend, workspace_root)
+        tab_endpoints(backend)
     with tab4:
-        tab_qdrant(st.session_state.qdrant_url, qdrant_collection)
+        tab_workspace(backend, workspace_root)
     with tab5:
-        tab_sqlite(state_db_path, checkpoint_db_path)
+        tab_qdrant(st.session_state.qdrant_url, qdrant_collection)
     with tab6:
+        tab_sqlite(state_db_path, checkpoint_db_path)
+    with tab7:
         tab_api_docs()
 
 

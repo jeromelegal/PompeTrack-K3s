@@ -41,6 +41,10 @@ class BackendClient:
     def health_features(self, *, days: int = 30) -> dict[str, Any]:
         return self._request("GET", f"/api/v1/health-coach/features?days={days}")
 
+    def alerts(self, *, days: int = 30, notify: bool = False) -> dict[str, Any]:
+        query = urllib.parse.urlencode({"days": days, "notify": str(notify).lower()})
+        return self._request("POST", f"/api/v1/health-coach/alerts/evaluate?{query}", payload={})
+
     def preferences(self, user_id: str) -> dict[str, Any]:
         return self._request("GET", f"/api/v1/health-coach/preferences/{urllib.parse.quote(user_id)}")
 

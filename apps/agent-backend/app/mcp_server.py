@@ -7,8 +7,13 @@ from mcp.server.fastmcp import FastMCP
 from app.dependencies import get_services
 from app.medplum.health_coach import (
     build_daily_health_features,
+    build_conclusion_traces,
+    build_medical_export_markdown,
+    build_structured_review,
+    evaluate_alert_rules,
     generate_daily_health_review,
     generate_weekly_health_review,
+    run_synthetic_coach_evaluation,
 )
 from app.medplum.health_tools import (
     create_health_summary,
@@ -174,6 +179,34 @@ def latest_health_review() -> dict[str, Any]:
     services.state_store.init_db()
     review = services.state_store.get_latest_health_review()
     return {"item": review}
+
+
+@mcp.tool()
+def health_coach_alerts(days: int | None = None) -> dict[str, Any]:
+    """Evaluate configurable deterministic health coach alerts."""
+    features = build_daily_health_features(days=_limit(days, 30, 90))
+    return evaluate_alert_rules(features)
+
+
+@mcp.tool()
+def health_coach_trace(days: int | None = None) -> dict[str, Any]:
+    """Show which data supports current health coach conclusions."""
+    features = build_daily_health_features(days=_limit(days, 30, 90))
+    structured = build_structured_review(features=features, review_history=[])
+    return {"items": build_conclusion_traces(features, structured)}
+
+
+@mcp.tool()
+def medical_visit_export_markdown(days: int | None = None) -> dict[str, Any]:
+    """Generate a Markdown summary for a medical appointment."""
+    k = _limit(days, 30, 90)
+    return {"days": k, "markdown": build_medical_export_markdown(build_daily_health_features(days=k), days=k)}
+
+
+@mcp.tool()
+def health_coach_synthetic_evaluation() -> dict[str, Any]:
+    """Run deterministic synthetic evaluations for the health coach."""
+    return run_synthetic_coach_evaluation()
 
 
 if __name__ == "__main__":
