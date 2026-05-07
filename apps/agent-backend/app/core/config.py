@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    backend_api_key: str = BACKEND_API_KEY
+    backend_api_key: str | None = BACKEND_API_KEY
     allow_origins: str = "*"
 
     ollama_base_url: str = OLLAMA_BASE_URL
