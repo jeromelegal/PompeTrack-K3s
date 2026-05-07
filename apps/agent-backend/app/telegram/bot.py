@@ -11,6 +11,7 @@ from app.telegram.backend import BackendClient
 from app.telegram.client import TelegramClient, parse_chat_ids
 from app.telegram.formatters import (
     format_evening_questions,
+    format_alerts,
     format_feedback_result,
     format_features,
     format_guided_actions,
@@ -47,6 +48,7 @@ HELP_TEXT = """Commandes disponibles:
 /spirometry - spirométrie récente
 /workouts - entraînements récents
 /evening - questions ciblées du soir
+/alerts - évalue les alertes configurables
 /weekly-review - lance un bilan hebdomadaire maintenant
 /prefs - affiche la mémoire utilisateur
 /setpref <clé> <valeur> - modifie une préférence
@@ -189,6 +191,11 @@ class TelegramHealthBot:
             features = self.backend.health_features(days=30)
             prefs = self.backend.preferences(_pref_user_id(chat_id))
             self.telegram.send_message(chat_id, format_guided_actions(features, prefs))
+            return
+        if command == "/alerts":
+            self.telegram.send_chat_action(chat_id)
+            notify = rest.strip().lower() in {"notify", "send", "telegram"}
+            self.telegram.send_message(chat_id, format_alerts(self.backend.alerts(days=30, notify=notify)))
             return
         if command == "/note":
             kind, _, note_text = rest.strip().partition(" ")

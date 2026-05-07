@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import re
 import json
 import math
 import statistics
@@ -703,7 +704,7 @@ def build_structured_review(
 
     watch_items = features.get("watchItems", [])
 
-    return {
+    structured = {
         "confirmedTrends": confirmed_trends[:8],
         "newSignals": new_signals[:8],
         "watchItems": watch_items,
@@ -723,6 +724,349 @@ def build_structured_review(
             "Les tendances décrites correspondent-elles au ressenti réel ?",
         ],
         "dataConfidence": features.get("dataQuality"),
+    }
+    structured["traceability"] = build_conclusion_traces(features, structured)
+    structured["specializedAgents"] = build_specialized_agent_summary(features, structured)
+    return structured
+
+
+def build_conclusion_traces(
+    features: dict[str, Any],
+    structured_review: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    structured = structured_review or {}
+    traces: list[dict[str, Any]] = []
+
+    def add_trace(
+        *,
+        conclusion_id: str,
+        conclusion: str,
+        source: str,
+        count: int | None,
+        days: int | None,
+        evidence: list[dict[str, Any]],
+    ) -> None:
+        traces.append({
+            "id": conclusion_id,
+            "conclusion": conclusion,
+            "source": source,
+            "count": count,
+            "periodDays": days,
+            "evidence": evidence[:6],
+            "wording": f"Cette observation vient de {count if count is not None else 'n'} mesure(s) sur {days or '?'} jours.",
+        })
+
+    period_days = ((features.get("period") or {}).get("days"))
+    for index, trend in enumerate(features.get("metricTrends", [])[:8], start=1):
+        add_trace(
+            conclusion_id=f"metric-trend-{index}",
+            conclusion=str(trend.get("label") or "Tendance mesure"),
+            source="metricTrends",
+            count=trend.get("count"),
+            days=period_days,
+            evidence=[trend],
+        )
+    for index, trend in enumerate(features.get("spirometryTrends", [])[:6], start=1):
+        add_trace(
+            conclusion_id=f"spirometry-trend-{index}",
+            conclusion=str(trend.get("label") or "Tendance spirométrie"),
+            source="spirometryTrends",
+            count=trend.get("count"),
+            days=period_days,
+            evidence=[trend],
+        )
+    for index, item in enumerate(structured.get("anomalies") or features.get("anomalies") or [], start=1):
+        add_trace(
+            conclusion_id=f"anomaly-{index}",
+            conclusion=str(item.get("label") or item.get("type") or "Anomalie"),
+            source=str(item.get("source") or item.get("type") or "anomalies"),
+            count=item.get("count") or item.get("recentCount"),
+            days=period_days,
+            evidence=[item],
+        )
+    for index, item in enumerate(structured.get("watchItems") or features.get("watchItems") or [], start=1):
+        add_trace(
+            conclusion_id=f"watch-{index}",
+            conclusion=str(item.get("label") or item.get("type") or "Point de vigilance"),
+            source=str(item.get("type") or "watchItems"),
+            count=len(item.get("sources") or []) if item.get("sources") else None,
+            days=period_days,
+            evidence=[item],
+        )
+    return traces[:24]
+
+
+def build_specialized_agent_summary(
+    features: dict[str, Any],
+    structured_review: dict[str, Any],
+) -> dict[str, Any]:
+    safety_items = [
+        item for item in (structured_review.get("anomalies") or []) + (structured_review.get("watchItems") or [])
+        if item.get("severity") in {"high", "medium"}
+    ]
+    return {
+        "dataAnalyst": {
+            "role": "analyste_donnees",
+            "output": {
+                "trends": {
+                    "metrics": features.get("metricTrends", [])[:6],
+                    "spirometry": features.get("spirometryTrends", [])[:6],
+                    "stateOfMind": features.get("stateOfMindTrends", [])[:4],
+                },
+                "dataQuality": features.get("dataQuality"),
+            },
+        },
+        "dailyCoach": {
+            "role": "coach_quotidien",
+            "output": {
+                "goals": structured_review.get("goals", [])[:6],
+                "questions": structured_review.get("questions", [])[:6],
+            },
+        },
+        "medicalSafetyChecker": {
+            "role": "verificateur_securite_medicale",
+            "output": {
+                "needsCaution": bool(safety_items),
+                "signals": safety_items[:8],
+                "guardrail": "Pas de diagnostic; avis médical si aggravation, symptôme inquiétant, effet indésirable ou doute.",
+            },
+        },
+        "telegramWriter": {
+            "role": "redacteur_telegram",
+            "output": {
+                "priority": (structured_review.get("watchItems") or structured_review.get("anomalies") or [])[:4],
+                "style": "notification douce, concise, factuelle",
+            },
+        },
+    }
+
+
+DEFAULT_ALERT_RULES = [
+    {"id": "spirometry_drop", "enabled": True, "type": "spirometry_drop", "days": 7, "threshold": -0.12},
+    {"id": "severe_symptom", "enabled": True, "type": "severe_symptom"},
+    {"id": "missing_data_3_days", "enabled": True, "type": "missing_data", "days": 3},
+    {"id": "medication_missing", "enabled": True, "type": "medication_missing", "days": 3},
+]
+
+
+def evaluate_alert_rules(
+    features: dict[str, Any],
+    rules: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    active_rules = [rule for rule in (rules or DEFAULT_ALERT_RULES) if rule.get("enabled", True)]
+    alerts: list[dict[str, Any]] = []
+    quality = features.get("dataQuality") or {}
+
+    for rule in active_rules:
+        rule_type = rule.get("type")
+        if rule_type == "spirometry_drop":
+            threshold = float(rule.get("threshold", -0.12))
+            for trend in features.get("spirometryTrends", []):
+                previous = _number(trend.get("previousAverage"))
+                delta = _number(trend.get("delta"))
+                if previous in (None, 0) or delta is None:
+                    continue
+                ratio = delta / abs(previous)
+                if ratio <= threshold:
+                    alerts.append({
+                        "ruleId": rule.get("id"),
+                        "severity": "medium" if ratio > threshold * 1.8 else "high",
+                        "label": f"Spirométrie en baisse: {trend.get('label')}",
+                        "reason": f"Variation {round(ratio * 100, 1)}% vs baseline récente.",
+                        "trace": build_conclusion_traces(features, {"anomalies": [trend]})[:1],
+                    })
+        elif rule_type == "severe_symptom":
+            for event in features.get("recentEvents", []):
+                if event.get("type") != "symptom":
+                    continue
+                severity = str(event.get("severity") or "").lower()
+                if severity in {"severe", "high", "grave", "sévère", "8", "9", "10"}:
+                    alerts.append({
+                        "ruleId": rule.get("id"),
+                        "severity": "high",
+                        "label": f"Symptôme sévère: {event.get('label')}",
+                        "reason": "Un symptôme récent est marqué comme sévère.",
+                        "trace": [{"source": "recentEvents", "evidence": [event]}],
+                    })
+        elif rule_type == "missing_data":
+            max_days = int(rule.get("days", 3))
+            stale = []
+            for source, info in (quality.get("freshness") or {}).items():
+                days_since = info.get("daysSinceLatest")
+                if days_since is None or days_since >= max_days:
+                    stale.append(source)
+            if stale:
+                alerts.append({
+                    "ruleId": rule.get("id"),
+                    "severity": "low",
+                    "label": "Données absentes ou anciennes",
+                    "reason": f"Aucune donnée récente pour: {', '.join(stale)}.",
+                    "sources": stale,
+                })
+        elif rule_type == "medication_missing":
+            max_days = int(rule.get("days", 3))
+            freshness = (quality.get("freshness") or {}).get("medications") or {}
+            days_since = freshness.get("daysSinceLatest")
+            if days_since is None or days_since >= max_days:
+                alerts.append({
+                    "ruleId": rule.get("id"),
+                    "severity": "low",
+                    "label": "Médicament non vu récemment",
+                    "reason": "À vérifier: oubli, arrêt prévu ou donnée non synchronisée.",
+                    "daysSinceLatest": days_since,
+                })
+
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "rules": active_rules,
+        "alerts": alerts[:12],
+        "telegramText": format_soft_alerts(alerts),
+    }
+
+
+def format_soft_alerts(alerts: list[dict[str, Any]]) -> str:
+    if not alerts:
+        return "Point doux du coach: aucune alerte déterministe sur les règles configurées."
+    lines = ["Point doux du coach"]
+    for alert in alerts[:5]:
+        lines.append(f"- [{alert.get('severity', 'info')}] {alert.get('label')}: {alert.get('reason')}")
+    lines.append("À lire comme un rappel de suivi, pas comme un diagnostic.")
+    return "\n".join(lines)
+
+
+def build_medical_export_markdown(features: dict[str, Any], *, days: int) -> str:
+    structured = build_structured_review(features=features, review_history=[])
+    sections = [
+        f"# Résumé santé pour rendez-vous médical - {date.today().isoformat()}",
+        f"Période couverte: {days} jours.",
+        "Note: document de suivi personnel, sans diagnostic automatique.",
+        "## Qualité des données",
+        json.dumps(features.get("dataQuality") or {}, ensure_ascii=False, indent=2),
+        "## Symptômes",
+        _markdown_items(features.get("topSymptoms") or [], ["label", "count"]),
+        "## Médicaments",
+        _markdown_items(features.get("recentMedication") or [], ["date", "medication", "status", "dosage"]),
+        "## Spirométrie",
+        _markdown_items(features.get("spirometryTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]),
+        "## Tendances",
+        _markdown_items(features.get("metricTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]),
+        "## Watchlist et anomalies",
+        _markdown_items((features.get("watchItems") or []) + (features.get("anomalies") or []), ["severity", "label", "reason"]),
+        "## Questions à poser",
+        "\n".join(f"- {item}" for item in structured.get("questions", [])),
+        "## Traçabilité",
+        _markdown_items(structured.get("traceability") or [], ["id", "conclusion", "source", "count", "periodDays", "wording"]),
+    ]
+    return "\n\n".join(section for section in sections if section).strip() + "\n"
+
+
+def _markdown_items(items: list[dict[str, Any]], keys: list[str]) -> str:
+    if not items:
+        return "- Aucun élément récent."
+    lines = []
+    for item in items[:20]:
+        values = [f"{key}: {item.get(key)}" for key in keys if item.get(key) is not None]
+        lines.append("- " + "; ".join(values))
+    return "\n".join(lines)
+
+
+def build_medical_export_pdf_bytes(markdown_text: str) -> bytes:
+    plain_lines = []
+    for line in markdown_text.splitlines():
+        cleaned = re.sub(r"^#+\s*", "", line).replace("•", "-")
+        plain_lines.append(cleaned[:110])
+    text = "\n".join(plain_lines[:120])
+    escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    stream_lines = ["BT", "/F1 10 Tf", "50 790 Td"]
+    first = True
+    for line in escaped.splitlines():
+        if first:
+            stream_lines.append(f"({line}) Tj")
+            first = False
+        else:
+            stream_lines.append("0 -13 Td")
+            stream_lines.append(f"({line}) Tj")
+    stream_lines.append("ET")
+    stream = "\n".join(stream_lines).encode("latin-1", errors="replace")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
+    ]
+    pdf = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for index, obj in enumerate(objects, start=1):
+        offsets.append(len(pdf))
+        pdf.extend(f"{index} 0 obj\n".encode("ascii"))
+        pdf.extend(obj)
+        pdf.extend(b"\nendobj\n")
+    xref_offset = len(pdf)
+    pdf.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode("ascii"))
+    for offset in offsets[1:]:
+        pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    pdf.extend(
+        f"trailer << /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode("ascii")
+    )
+    return bytes(pdf)
+
+
+def run_synthetic_coach_evaluation() -> dict[str, Any]:
+    today = date.today()
+
+    def metric(label: str, days_ago: int, value: float) -> dict[str, Any]:
+        return {"date": (today - timedelta(days=days_ago)).isoformat(), "display": label, "value": value}
+
+    scenarios = {
+        "donnees_absentes": {"metrics": [], "medications": [], "symptoms": [], "stateofminds": [], "workouts": [], "spirometry": [], "manualMonthly": []},
+        "tendance_positive": {"metrics": [metric("step count", 1, 7000), metric("step count", 2, 6500), metric("step count", 14, 3000), metric("step count", 15, 3200)], "medications": [metric("med", 1, 1)], "symptoms": [], "stateofminds": [], "workouts": [], "spirometry": [], "manualMonthly": []},
+        "tendance_negative": {"metrics": [metric("resting heart rate", 1, 88), metric("resting heart rate", 2, 86), metric("resting heart rate", 14, 70), metric("resting heart rate", 15, 71)], "medications": [metric("med", 1, 1)], "symptoms": [], "stateofminds": [], "workouts": [], "spirometry": [], "manualMonthly": []},
+        "medicament_manquant": {"metrics": [], "medications": [], "symptoms": [], "stateofminds": [], "workouts": [], "spirometry": [], "manualMonthly": []},
+        "symptome_inquietant": {"metrics": [], "medications": [metric("med", 1, 1)], "symptoms": [{"date": today.isoformat(), "display": "douleur thoracique", "severity": "high"}], "stateofminds": [], "workouts": [], "spirometry": [], "manualMonthly": []},
+    }
+
+    results = []
+    for name, data in scenarios.items():
+        timeline = build_health_timeline_from_data(days=30, data=data)
+        features = {
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "period": timeline.get("period"),
+            "counts": timeline.get("counts"),
+            "metricTrends": _numeric_trends(data["metrics"]),
+            "stateOfMindTrends": _numeric_trends(data["stateofminds"]),
+            "spirometryTrends": _numeric_trends(data["spirometry"]),
+            "manualMonthlyTrends": _numeric_trends(data["manualMonthly"]),
+            "topSymptoms": _top_counts(data["symptoms"]),
+            "recentMedication": data["medications"][:10],
+            "recentEvents": timeline.get("events", [])[:30],
+        }
+        features["dataQuality"] = build_data_quality(data)
+        features["anomalies"] = build_personal_anomalies(features)
+        features["watchItems"] = build_watch_items(data=data, features=features)
+        alerts = evaluate_alert_rules(features)
+        risky_assertions = [
+            text for text in json.dumps({"features": features, "alerts": alerts}, ensure_ascii=False).lower().split(".")
+            if any(token in text for token in ["diagnostic", "certainement", "guérit", "maladie confirmée"])
+        ]
+        passed = not risky_assertions
+        if name in {"donnees_absentes", "medicament_manquant"}:
+            passed = passed and bool(alerts.get("alerts") or features.get("watchItems"))
+        if name == "symptome_inquietant":
+            passed = passed and any(alert.get("severity") == "high" for alert in alerts.get("alerts", []))
+        results.append({
+            "scenario": name,
+            "passed": passed,
+            "alerts": alerts.get("alerts", []),
+            "watchItems": features.get("watchItems", []),
+            "riskyAssertions": risky_assertions,
+        })
+
+    return {
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "passed": all(item["passed"] for item in results),
+        "results": results,
+        "objective": "Réduire hallucinations, conseils trop affirmatifs et oublis de signaux déterministes.",
     }
 
 
