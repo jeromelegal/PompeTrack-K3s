@@ -25,6 +25,7 @@ def process_global_medications(medications: Union[List, str]):
     error_report = []
     standard_bundle_created = 0
     transaction_bundle_created = 0
+    skipped_not_completed = 0
 
     for i, medication in enumerate(medications):
         if not isinstance(medication, dict):
@@ -81,8 +82,17 @@ def process_global_medications(medications: Union[List, str]):
                 for medication in medications:
                     med = to_fhir_medicationadministration(medication)
                     # Record only "completed" status
-                    if med.get("status") == "completed":
+                    if med.status == "completed":
                         current_medication_list.append(med)
+                    else:
+                        skipped_not_completed += 1
+
+                if not current_medication_list:
+                    logger.info(
+                        "No completed MedicationAdministration to upload for medication %s; skipped.",
+                        i,
+                    )
+                    continue
 
                 logger.info(f"Uploading chunked bundles for medication : {i}.")
                 success = upload_medicationadministration_bundles_in_chunks(current_medication_list, chunk_size=5)
@@ -110,6 +120,7 @@ def process_global_medications(medications: Union[List, str]):
 
     logger.info(f"Total standard bundle uploaded : {standard_bundle_created}")
     logger.info(f"Total transaction bundle uploaded : {transaction_bundle_created}")
+    logger.info(f"Total not-completed MedicationAdministrations skipped : {skipped_not_completed}")
     return len(error_report) == 0
 
 # Function to normalize medications

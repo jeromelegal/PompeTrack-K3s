@@ -96,3 +96,21 @@ build_pg_pompetrack:
   rules:
     - changes:
         - apps/pgsql-pompetrack-core/**
+
+build_agent_backend:
+  extends: .build_app
+  variables:
+    APP_NAME: agent-backend
+    APP_PATH: apps/agent-backend
+  rules:
+    - changes:
+        - apps/agent-backend/**
+
+build_streamlit_agent_llm:
+  extends: .build_app
+  variables:
+    APP_NAME: streamlit-agent-llm
+    APP_PATH: apps/streamlit-agent-llm
+  rules:
+    - changes:
+        - apps/streamlit-agent-llm/**

@@ -77,6 +77,123 @@ Exemple pour Airflow
 helm show values apache-airflow/airflow > default-values.yaml
 ```
 
+## Open WebUI tools via mcpo
+
+L'agent backend expose aussi ses outils internes en serveur MCP stdio:
+
+```bash
+python -m app.mcp_server
+```
+
+Le chart `llm-agent` lance `agent-backend-mcpo`, qui enveloppe ce serveur avec `mcpo` et publie un serveur OpenAPI compatible avec l'onglet Tools d'Open WebUI:
+
+```text
+http://agent-backend-mcpo:8000
+```
+
+Pour un tool server global, ajoute-le dans Open WebUI depuis Admin Settings -> Tools:
+
+1. Ajouter un serveur de type OpenAPI.
+2. Utiliser l'URL interne `http://agent-backend-mcpo:8000`.
+3. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
+4. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
+
+Pour un tool server utilisateur ajoute depuis Settings -> Tools, les requetes partent du navigateur. Il faut donc utiliser l'URL exposee par Traefik, pas le DNS Kubernetes:
+
+```text
+http://agent-tools.192.168.2.88.nip.io
+```
+
+Dans ce mode:
+
+1. Ajouter un serveur de type OpenAPI.
+2. Utiliser `http://agent-tools.192.168.2.88.nip.io`.
+3. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
+4. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
+
+Les outils exposes sont `web_search`, `scrape_url`, `rag_search`, `workspace_list` et `workspace_read`.
+
+Attention: les Tools Open WebUI sont optionnels. Le modele peut les ignorer, et certains modeles gerent mal le tool calling. Pour utiliser le backend agentique complet, configure aussi l'agent comme provider OpenAI-compatible avec l'URL interne:
+
+```text
+http://agent-backend:8000/v1
+```
+
+Si l'URL est saisie depuis un ecran utilisateur qui appelle depuis le navigateur, utiliser plutot l'URL Traefik:
+
+```text
+http://agent-backend.192.168.2.88.nip.io/v1
+```
+
+Les modeles exposes par ce provider sont prefixes par `agent-` pour les distinguer des modeles Ollama directs, par exemple `agent-medgemma:27b`. Choisir ce modele force le passage par le graphe agentique planner/researcher/executor/critic, qui peut appeler Qdrant via `rag_search`.
+
+---
+
+## Telegram bot pour le coach santé et le LLM
+
+Créer le bot Telegram:
+
+1. Ouvrir Telegram et parler à `@BotFather`.
+2. Envoyer `/newbot`.
+3. Choisir un nom, puis un username qui finit par `bot`.
+4. Garder le token donné par BotFather.
+5. Dans Telegram, ouvrir une conversation avec le bot et envoyer `/start`.
+
+Pour trouver le `chat_id`, deux options:
+
+```bash
+curl "https://api.telegram.org/bot<TOKEN_DU_BOT>/getUpdates"
+```
+
+Ou déployer temporairement le bot sans `allowed_chat_ids`, puis envoyer `/id`.
+
+Créer le secret Kubernetes initial:
+
+```bash
+kubectl -n llm-agent create secret generic telegram-bot \
+  --from-literal=bot_token='<TOKEN_DU_BOT>'
+```
+
+Après récupération du `chat_id`, verrouiller le bot:
+
+```bash
+kubectl -n llm-agent create secret generic telegram-bot \
+  --dry-run=client -o yaml \
+  --from-literal=bot_token='<TOKEN_DU_BOT>' \
+  --from-literal=allowed_chat_ids='<CHAT_ID_AUTORISE>' \
+  --from-literal=notify_chat_ids='<CHAT_ID_NOTIFICATION>' \
+  | kubectl apply -f -
+```
+
+Activer le bot dans `deploy/charts/llm-agent/values.yaml`:
+
+```yaml
+telegramBot:
+  enabled: true
+
+healthCoach:
+  telegramDailyReviewEnabled: true
+```
+
+Puis redéployer:
+
+```bash
+helm upgrade llm-agent deploy/charts/llm-agent -n llm-agent
+kubectl -n llm-agent apply -f deploy/namespaces/llm-agent/netpol/14-allow-telegram-egress.yaml
+```
+
+Commandes du bot:
+
+```text
+/id
+/latest
+/features
+/coach
+/ask <question>
+```
+
+Une question envoyée sans commande est traitée comme une requête LLM via `agent-backend`.
+
 ---
 
 ## Verifs istio :

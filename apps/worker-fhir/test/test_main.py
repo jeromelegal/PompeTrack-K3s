@@ -1,69 +1,82 @@
 from fastapi.testclient import TestClient
-from main import app
 import pytest
-from unittest.mock import Mock, patch
-import responses
-import requests
-import json
+
+import main
+from main import app
+
 
 client = TestClient(app)
 
-    
-@responses.activate
-def test_external_call():
-    responses.add(
-        responses.GET,
-        "https://api.com/endpoint",
-        json={"ok": True},
-        status=200
-    )
-    
+
 def test_root():
     r = client.get("/")
     assert r.status_code == 200
     assert r.json() == {"message": "Worker API ready."}
 
 
-@pytest.mark.asyncio
-async def test_healthz():
+def test_healthz():
     r = client.get("/healthz")
     assert r.status_code == 200
     js = r.json()
     assert js["status"] == "ok"
-
     assert isinstance(js["time"], str)
-    
-def test_run_worker_success(mocker):
-    mock_run = mocker.patch("main.subprocess.run")
-    mock_run.return_value = mocker.MagicMock(returncode=0, stdout="PIPELINE OK", stderr="")
 
-    r = client.post("/run/iphone")
-    assert r.status_code == 200
-    assert r.json() == {"status": "success", "output": "PIPELINE OK"}
-    mock_run.assert_called_once_with(
-        ["python", "/app/pipeline_iphone.py"],
-        capture_output=True,
-        text=True,
-    )
-    
-def test_run_worker_failure(mocker):
-    mock_run = mocker.patch("main.subprocess.run")
-    mock_run.return_value = mocker.MagicMock(returncode=1, stdout="", stderr="Error\n")
-    r = client.post("/run/iphone")
-    assert r.status_code == 500
-    assert "Error" in r.json()["detail"]
-    
-def test_run_worker_exception(mocker):
-    mock_run = mocker.patch("app.main.subprocess.run", side_effect=Exception("Boom!"))
-    r = client.post("/run/iphone")
-    assert r.status_code == 500
-    assert "Boom!" in r.json()["detail"]
-    
-def test_external_call_requests(monkeypatch):
-    def fake_get(url):
-        assert url == "https://api.example.com/v1/data"
-        class Resp:
-            status_code = 200
-            json = lambda self: {"ok": True}
-        return Resp()
-    monkeypatch.setattr(requests, "get", fake_get)
+
+def test_run_worker_iphone_success(mocker):
+    pipeline = mocker.patch("main.iphone_json_pipeline", return_value=True)
+
+    result = main.run_worker_iphone(device={})
+
+    assert result == {
+        "status": "success",
+        "output": "iphone pipeline completed",
+    }
+    pipeline.assert_called_once_with()
+
+
+def test_run_worker_iphone_false_is_500(mocker):
+    mocker.patch("main.iphone_json_pipeline", return_value=False)
+
+    with pytest.raises(main.HTTPException) as exc_info:
+        main.run_worker_iphone(device={})
+
+    assert exc_info.value.status_code == 500
+    assert "iphone pipeline failed or no object processed" in exc_info.value.detail
+
+
+def test_run_worker_iphone_exception_is_500(mocker):
+    mocker.patch("main.iphone_json_pipeline", side_effect=RuntimeError("Boom!"))
+
+    with pytest.raises(main.HTTPException) as exc_info:
+        main.run_worker_iphone(device={})
+
+    assert exc_info.value.status_code == 500
+    assert "Boom!" in exc_info.value.detail
+
+
+@pytest.mark.parametrize(
+    ("endpoint_func", "pipeline_attr", "expected_output"),
+    [
+        (main.run_worker_manual, "manual_json_pipeline", "manual pipeline completed"),
+        (
+            main.run_worker_spirometer,
+            "spirometer_json_pipeline",
+            "spirometer pipeline completed",
+        ),
+        (main.run_worker_strength, "strength_json_pipeline", "strength pipeline completed"),
+        (main.run_worker_medication, "medication_json_pipeline", "medication pipeline completed"),
+        (main.run_logs_transfert, "transfert_logs_pipeline", "logs pipeline completed"),
+    ],
+)
+def test_other_pipeline_endpoints_use_boolean_contract(
+    mocker,
+    endpoint_func,
+    pipeline_attr,
+    expected_output,
+):
+    pipeline = mocker.patch(f"main.{pipeline_attr}", return_value=True)
+
+    result = endpoint_func(device={})
+
+    assert result == {"status": "success", "output": expected_output}
+    pipeline.assert_called_once_with()

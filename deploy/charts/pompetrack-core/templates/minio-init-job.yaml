@@ -75,6 +75,8 @@ spec:
                 secretKeyRef:
                   name: minio-airflow-logs-creds
                   key: airflowLogsSecretKey
+            - name: AIRFLOW_LOGS_RETENTION_DAYS
+              value: {{ .Values.minio.airflowLogsRetentionDays | default 7 | quote }}
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
@@ -307,6 +309,9 @@ spec:
 
               echo "==> Ensure bucket airflow-logs exists"
               mc mb --ignore-existing local/airflow-logs
+              echo "==> Configure lifecycle for airflow-logs (${AIRFLOW_LOGS_RETENTION_DAYS} days)"
+              mc ilm rule remove --all --force local/airflow-logs || true
+              mc ilm rule add local/airflow-logs --expire-days "${AIRFLOW_LOGS_RETENTION_DAYS}"
 
               echo "==> (Re)create policy airflow-logs-rw"
               cat >/tmp/airflow-logs-policy.json <<'EOF'

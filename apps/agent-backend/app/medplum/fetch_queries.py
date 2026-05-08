@@ -1,0 +1,763 @@
+import os
+import logging
+from typing import Optional
+from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
+
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from app.medplum.get_medplum_token import get_token
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("Agent-LLM")
+
+
+FHIR_BASE = os.getenv(
+    "FHIR_BASE",
+    "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4/"
+)
+
+DEFAULT_CONNECT_TIMEOUT = 10
+DEFAULT_READ_TIMEOUT = 120
+
+# Function to get the resource base URL
+def get_resource_base_url(internal_base: str, resource_type: str) -> str:
+    return f"{internal_base.rstrip('/')}/{resource_type}"
+
+# Function to rewrite the 'next' URL
+def rewrite_next_to_internal_resource_base(
+    next_url: Optional[str],
+    internal_base: str,
+    resource_type: str,
+) -> Optional[str]:
+    """
+    Keep the 'next' URL.
+    If it contains a query string, 
+    rewrite it to the internal resource base URL with the query string.
+      {FHIR_BASE}/{resource_type}?...
+    """
+    if not next_url:
+        return None
+
+    parsed_next = urlparse(next_url)
+
+    if not parsed_next.query:
+        logger.warning("URL 'next' sans query string: %s", next_url)
+        return None
+
+    resource_base = get_resource_base_url(internal_base, resource_type)
+    rewritten = f"{resource_base}?{parsed_next.query}"
+
+    if rewritten != next_url:
+        logger.warning(
+            "Réécriture de l'URL de pagination : %s -> %s",
+            next_url,
+            rewritten,
+        )
+
+    return rewritten
+
+# Function to create a requests session
+def create_session() -> requests.Session:
+    """
+    Create a requests session with retry logic.
+    """
+    retry = Retry(
+        total=6,
+        connect=6,
+        read=6,
+        status=6,
+        backoff_factor=1.0,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["GET"]),
+        respect_retry_after_header=True,
+        raise_on_status=False,
+    )
+
+    adapter = HTTPAdapter(
+        max_retries=retry,
+        pool_connections=10,
+        pool_maxsize=10,
+    )
+
+    session = requests.Session()
+    session.trust_env = False
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+# Function to build the search URL
+def build_search_url(base: str, resource_type: str, params: dict) -> str:
+    """
+    Build the search URL based on the base URL, resource type, and query parameters.
+    """
+    query = urlencode(
+        {k: v for k, v in params.items() if v is not None},
+        doseq=True
+    )
+    return f"{base.rstrip('/')}/{resource_type}?{query}"
+
+# Function to get a bundle page
+def get_bundle_page(
+    session: requests.Session,
+    url: str,
+    headers: dict,
+    timeout: tuple[int, int] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+) -> dict:
+    """
+    Get a bundle page.
+    """
+    try:
+        r = session.get(url, headers=headers, timeout=timeout)
+    except requests.RequestException as e:
+        raise RuntimeError(f"Erreur réseau lors du GET {url}: {e}") from e
+
+    if r.status_code >= 400:
+        body = r.text[:1000] if r.text else ""
+        raise RuntimeError(
+            f"Erreur HTTP {r.status_code} sur {url}. "
+            f"Réponse partielle: {body}"
+        )
+
+    try:
+        return r.json()
+    except ValueError as e:
+        raise RuntimeError(
+            f"Réponse non JSON sur {url}. "
+            f"Content-Type={r.headers.get('Content-Type')} "
+            f"Body(partiel)={r.text[:500] if r.text else ''}"
+        ) from e
+
+# Function to fetch FHIR observations
+def fetch_fhir_observation(
+    patient: str,
+    payload: Optional[dict] = None
+) -> list[dict]:
+    """
+    Fetch FHIR observations.
+    """
+    token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/fhir+json",
+    }
+
+    session = create_session()
+
+    patient_full = f"Patient/{patient}"
+    payload = payload or {}
+
+    category = payload.get("category")
+    start_date = payload.get("startDate")
+    end_date = payload.get("endDate")
+    code = payload.get("code")
+    device = payload.get("device")
+    tag = payload.get("tag")
+
+    max_records = payload.get("max_records", 1000)
+    page_count = int(payload.get("page_count", 100))
+    max_pages = int(payload.get("max_pages", 1000))
+
+    if page_count <= 0:
+        page_count = 100
+
+    elements = ",".join([
+        "id",
+        "category",
+        "code",
+        "effectiveDateTime",
+        "effectivePeriod",
+        "performer",
+        "valueQuantity",
+        "valueString",
+        "valueCodeableConcept",
+        "device",
+        "hasMember",
+        "component",
+        "interpretation",
+        "bodySite",
+        "note",
+    ])
+
+    params = {
+        "patient": patient_full,
+        "_count": page_count,
+        "_elements": elements,
+    }
+
+    if category:
+        params["category"] = category
+    if code:
+        params["code"] = code
+    if device:
+        params["device"] = device
+    if tag:
+        params["_tag"] = tag
+    if start_date or end_date:
+        dates = []
+        if start_date:
+            dates.append(f"ge{start_date}")
+        if end_date:
+            dates.append(f"le{end_date}")
+        params["date"] = dates if len(dates) > 1 else dates[0]
+
+    all_observations: list[dict] = []
+    seen_obs_refs: set[str] = set()
+    visited_urls: set[str] = set()
+
+    resource_type = "Observation"
+    url = build_search_url(FHIR_BASE, resource_type, params)
+
+    page_number = 0
+
+    while url and (max_records is None or len(all_observations) < max_records):
+        page_number += 1
+
+        if page_number > max_pages:
+            raise RuntimeError(
+                f"Pagination interrompue : plus de {max_pages} pages parcourues."
+            )
+
+        if url in visited_urls:
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
+        visited_urls.add(url)
+
+        logger.info("GET page %s: %s", page_number, url)
+        bundle = get_bundle_page(session, url, headers=headers)
+
+        page_obs_count = 0
+        for entry in bundle.get("entry", []):
+            resource = entry.get("resource")
+            if not resource or resource.get("resourceType") != "Observation":
+                continue
+
+            obs_id = resource.get("id")
+            obs_ref = f"Observation/{obs_id}" if obs_id else None
+
+            if obs_ref and obs_ref in seen_obs_refs:
+                continue
+
+            if obs_ref:
+                seen_obs_refs.add(obs_ref)
+
+            all_observations.append(resource)
+            page_obs_count += 1
+
+            if max_records is not None and len(all_observations) >= max_records:
+                break
+
+        logger.info(
+            "Page %s récupérée: %s observations (cumul=%s)",
+            page_number,
+            page_obs_count,
+            len(all_observations),
+        )
+
+        if max_records is not None and len(all_observations) >= max_records:
+            break
+
+        raw_next_url = next(
+            (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
+            None,
+        )
+
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
+    if max_records is not None:
+        all_observations = all_observations[:max_records]
+
+    obs_index = {
+        f"Observation/{obs['id']}": obs
+        for obs in all_observations
+        if "id" in obs
+    }
+
+    results = []
+    for obs in all_observations:
+        resolved_members = []
+
+        for member_ref in obs.get("hasMember", []):
+            ref = member_ref.get("reference")
+            member_obs = obs_index.get(ref)
+            if not member_obs:
+                continue
+
+            resolved_members.append({
+                "reference": ref,
+                "effectiveDateTime": member_obs.get("effectiveDateTime"),
+                "valueQuantity": member_obs.get("valueQuantity"),
+            })
+
+        if resolved_members:
+            obs["resolvedHasMember"] = resolved_members
+
+        results.append(obs)
+
+    return results
+
+# Function to fetch FHIR medication
+def fetch_fhir_medication(
+    payload: Optional[dict] = None
+) -> list[dict]:
+    """
+    Fetch FHIR medication.
+    """
+    token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/fhir+json",
+    }
+
+    session = create_session()
+
+    payload = payload or {}
+    code = payload.get("code")
+
+    max_records = payload.get("max_records", 1000)
+    page_count = int(payload.get("page_count", 100))
+    max_pages = int(payload.get("max_pages", 1000))
+
+    if page_count <= 0:
+        page_count = 100
+
+    elements = ",".join([
+        "id",
+        "code",
+    ])
+
+    params = {
+        "_count": page_count,
+        "_elements": elements,
+    }
+
+    if code:
+        params["code"] = code
+
+    all_medications: list[dict] = []
+    seen_med_refs: set[str] = set()
+    visited_urls: set[str] = set()
+
+    resource_type = "Medication"
+    url = build_search_url(FHIR_BASE, resource_type, params)
+
+    page_number = 0
+
+    while url and (max_records is None or len(all_medications) < max_records):
+        page_number += 1
+
+        if page_number > max_pages:
+            raise RuntimeError(
+                f"Pagination interrompue : plus de {max_pages} pages parcourues."
+            )
+
+        if url in visited_urls:
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
+        visited_urls.add(url)
+
+        logger.info("GET page %s: %s", page_number, url)
+        bundle = get_bundle_page(session, url, headers=headers)
+
+        page_med_count = 0
+        for entry in bundle.get("entry", []):
+            resource = entry.get("resource")
+            if not resource or resource.get("resourceType") != "Medication":
+                continue
+
+            med_id = resource.get("id")
+            med_ref = f"Medication/{med_id}" if med_id else None
+
+            if med_ref and med_ref in seen_med_refs:
+                continue
+
+            if med_ref:
+                seen_med_refs.add(med_ref)
+
+            all_medications.append(resource)
+            page_med_count += 1
+
+            if max_records is not None and len(all_medications) >= max_records:
+                break
+
+        logger.info(
+            "Page %s récupérée: %s Medications (cumul=%s)",
+            page_number,
+            page_med_count,
+            len(all_medications),
+        )
+
+        if max_records is not None and len(all_medications) >= max_records:
+            break
+
+        raw_next_url = next(
+            (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
+            None,
+        )
+
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
+    if max_records is not None:
+        all_medications = all_medications[:max_records]
+
+    results = []
+    for med in all_medications:
+        resolved_members = []
+        results.append(med)
+
+    return results
+
+# Function to fetch FHIR MedicationsAdministartion
+def fetch_fhir_medicationadministration(
+    patient: str,
+    payload: Optional[dict] = None
+) -> list[dict]:
+    """
+    Fetch FHIR MedicationAdministrations and resolve:
+      - hasMember -> MedicationAdministration resources
+      - medicationReference -> full Medication resource
+    """
+    token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/fhir+json",
+    }
+
+    session = create_session()
+
+    patient_full = f"Patient/{patient}"
+    payload = payload or {}
+
+    category = payload.get("category")
+    start_date = payload.get("startDate")
+    end_date = payload.get("endDate")
+    device = payload.get("device")
+    tag = payload.get("tag")
+
+    max_records = payload.get("max_records", 1000)
+    page_count = int(payload.get("page_count", 100))
+    max_pages = int(payload.get("max_pages", 1000))
+
+    if page_count <= 0:
+        page_count = 100
+
+    elements = ",".join([
+        "id",
+        "category",
+        "effectiveDateTime",
+        "effectivePeriod",
+        "performer",
+        "device",
+        "hasMember",
+        "status",
+        "medicationReference",
+        "dosage",
+    ])
+
+    params = {
+        "patient": patient_full,
+        "_count": page_count,
+        "_elements": elements,
+    }
+
+    if category:
+        params["category"] = category
+    if device:
+        params["device"] = device
+    if tag:
+        params["_tag"] = tag
+    if start_date or end_date:
+        dates = []
+        if start_date:
+            dates.append(f"ge{start_date}")
+        if end_date:
+            dates.append(f"le{end_date}")
+        params["effective-time"] = dates if len(dates) > 1 else dates[0]
+
+    all_medicationadministrations: list[dict] = []
+    seen_medadmin_refs: set[str] = set()
+    visited_urls: set[str] = set()
+
+    resource_type = "MedicationAdministration"
+    url = build_search_url(FHIR_BASE, resource_type, params)
+
+    page_number = 0
+
+    while url and (max_records is None or len(all_medicationadministrations) < max_records):
+        page_number += 1
+
+        if page_number > max_pages:
+            raise RuntimeError(
+                f"Pagination interrompue : plus de {max_pages} pages parcourues."
+            )
+
+        if url in visited_urls:
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
+        visited_urls.add(url)
+
+        logger.info("GET page %s: %s", page_number, url)
+        bundle = get_bundle_page(session, url, headers=headers)
+
+        page_medadmin_count = 0
+        for entry in bundle.get("entry", []):
+            resource = entry.get("resource")
+            if not resource or resource.get("resourceType") != "MedicationAdministration":
+                continue
+
+            medadmin_id = resource.get("id")
+            medadmin_ref = f"MedicationAdministration/{medadmin_id}" if medadmin_id else None
+
+            if medadmin_ref and medadmin_ref in seen_medadmin_refs:
+                continue
+
+            if medadmin_ref:
+                seen_medadmin_refs.add(medadmin_ref)
+
+            all_medicationadministrations.append(resource)
+            page_medadmin_count += 1
+
+            if max_records is not None and len(all_medicationadministrations) >= max_records:
+                break
+
+        logger.info(
+            "Page %s récupérée: %s MedicationAdministrations (cumul=%s)",
+            page_number,
+            page_medadmin_count,
+            len(all_medicationadministrations),
+        )
+
+        if max_records is not None and len(all_medicationadministrations) >= max_records:
+            break
+
+        raw_next_url = next(
+            (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
+            None,
+        )
+
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
+    if max_records is not None:
+        all_medicationadministrations = all_medicationadministrations[:max_records]
+
+    medadmin_index = {
+        f"MedicationAdministration/{medadmin['id']}": medadmin
+        for medadmin in all_medicationadministrations
+        if "id" in medadmin
+    }
+
+    medication_refs: set[str] = set()
+    for medadmin in all_medicationadministrations:
+        med_ref_obj = medadmin.get("medicationReference")
+
+        if isinstance(med_ref_obj, dict):
+            ref = med_ref_obj.get("reference")
+            if isinstance(ref, str) and ref.startswith("Medication/"):
+                medication_refs.add(ref)
+        elif isinstance(med_ref_obj, str) and med_ref_obj.startswith("Medication/"):
+            medication_refs.add(med_ref_obj)
+
+    medication_index: dict[str, dict] = {}
+    if medication_refs:
+        medications = fetch_fhir_medication(
+            payload={
+                "max_records": max(len(medication_refs), 100),
+                "page_count": min(max(len(medication_refs), 100), 1000),
+                "max_pages": max_pages,
+            }
+        )
+        medication_index = {
+            f"Medication/{med['id']}": med
+            for med in medications
+            if "id" in med
+        }
+
+    results = []
+    for medadmin in all_medicationadministrations:
+        resolved_members = []
+
+        for member_ref in medadmin.get("hasMember", []):
+            ref = member_ref.get("reference")
+            member_medadmin = medadmin_index.get(ref)
+            if not member_medadmin:
+                continue
+
+            resolved_members.append({
+                "reference": ref,
+                "effectiveDateTime": member_medadmin.get("effectiveDateTime"),
+            })
+
+        if resolved_members:
+            medadmin["resolvedHasMember"] = resolved_members
+
+        med_ref_obj = medadmin.get("medicationReference")
+        medication_ref = None
+
+        if isinstance(med_ref_obj, dict):
+            medication_ref = med_ref_obj.get("reference")
+        elif isinstance(med_ref_obj, str):
+            medication_ref = med_ref_obj
+
+        if medication_ref:
+            resolved_medication = medication_index.get(medication_ref)
+            if resolved_medication:
+                medadmin["medicationReference"] = resolved_medication
+
+        results.append(medadmin)
+
+    return results
+
+
+# Function to fetch FHIR Conditions
+def fetch_fhir_condition(
+    patient: str,
+    payload: Optional[dict] = None
+) -> list[dict]:
+    """
+    Fetch FHIR Conditions for a patient.
+    """
+    token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/fhir+json",
+    }
+
+    session = create_session()
+
+    patient_full = f"Patient/{patient}"
+    payload = payload or {}
+
+    category = payload.get("category")
+    clinical_status = payload.get("clinicalStatus")
+    verification_status = payload.get("verificationStatus")
+    start_date = payload.get("startDate")
+    end_date = payload.get("endDate")
+    code = payload.get("code")
+    tag = payload.get("tag")
+
+    max_records = payload.get("max_records", 1000)
+    page_count = int(payload.get("page_count", 100))
+    max_pages = int(payload.get("max_pages", 1000))
+
+    if page_count <= 0:
+        page_count = 100
+
+    elements = ",".join([
+        "id",
+        "clinicalStatus",
+        "verificationStatus",
+        "category",
+        "severity",
+        "code",
+        "subject",
+        "onsetDateTime",
+        "onsetPeriod",
+        "recordedDate",
+        "abatementDateTime",
+        "abatementPeriod",
+        "note",
+    ])
+
+    params = {
+        "patient": patient_full,
+        "_count": page_count,
+        "_elements": elements,
+    }
+
+    if category:
+        params["category"] = category
+    if clinical_status:
+        params["clinical-status"] = clinical_status
+    if verification_status:
+        params["verification-status"] = verification_status
+    if code:
+        params["code"] = code
+    if tag:
+        params["_tag"] = tag
+    if start_date or end_date:
+        dates = []
+        if start_date:
+            dates.append(f"ge{start_date}")
+        if end_date:
+            dates.append(f"le{end_date}")
+        params["recorded-date"] = dates if len(dates) > 1 else dates[0]
+
+    all_conditions: list[dict] = []
+    seen_condition_refs: set[str] = set()
+    visited_urls: set[str] = set()
+
+    resource_type = "Condition"
+    url = build_search_url(FHIR_BASE, resource_type, params)
+
+    page_number = 0
+
+    while url and (max_records is None or len(all_conditions) < max_records):
+        page_number += 1
+
+        if page_number > max_pages:
+            raise RuntimeError(
+                f"Pagination interrompue : plus de {max_pages} pages parcourues."
+            )
+
+        if url in visited_urls:
+            raise RuntimeError(f"Boucle de pagination détectée sur l'URL : {url}")
+        visited_urls.add(url)
+
+        logger.info("GET page %s: %s", page_number, url)
+        bundle = get_bundle_page(session, url, headers=headers)
+
+        page_condition_count = 0
+        for entry in bundle.get("entry", []):
+            resource = entry.get("resource")
+            if not resource or resource.get("resourceType") != "Condition":
+                continue
+
+            condition_id = resource.get("id")
+            condition_ref = f"Condition/{condition_id}" if condition_id else None
+
+            if condition_ref and condition_ref in seen_condition_refs:
+                continue
+
+            if condition_ref:
+                seen_condition_refs.add(condition_ref)
+
+            all_conditions.append(resource)
+            page_condition_count += 1
+
+            if max_records is not None and len(all_conditions) >= max_records:
+                break
+
+        logger.info(
+            "Page %s récupérée: %s Conditions (cumul=%s)",
+            page_number,
+            page_condition_count,
+            len(all_conditions),
+        )
+
+        if max_records is not None and len(all_conditions) >= max_records:
+            break
+
+        raw_next_url = next(
+            (l.get("url") for l in bundle.get("link", []) if l.get("relation") == "next"),
+            None,
+        )
+
+        url = rewrite_next_to_internal_resource_base(
+            raw_next_url,
+            FHIR_BASE,
+            resource_type,
+        )
+
+    if max_records is not None:
+        all_conditions = all_conditions[:max_records]
+
+    return all_conditions

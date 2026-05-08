@@ -32,7 +32,7 @@ def extract_objects(response_text: str) -> list:
 with DAG(
     dag_id="sqlite_minio_watch_and_run",
     start_date=datetime(2026, 1, 27, tzinfo=timezone.utc),
-    schedule="* */24 * * *",
+    schedule="* */4 * * *",
     catchup=False,
     max_active_runs=1,
     default_args={

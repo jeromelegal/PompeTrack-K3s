@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-backend
+  labels:
+    allow-external-ollama: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-backend
+  template:
+    metadata:
+      labels:
+        app: agent-backend
+        allow-external-ollama: "true"
+    spec:
+      serviceAccountName: agent-backend
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: agent-backend
+          image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "http://ollama.lan:11434"
+            - name: DEFAULT_CHAT_MODEL
+              value: "medgemma:27b"
+            - name: QDRANT_URL
+              value: "http://llm-agent-qdrant:6333"
+            - name: SEARXNG_BASE_URL
+              value: "http://searxng:8080"
+            - name: BACKEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-api-key
+                  key: secret_key
+
+            - name: CLIENT_ID_FILE
+              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_ID
+            - name: CLIENT_SECRET_FILE
+              value: /var/run/secrets/medplum/MEDPLUM_CLIENT_SECRET
+
+            # config Medplum api
+            - name: MEDPLUM_BASE_URL
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103"
+            - name: MEDPLUM_TOKEN_ENDPOINT
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/oauth2/token"
+            - name: MEDPLUM_SCOPE
+              value: "system/*.*"
+            - name: FHIR_BASE
+              value: "http://medplum-mesh.medplum.svc.cluster.local:8103/fhir/R4"
+
+          envFrom:
+            - configMapRef:
+                name: medplum-ids
+
+          volumeMounts:
+            - name: agent-data
+              mountPath: /data
+            - name: agent-workspace
+              mountPath: /workspace
+              readOnly: true
+            - name: medplum-creds-agent
+              mountPath: /var/run/secrets
+              readOnly: true
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+            timeoutSeconds: 10
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 6
+      volumes:
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: agent-backend-data
+        - name: agent-workspace
+          persistentVolumeClaim:
+            claimName: agent-backend-workspace
+        - name: medplum-creds-agent
+          secret:
+            secretName: agent-medplum-client
+            defaultMode: 0400
+            items:
+              - key: MEDPLUM_CLIENT_ID
+                path: MEDPLUM_CLIENT_ID
+              - key: MEDPLUM_CLIENT_SECRET
+                path: MEDPLUM_CLIENT_SECRET

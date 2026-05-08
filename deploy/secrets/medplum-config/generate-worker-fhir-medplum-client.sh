@@ -16,6 +16,7 @@ STREAMLIT_OUT_FILE="deploy/secrets/pompetrack-core/streamlit-medplum-client.env"
 INGESTION_OUT_FILE="deploy/secrets/pompetrack-core/ingestion-medplum-client.env"
 AIRFLOW_OUT_FILE="deploy/secrets/airflow/airflow-medplum-client.env"
 PROVIDER_OUT_FILE="deploy/secrets/medplum/provider-medplum-client.env"
+LLM_AGENT_FILE="deploy/secrets/llm-agent/agent-medplum-client.env"
 IDS_OUT_FILE="deploy/outputs/pompetrack-core/medplum-ids.env"
 
 # NEW: Global file containing all client_ids
@@ -296,9 +297,10 @@ ensure_client "worker-fhir"    "$WORKER_FHIR_OUT_FILE"    "PompeTrack worker-fhi
 ensure_client "worker-stream"  "$WORKER_STREAM_OUT_FILE"  "PompeTrack worker-stream (machine-to-machine)"  "stream:fhir stream:generic"
 ensure_client "streamlit"      "$STREAMLIT_OUT_FILE"      "PompeTrack streamlit (machine-to-machine)"      "ingest:manual ingest:generic download:df stream:fhir ingest:iphone ingest:spirometer ingest:sqlite ingest:medication"
 ensure_client "worker-sqlite"  "$WORKER_SQLITE_OUT_FILE"  "PompeTrack worker-sqlite (machine-to-machine)"  "object:list object:move object:delete download:object ingest:spirometer"
-ensure_client "ingestion"      "$INGESTION_OUT_FILE"     "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
+ensure_client "ingestion"      "$INGESTION_OUT_FILE"      "PompeTrack ingestion (machine-to-machine)"      "svc:ingestion ingest:generic"
 ensure_client "airflow"        "$AIRFLOW_OUT_FILE"        "PompeTrack airflow (machine-to-machine)"        "object:list airflow:iphone airflow:manual airflow:spirometer airflow:strength fhir:logs airflow:medication"
 ensure_client "provider"       "$PROVIDER_OUT_FILE"       "Provider frontend login"                        "openid profile email medplum:base"  "https://provider.phylcero.fr/auth/callback"  "https://provider.phylcero.fr"
+ensure_client "agent"          "$LLM_AGENT_FILE"          "LLM-agent Medplum (machine-to-machine)"         "stream:fhir stream:generic"
 
 # === Write global Client IDs file ===
 echo "==> Write global Client IDs file: ${CLIENT_IDS_OUT_FILE}"

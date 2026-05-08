@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-backend-mcpo
+  namespace: llm-agent
+  labels:
+    app: agent-backend-mcpo
+spec:
+  type: ClusterIP
+  selector:
+    app: agent-backend-mcpo
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

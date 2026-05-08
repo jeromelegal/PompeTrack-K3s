@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-agent-llm
+  namespace: llm-agent
+  labels:
+    app: streamlit-agent-llm
+spec:
+  type: ClusterIP
+  selector:
+    app: streamlit-agent-llm
+  ports:
+    - name: http
+      port: 8501
+      targetPort: 8501

@@ -4,7 +4,7 @@ set -euo pipefail
 echo "==> create/update registry secrets from .env"
 REGISTRY_ENV="deploy/secrets/registry/registry-token.env"
 
-NAMESPACES=("pompetrack-core" "medplum" "pg-backups")
+NAMESPACES=("pompetrack-core" "medplum" "pg-backups" "llm-agent")
 
 if [ -f "$REGISTRY_ENV" ]; then
   source "$REGISTRY_ENV"

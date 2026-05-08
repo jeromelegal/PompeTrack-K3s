@@ -32,6 +32,8 @@ airflow:
       username: airflow
       database: airflow
     primary:
+      podAnnotations:
+        sidecar.istio.io/inject: "false"
       resources:
         requests:
           cpu: 300m

@@ -127,10 +127,18 @@ def iphone_json_pipeline():
             result_stateofminds = _run_pipeline("stateofminds", pipeline_stateofminds, stateofminds, obj_id)
             result_symptoms = _run_pipeline("symptoms", pipeline_symptoms, symptoms, obj_id)
             result_medications = _run_pipeline("medications", pipeline_medications, medications, obj_id)
+            stage_results = {
+                "metrics": result_metrics,
+                "workouts": result_workouts,
+                "stateofminds": result_stateofminds,
+                "symptoms": result_symptoms,
+                "medications": result_medications,
+            }
+            logger.info("Résultats sous-pipelines pour %s: %s", obj_id, stage_results)
 
-            if any([result_metrics, result_workouts, result_stateofminds, result_symptoms, result_medications]):
+            if any(stage_results.values()):
                 logger.info("Upload status is OK.")
-                move_object(c
+                move_object(
                     object_name=obj_id,
                     source_bucket=BUCKET_RAW,
                     destination_bucket=BUCKET_PROCESSED
@@ -139,6 +147,8 @@ def iphone_json_pipeline():
                 IPHONE_PIPELINE_OBJECT_SUCCESS_TOTAL.inc()
                 IPHONE_PIPELINE_LAST_SUCCESS_UNIXTIME.set_to_current_time()
                 success = True
+            else:
+                logger.warning("Aucun sous-pipeline réussi pour %s, objet conservé dans %s.", obj_id, BUCKET_RAW)
 
         except Exception as exc:
             logger.error(f"Fail in process ({obj_id}): {exc}")

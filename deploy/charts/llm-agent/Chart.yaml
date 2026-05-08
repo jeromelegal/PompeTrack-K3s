@@ -1,0 +1,11 @@
+apiVersion: v2
+name: qdrant
+
+type: application
+version: 1.17.1
+appVersion: v1.17.1
+
+dependencies:
+  - name: qdrant
+    version: "1.17.1"
+    repository: "https://qdrant.github.io/qdrant-helm"

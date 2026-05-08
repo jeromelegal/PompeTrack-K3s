@@ -2,7 +2,7 @@
 set -euo pipefail
 
 helm -n pompetrack-core uninstall pompetrack-core || true
-kubectl delete namespace pompetrack-core
+kubectl delete namespace pompetrack-core || true
 
 apply_dir_ordered() {
   local dir="$1"

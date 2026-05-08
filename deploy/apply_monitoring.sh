@@ -2,7 +2,7 @@
 set -euo pipefail
 
 helm -n monitoring uninstall monitoring || true
-kubectl delete namespace monitoring
+kubectl delete namespace monitoring || true
 
 apply_dir_ordered() {
   local dir="$1"

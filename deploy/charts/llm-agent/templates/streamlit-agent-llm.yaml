@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-agent-llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit-agent-llm
+  template:
+    metadata:
+      labels:
+        app: streamlit-agent-llm
+    spec:
+      serviceAccountName: streamlit-agent-llm
+      imagePullSecrets:
+        - name: gitlab-regcred
+      containers:
+        - name: streamlit-agent-llm
+          image: registry.phylcero.fr/garth/pompetrack/streamlit-agent-llm:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8501
+          env:
+            - name: BACKEND_BASE_URL
+              value: http://agent-backend:8000
+            - name: BACKEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-api-key
+                  key: secret_key
+            - name: WORKSPACE_ROOT
+              value: "/workspace"
+            - name: DATA_DIR
+              value: "/data"
+            - name: STATE_DB_PATH
+              value: "/data/app.sqlite"
+            - name: CHECKPOINT_DB_PATH
+              value: "/data/langgraph-checkpoints.sqlite"
+            - name: QDRANT_URL
+              value: "http://llm-agent-qdrant:6333"
+            - name: QDRANT_COLLECTION
+              value: "documents"
+          volumeMounts:
+            - name: agent-data
+              mountPath: /data
+            - name: agent-workspace
+              mountPath: /workspace
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8501
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: agent-backend-data
+        - name: agent-workspace
+          persistentVolumeClaim:
+            claimName: agent-backend-workspace
