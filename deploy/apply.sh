@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source deploy/versions.sh
+./deploy/sync-medplum-version.sh
+
 apply_dir_ordered() {
   local dir="$1"
   if [ -d "$dir" ] && ls -1 "$dir"/*.yaml >/dev/null 2>&1; then
@@ -81,9 +84,13 @@ echo "==> Helm deps"
 helm dependency update deploy/charts/medplum || true
 
 ### Helm umbrella Medplum namespace
-echo "==> Helm install/upgrade medplum (with post-renderer patches)"
+echo "==> Helm install/upgrade medplum ${MEDPLUM_VERSION} (with post-renderer patches)"
 helm upgrade --install medplum deploy/charts/medplum \
   -f deploy/charts/medplum/values-medplum.yaml \
+  --set global.medplumVersion="${MEDPLUM_VERSION}" \
+  --set global.medplumProviderVersion="${MEDPLUM_PROVIDER_VERSION}" \
+  --set global.medplumProviderImageTag="${MEDPLUM_PROVIDER_IMAGE_TAG}" \
+  --set medplum.deployment.image.tag="${MEDPLUM_VERSION}" \
   -n medplum \
   --post-renderer ./deploy/post-renderer/medplum/kustomize.sh
 

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: medplum-app
-          image: medplum/medplum-app:5.1.1
+          image: medplum/medplum-app:{{ .Values.global.medplumVersion }}
           ports:
             - containerPort: 3000
           env:
