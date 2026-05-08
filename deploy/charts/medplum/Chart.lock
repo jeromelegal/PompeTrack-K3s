@@ -1,7 +1,7 @@
 dependencies:
 - name: medplum
   repository: https://charts.medplum.com
-  version: 5.1.1
+  version: 5.1.11
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 18.2.4
@@ -14,5 +14,5 @@ dependencies:
 - name: prometheus-redis-exporter
   repository: https://prometheus-community.github.io/helm-charts
   version: 6.20.2
-digest: sha256:905962ceee4dd0d36f5a24aa441c46de42147d3c167035179ffd92da3dd653b4
-generated: "2026-03-05T07:04:52.727759902Z"
+digest: sha256:55ef542d49ae900e46aa6854c4319f07914d1b882cd07725624fdb389778c0bc
+generated: "2026-05-08T16:36:24.100229044Z"

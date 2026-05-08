@@ -1,3 +1,8 @@
+global:
+  medplumVersion: "5.1.11"
+  medplumProviderVersion: "5.1.11"
+  medplumProviderImageTag: "5.1.11"
+
 medplum:
   global:
     cloudProvider: ""
@@ -8,7 +13,7 @@ medplum:
     replicaCount: 1
     image:
       repository: medplum/medplum-server
-      tag: "5.1.1"
+      tag: "5.1.11"
 
     resources:
       requests:
