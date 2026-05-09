@@ -128,7 +128,7 @@ def sqlite_query(db_path: Path, query: str, params: tuple[Any, ...] = ()) -> tup
 
 def render_table(columns: list[str], rows: list[tuple[Any, ...]], height: int = 320) -> None:
     table = [dict(zip(columns, row, strict=False)) for row in rows]
-    st.dataframe(table, use_container_width=True, height=height)
+    st.dataframe(table, width="stretch", height=height)
 
 
 
@@ -212,14 +212,14 @@ def tab_endpoints(backend: BackendClient) -> None:
 
     cols = st.columns(2)
     with cols[0]:
-        if st.button("Tester /health", use_container_width=True):
+        if st.button("Tester /health", width="stretch"):
             try:
                 st.json(read_json_response(backend.get("/health")))
             except Exception as exc:  # noqa: BLE001
                 st.error(str(exc))
 
     with cols[1]:
-        if st.button("Lister /v1/models", use_container_width=True):
+        if st.button("Lister /v1/models", width="stretch"):
             try:
                 st.json(read_json_response(backend.get("/v1/models")))
             except Exception as exc:  # noqa: BLE001
@@ -228,7 +228,7 @@ def tab_endpoints(backend: BackendClient) -> None:
     st.markdown("### Recherche RAG via endpoint")
     rag_query = st.text_input("Query RAG", value="test")
     rag_k = st.slider("k", min_value=1, max_value=20, value=5)
-    if st.button("Appeler /api/v1/rag/search", use_container_width=True):
+    if st.button("Appeler /api/v1/rag/search", width="stretch"):
         try:
             payload = {"query": rag_query, "k": rag_k}
             st.json(read_json_response(backend.post("/api/v1/rag/search", json=payload)))
@@ -237,14 +237,14 @@ def tab_endpoints(backend: BackendClient) -> None:
 
     st.markdown("### Runs via endpoints")
     limit = st.slider("Limit runs", 1, 200, 20)
-    if st.button("Lister /api/v1/runs", use_container_width=True):
+    if st.button("Lister /api/v1/runs", width="stretch"):
         try:
             st.json(read_json_response(backend.get("/api/v1/runs", params={"limit": limit})))
         except Exception as exc:  # noqa: BLE001
             st.error(str(exc))
 
     run_id = st.text_input("Run ID")
-    if st.button("Lire /api/v1/runs/{run_id}", use_container_width=True, disabled=not run_id.strip()):
+    if st.button("Lire /api/v1/runs/{run_id}", width="stretch", disabled=not run_id.strip()):
         try:
             st.json(read_json_response(backend.get(f"/api/v1/runs/{run_id.strip()}")))
         except Exception as exc:  # noqa: BLE001
@@ -288,18 +288,18 @@ def tab_health_coach(backend: BackendClient) -> None:
 
     a1, a2, a3, a4 = st.columns(4)
     with a1:
-        if st.button("Générer revue 30j", use_container_width=True):
+        if st.button("Générer revue 30j", width="stretch"):
             with st.spinner("Génération de la revue quotidienne..."):
                 st.json(read_json_response(backend.post("/api/v1/health-coach/daily-review", params={"days": 30})))
     with a2:
-        if st.button("Générer bilan 90j", use_container_width=True):
+        if st.button("Générer bilan 90j", width="stretch"):
             with st.spinner("Génération du bilan hebdomadaire..."):
                 st.json(read_json_response(backend.post("/api/v1/health-coach/weekly-review", params={"days": 90})))
     with a3:
-        if st.button("Évaluer alertes", use_container_width=True):
+        if st.button("Évaluer alertes", width="stretch"):
             st.json(read_json_response(backend.post("/api/v1/health-coach/alerts/evaluate", params={"days": days})))
     with a4:
-        if st.button("Tests synthétiques", use_container_width=True):
+        if st.button("Tests synthétiques", width="stretch"):
             st.json(read_json_response(backend.get("/api/v1/health-coach/evaluation")))
 
     t1, t2, t3, t4, t5, t6 = st.tabs(
@@ -319,30 +319,30 @@ def tab_health_coach(backend: BackendClient) -> None:
 
     with t2:
         st.markdown("### Mesures")
-        st.dataframe(_as_table(features.get("metricTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), use_container_width=True, height=240)
+        st.dataframe(_as_table(features.get("metricTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), width="stretch", height=240)
         st.markdown("### Spirométrie")
-        st.dataframe(_as_table(features.get("spirometryTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), use_container_width=True, height=220)
+        st.dataframe(_as_table(features.get("spirometryTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), width="stretch", height=220)
         st.markdown("### Humeur")
-        st.dataframe(_as_table(features.get("stateOfMindTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), use_container_width=True, height=220)
+        st.dataframe(_as_table(features.get("stateOfMindTrends") or [], ["label", "recentAverage", "previousAverage", "delta", "unit", "count"]), width="stretch", height=220)
 
     with t3:
         st.markdown("### Watchlist personnalisée")
-        st.dataframe(_as_table(features.get("personalWatchlist") or [], ["label", "status", "severity", "recentCount", "latestDate", "reason"]), use_container_width=True, height=240)
+        st.dataframe(_as_table(features.get("personalWatchlist") or [], ["label", "status", "severity", "recentCount", "latestDate", "reason"]), width="stretch", height=240)
         st.markdown("### Anomalies")
-        st.dataframe(_as_table(features.get("anomalies") or [], ["severity", "source", "label", "direction", "delta", "reason"]), use_container_width=True, height=240)
+        st.dataframe(_as_table(features.get("anomalies") or [], ["severity", "source", "label", "direction", "delta", "reason"]), width="stretch", height=240)
         st.markdown("### Alertes configurables")
-        st.dataframe(_as_table(alerts.get("alerts") or [], ["severity", "ruleId", "label", "reason"]), use_container_width=True, height=220)
+        st.dataframe(_as_table(alerts.get("alerts") or [], ["severity", "ruleId", "label", "reason"]), width="stretch", height=220)
 
     with t4:
         reviews = dashboard.get("reviews") or []
-        st.dataframe(_as_table(reviews, ["review_date", "period_days", "status", "model", "review_id", "created_at"]), use_container_width=True, height=320)
+        st.dataframe(_as_table(reviews, ["review_date", "period_days", "status", "model", "review_id", "created_at"]), width="stretch", height=320)
         review_id = st.text_input("Review ID à inspecter", value="")
-        if st.button("Charger la revue", use_container_width=True, disabled=not review_id.strip()):
+        if st.button("Charger la revue", width="stretch", disabled=not review_id.strip()):
             st.json(read_json_response(backend.get(f"/api/v1/health-coach/reviews/{review_id.strip()}")))
 
     with t5:
         traces = structured.get("traceability") or []
-        st.dataframe(_as_table(traces, ["id", "conclusion", "source", "count", "periodDays", "wording"]), use_container_width=True, height=320)
+        st.dataframe(_as_table(traces, ["id", "conclusion", "source", "count", "periodDays", "wording"]), width="stretch", height=320)
         with st.expander("Mode multi-agent spécialisé"):
             st.json(structured.get("specializedAgents") or {})
 
@@ -353,14 +353,14 @@ def tab_health_coach(backend: BackendClient) -> None:
             try:
                 response = backend.download("/api/v1/health-coach/export/markdown", params={"days": export_days})
                 response.raise_for_status()
-                st.download_button("Télécharger Markdown", data=response.content, file_name=f"resume-sante-{export_days}j.md", mime="text/markdown", use_container_width=True)
+                st.download_button("Télécharger Markdown", data=response.content, file_name=f"resume-sante-{export_days}j.md", mime="text/markdown", width="stretch")
             except Exception as exc:  # noqa: BLE001
                 st.warning(f"Export Markdown indisponible: {exc}")
         with c_pdf:
             try:
                 response = backend.download("/api/v1/health-coach/export/pdf", params={"days": export_days})
                 response.raise_for_status()
-                st.download_button("Télécharger PDF", data=response.content, file_name=f"resume-sante-{export_days}j.pdf", mime="application/pdf", use_container_width=True)
+                st.download_button("Télécharger PDF", data=response.content, file_name=f"resume-sante-{export_days}j.pdf", mime="application/pdf", width="stretch")
             except Exception as exc:  # noqa: BLE001
                 st.warning(f"Export PDF indisponible: {exc}")
 
@@ -380,7 +380,7 @@ def tab_workspace(backend: BackendClient, workspace_root: Path) -> None:
             accept_multiple_files=True,
             type=None,
         )
-        if st.button("Copier dans /workspace", use_container_width=True):
+        if st.button("Copier dans /workspace", width="stretch"):
             try:
                 target_dir = safe_resolve(workspace_root, target_subdir)
                 target_dir.mkdir(parents=True, exist_ok=True)
@@ -401,7 +401,7 @@ def tab_workspace(backend: BackendClient, workspace_root: Path) -> None:
             accept_multiple_files=True,
             key="ingest_uploads",
         )
-        if st.button("Ingest uploads", use_container_width=True):
+        if st.button("Ingest uploads", width="stretch"):
             try:
                 files = []
                 for uploaded in ingest_uploads or []:
@@ -417,7 +417,7 @@ def tab_workspace(backend: BackendClient, workspace_root: Path) -> None:
             height=120,
             placeholder="docs/notes.md\nmanual.pdf",
         )
-        if st.button("Ingest workspace paths", use_container_width=True):
+        if st.button("Ingest workspace paths", width="stretch"):
             try:
                 paths = [line.strip() for line in paths_text.splitlines() if line.strip()]
                 st.json(read_json_response(backend.post("/api/v1/ingest/paths", json={"paths": paths})))
@@ -427,7 +427,7 @@ def tab_workspace(backend: BackendClient, workspace_root: Path) -> None:
     with c2:
         st.markdown("### Contenu du workspace")
         browse_subdir = st.text_input("Lister à partir de", value=".", key="browse_subdir")
-        if st.button("Rafraîchir le listing", use_container_width=True):
+        if st.button("Rafraîchir le listing", width="stretch"):
             st.session_state["refresh_workspace"] = True
 
         try:
@@ -445,13 +445,13 @@ def tab_workspace(backend: BackendClient, workspace_root: Path) -> None:
                             "size": p.stat().st_size if p.is_file() else None,
                         }
                     )
-                st.dataframe(items, use_container_width=True, height=380)
+                st.dataframe(items, width="stretch", height=380)
         except Exception as exc:  # noqa: BLE001
             st.error(str(exc))
 
         st.markdown("### Lecture d'un fichier du workspace")
         read_path = st.text_input("Chemin relatif du fichier", value="")
-        if st.button("Lire le fichier", use_container_width=True, disabled=not read_path.strip()):
+        if st.button("Lire le fichier", width="stretch", disabled=not read_path.strip()):
             try:
                 path = safe_resolve(workspace_root, read_path.strip())
                 if not path.exists() or not path.is_file():
@@ -529,7 +529,7 @@ def tab_qdrant(qdrant_url: str, default_collection: str) -> None:
                     "text_preview": str(payload.get("text", ""))[:500],
                 }
             )
-        st.dataframe(rows, use_container_width=True, height=360)
+        st.dataframe(rows, width="stretch", height=360)
     except Exception as exc:  # noqa: BLE001
         st.error(f"Scroll Qdrant impossible: {exc}")
 
@@ -622,7 +622,7 @@ def tab_sqlite(state_db_path: Path, checkpoint_db_path: Path) -> None:
         else "SELECT run_id, session_id, status, created_at FROM runs ORDER BY created_at DESC LIMIT 20"
     )
     query = st.text_area("SQL", value=default_query, height=140)
-    if st.button("Exécuter la requête SQL", use_container_width=True):
+    if st.button("Exécuter la requête SQL", width="stretch"):
         normalized = query.strip().lower()
         forbidden = ("insert ", "update ", "delete ", "drop ", "alter ", "replace ", "create ", "attach ")
         if normalized.startswith(forbidden) or any(token in normalized for token in forbidden):

@@ -15,7 +15,12 @@ import { App } from './App';
 
 const medplum = new MedplumClient({
   onUnauthenticated: () => (window.location.href = '/'),
-  baseUrl: sessionStorage.getItem('medplum_base_url') || import.meta.env.VITE_MEDPLUM_BASE_URL || undefined,
+  baseUrl:
+    sessionStorage.getItem('medplum_base_url') ||
+    window.__APP_CONFIG__?.MEDPLUM_BASE_URL ||
+    import.meta.env.VITE_MEDPLUM_BASE_URL ||
+    undefined,
+  clientId: window.__APP_CONFIG__?.MEDPLUM_CLIENT_ID || import.meta.env.VITE_MEDPLUM_CLIENT_ID || undefined,
   cacheTime: 60000,
   autoBatchTime: 100,
 });

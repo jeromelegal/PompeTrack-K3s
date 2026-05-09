@@ -166,7 +166,7 @@ with col1:
         labels={"timestamp": "Date", "score": "Score", "parameter": "Type"},
         hover_data=["interpretation", "labels", "associations"],
     )
-    st.plotly_chart(fig_score, use_container_width=True)
+    st.plotly_chart(fig_score, width="stretch")
 
 with col2:
     st.subheader("Répartition des interprétations")
@@ -180,7 +180,7 @@ with col2:
         labels={"interpretation": "Interpretation", "count": "Nombre", "parameter": "Type"},
     )
     fig_interp.update_xaxes(tickangle=35)
-    st.plotly_chart(fig_interp, use_container_width=True)
+    st.plotly_chart(fig_interp, width="stretch")
 
 col3, col4 = st.columns(2)
 
@@ -195,7 +195,7 @@ with col3:
         title="Tendance mensuelle",
         labels={"month": "Mois", "avg_score": "Score moyen", "parameter": "Type"},
     )
-    st.plotly_chart(fig_month, use_container_width=True)
+    st.plotly_chart(fig_month, width="stretch")
 
 with col4:
     st.subheader("Score moyen par jour")
@@ -206,7 +206,7 @@ with col4:
         title="Score moyen par jour de semaine",
         labels={"weekday": "Jour", "avg_score": "Score moyen"},
     )
-    st.plotly_chart(fig_weekday, use_container_width=True)
+    st.plotly_chart(fig_weekday, width="stretch")
 
 col5, col6 = st.columns(2)
 
@@ -223,7 +223,7 @@ with col5:
             labels={"association": "Association", "count": "Nombre"},
         )
         fig_assoc.update_xaxes(tickangle=35)
-        st.plotly_chart(fig_assoc, use_container_width=True)
+        st.plotly_chart(fig_assoc, width="stretch")
 
 with col6:
     st.subheader("Labels les plus fréquents")
@@ -238,7 +238,7 @@ with col6:
             labels={"label": "Label", "count": "Nombre"},
         )
         fig_labels.update_xaxes(tickangle=35)
-        st.plotly_chart(fig_labels, use_container_width=True)
+        st.plotly_chart(fig_labels, width="stretch")
 
 st.markdown("---")
 
@@ -271,7 +271,7 @@ display_df = (
 
 st.dataframe(
     display_df,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 
