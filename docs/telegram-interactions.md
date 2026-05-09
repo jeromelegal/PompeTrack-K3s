@@ -90,6 +90,10 @@ Le bot peut déclencher une revue LLM sans attendre les CronJobs.
 
 `/weekly-review` lance un bilan plus large, prévu pour les tendances lentes: humeur, activité, douleur récurrente, spirométrie, adhérence médicament, objectifs légers.
 
+`/coach` lance maintenant un bilan de la journée précédente, pensé pour le matin avec des conseils pour la journée qui démarre.
+
+`/bilans off` désactive les bilans automatiques planifiés. `/bilans on` les réactive. `/bilans status` affiche l'état courant.
+
 Ces commandes peuvent prendre un peu de temps car elles appellent le backend agentique et le modèle.
 
 ## Questions du soir

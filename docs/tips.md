@@ -173,6 +173,7 @@ telegramBot:
 
 healthCoach:
   telegramDailyReviewEnabled: true
+  schedule: "0 8 * * *" # bilan matinal de la veille
 ```
 
 Puis redéployer:
@@ -189,6 +190,7 @@ Commandes du bot:
 /latest
 /features
 /coach
+/bilans on|off|status
 /ask <question>
 ```
 

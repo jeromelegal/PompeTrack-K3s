@@ -50,6 +50,7 @@ HELP_TEXT = """Commandes disponibles:
 /evening - questions ciblées du soir
 /alerts - évalue les alertes configurables
 /weekly-review - lance un bilan hebdomadaire maintenant
+/bilans on|off|status - active ou désactive les bilans automatiques
 /prefs - affiche la mémoire utilisateur
 /setpref <clé> <valeur> - modifie une préférence
 /addsymptom <nom> - ajoute un symptôme prioritaire
@@ -59,7 +60,7 @@ HELP_TEXT = """Commandes disponibles:
 /note symptom|medication <texte> - prépare une note structurée
 /why <question> - réponse clinique prudente sans diagnostic
 /features - synthèse déterministe des données récentes
-/coach - lance une nouvelle revue santé maintenant
+/coach - lance le bilan de la journée précédente maintenant
 /ask <question> - pose une question libre au LLM
 
 Tu peux aussi envoyer directement une question sans commande."""
@@ -212,9 +213,12 @@ class TelegramHealthBot:
             self._ask_clinical(chat_id=chat_id, user_id=user_id, prompt=prompt)
             return
         if command == "/coach":
-            self.telegram.send_message(chat_id, "Je lance une nouvelle revue santé. Cela peut prendre un peu de temps.")
+            self.telegram.send_message(
+                chat_id,
+                "Je lance le bilan de la journée précédente. Cela peut prendre un peu de temps.",
+            )
             self.telegram.send_chat_action(chat_id)
-            result = self.backend.run_daily_review(days=30, history_limit=7)
+            result = self.backend.run_daily_review(days=30, history_limit=7, previous_day=True)
             self.telegram.send_message(chat_id, format_review_result_brief(result))
             return
         if command == "/weekly-review":
@@ -222,6 +226,9 @@ class TelegramHealthBot:
             self.telegram.send_chat_action(chat_id)
             result = self.backend.run_weekly_review(days=90, history_limit=7)
             self.telegram.send_message(chat_id, format_review_result_brief(result))
+            return
+        if command == "/bilans":
+            self._scheduled_reviews(chat_id=chat_id, rest=rest)
             return
         if command == "/ask":
             prompt = rest.strip()
@@ -332,6 +339,22 @@ class TelegramHealthBot:
             return
         prefs = self.backend.update_preferences(_pref_user_id(chat_id), patch)
         self.telegram.send_message(chat_id, format_preferences(prefs))
+
+    def _scheduled_reviews(self, *, chat_id: int, rest: str) -> None:
+        action = rest.strip().lower()
+        if action in {"on", "enable", "activer", "active"}:
+            result = self.backend.set_scheduled_reviews_enabled(True)
+        elif action in {"off", "disable", "desactiver", "désactiver", "inactive"}:
+            result = self.backend.set_scheduled_reviews_enabled(False)
+        elif action in {"", "status", "statut"}:
+            result = self.backend.scheduled_reviews_status()
+        else:
+            self.telegram.send_message(chat_id, "Utilisation: /bilans on|off|status")
+            return
+
+        enabled = bool(result.get("enabled"))
+        status = "activés" if enabled else "désactivés"
+        self.telegram.send_message(chat_id, f"Bilans automatiques: {status}.")
 
     def _edit_priority_symptom(self, *, chat_id: int, symptom: str, add: bool) -> None:
         item = symptom.strip().lower()

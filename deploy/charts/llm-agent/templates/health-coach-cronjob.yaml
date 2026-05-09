@@ -40,6 +40,8 @@ spec:
                 - -m
                 - app.medplum.health_coach
               args:
+                - --previous-day
+                - --respect-schedule-toggle
                 - --days
                 - {{ .Values.healthCoach.days | quote }}
                 - --history-limit

@@ -137,7 +137,7 @@ serviceAccount:
 
 healthCoach:
   enabled: true
-  schedule: "30 6 * * *"
+  schedule: "0 8 * * *"
   suspend: false
   days: 30
   historyLimit: 7

@@ -1,7 +1,7 @@
 global:
   medplumVersion: "5.1.11"
   medplumProviderVersion: "5.1.11"
-  medplumProviderImageTag: "5.1.11"
+  medplumProviderImageTag: "latest"
 
 medplum:
   global:
