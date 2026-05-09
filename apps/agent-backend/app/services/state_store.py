@@ -8,6 +8,8 @@ from typing import Any
 
 from app.core.config import Settings
 
+AUTOMATION_USER_ID = "telegram:automation"
+
 
 class StateStore:
     def __init__(self, settings: Settings) -> None:
@@ -315,8 +317,9 @@ class StateStore:
             "tone": "bienveillant_concis",
             "answerStyle": "concise",
             "alertSensitivity": "normal",
+            "scheduledHealthReviewsEnabled": True,
             "notificationTimes": {
-                "daily": "06:30",
+                "daily": "08:00",
                 "evening": "19:30",
                 "weekly": "08:00 Sunday",
             },
@@ -364,6 +367,16 @@ class StateStore:
                 (user_id, json.dumps(prefs, ensure_ascii=False), now, now),
             )
         return prefs
+
+    def are_scheduled_health_reviews_enabled(self) -> bool:
+        prefs = self.get_user_preferences(AUTOMATION_USER_ID)
+        return bool(prefs.get("scheduledHealthReviewsEnabled", True))
+
+    def set_scheduled_health_reviews_enabled(self, enabled: bool) -> dict[str, Any]:
+        return self.update_user_preferences(
+            AUTOMATION_USER_ID,
+            {"scheduledHealthReviewsEnabled": bool(enabled)},
+        )
 
     def add_review_feedback(
         self,

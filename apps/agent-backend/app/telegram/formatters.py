@@ -210,6 +210,8 @@ def format_preferences(prefs: dict[str, Any]) -> str:
         f"Ton: {prefs.get('tone')}",
         f"Style de réponse: {prefs.get('answerStyle')}",
         f"Sensibilité alertes: {prefs.get('alertSensitivity')}",
+        "Bilans automatiques: "
+        + ("activés" if prefs.get("scheduledHealthReviewsEnabled", True) else "désactivés"),
         "",
         "Horaires:",
     ]

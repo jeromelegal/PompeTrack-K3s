@@ -150,8 +150,13 @@ def _sort_by_date_desc(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )
 
 
-def _numeric_trends(items: list[dict[str, Any]], *, recent_days: int = 7) -> list[dict[str, Any]]:
-    today = date.today()
+def _numeric_trends(
+    items: list[dict[str, Any]],
+    *,
+    recent_days: int = 7,
+    reference_date: date | None = None,
+) -> list[dict[str, Any]]:
+    today = reference_date or date.today()
     recent_start = today - timedelta(days=recent_days)
 
     grouped: dict[str, list[tuple[date, float, str | None]]] = defaultdict(list)
@@ -217,6 +222,31 @@ def load_health_data(days: int = 30) -> dict[str, list[dict[str, Any]]]:
     }
 
 
+def _filter_items_to_period(items: list[dict[str, Any]], *, days: int, end_date: date) -> list[dict[str, Any]]:
+    start_date = end_date - timedelta(days=days)
+    filtered = []
+    for item in items:
+        parsed = _parse_date(_event_date(item))
+        if parsed is None:
+            continue
+        item_date = parsed.date()
+        if start_date <= item_date <= end_date:
+            filtered.append(item)
+    return filtered
+
+
+def _filter_data_to_period(
+    data: dict[str, list[dict[str, Any]]],
+    *,
+    days: int,
+    end_date: date,
+) -> dict[str, list[dict[str, Any]]]:
+    return {
+        key: _filter_items_to_period(items, days=days, end_date=end_date)
+        for key, items in data.items()
+    }
+
+
 def _timeline_event(event_type: str, item: dict[str, Any]) -> dict[str, Any]:
     event = {
         "type": event_type,
@@ -247,8 +277,14 @@ def _timeline_event(event_type: str, item: dict[str, Any]) -> dict[str, Any]:
     return event
 
 
-def build_health_timeline_from_data(days: int, data: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+def build_health_timeline_from_data(
+    days: int,
+    data: dict[str, list[dict[str, Any]]],
+    *,
+    end_date: date | None = None,
+) -> dict[str, Any]:
     days = max(1, min(days, 90))
+    period_end = end_date or date.today()
     events = []
     events.extend(_timeline_event("metric", item) for item in data["metrics"])
     events.extend(_timeline_event("medication", item) for item in data["medications"])
@@ -259,13 +295,12 @@ def build_health_timeline_from_data(days: int, data: dict[str, list[dict[str, An
     events.extend(_timeline_event("manualMonthly", item) for item in data["manualMonthly"])
     events = _sort_by_date_desc([event for event in events if event.get("date")])
 
-    end_date = date.today()
-    start_date = end_date - timedelta(days=days)
+    start_date = period_end - timedelta(days=days)
     return {
         "period": {
             "days": days,
             "startDate": start_date.isoformat(),
-            "endDate": end_date.isoformat(),
+            "endDate": period_end.isoformat(),
         },
         "counts": {key: len(value) for key, value in data.items()},
         "events": events,
@@ -280,18 +315,22 @@ def _latest_date(items: list[dict[str, Any]]) -> str | None:
     return max(valid_dates).isoformat()
 
 
-def _days_since(value: str | None) -> int | None:
+def _days_since(value: str | None, *, reference_date: date | None = None) -> int | None:
     parsed = _parse_date(value)
     if parsed is None:
         return None
-    return (date.today() - parsed.date()).days
+    return ((reference_date or date.today()) - parsed.date()).days
 
 
-def build_data_quality(data: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+def build_data_quality(
+    data: dict[str, list[dict[str, Any]]],
+    *,
+    reference_date: date | None = None,
+) -> dict[str, Any]:
     freshness = {
         key: {
             "latestDate": _latest_date(items),
-            "daysSinceLatest": _days_since(_latest_date(items)),
+            "daysSinceLatest": _days_since(_latest_date(items), reference_date=reference_date),
         }
         for key, items in data.items()
     }
@@ -1127,25 +1166,30 @@ def build_review_history_context(history: list[dict[str, Any]]) -> list[dict[str
     return context
 
 
-def build_daily_health_features(days: int = 30) -> dict[str, Any]:
+def build_daily_health_features(days: int = 30, *, end_date: date | None = None) -> dict[str, Any]:
     days = max(1, min(days, 90))
+    period_end = end_date or date.today()
 
-    data = load_health_data(days=days)
-    timeline = build_health_timeline_from_data(days=min(days, 30), data=data)
+    data = _filter_data_to_period(
+        load_health_data(days=days + 1),
+        days=days,
+        end_date=period_end,
+    )
+    timeline = build_health_timeline_from_data(days=min(days, 30), data=data, end_date=period_end)
 
     features = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "period": timeline.get("period"),
         "counts": timeline.get("counts"),
-        "metricTrends": _numeric_trends(data["metrics"]),
-        "stateOfMindTrends": _numeric_trends(data["stateofminds"]),
-        "spirometryTrends": _numeric_trends(data["spirometry"]),
-        "manualMonthlyTrends": _numeric_trends(data["manualMonthly"]),
+        "metricTrends": _numeric_trends(data["metrics"], reference_date=period_end),
+        "stateOfMindTrends": _numeric_trends(data["stateofminds"], reference_date=period_end),
+        "spirometryTrends": _numeric_trends(data["spirometry"], reference_date=period_end),
+        "manualMonthlyTrends": _numeric_trends(data["manualMonthly"], reference_date=period_end),
         "topSymptoms": _top_counts(data["symptoms"]),
         "recentMedication": data["medications"][:10],
         "recentEvents": timeline.get("events", [])[:30],
     }
-    features["dataQuality"] = build_data_quality(data)
+    features["dataQuality"] = build_data_quality(data, reference_date=period_end)
     features["anomalies"] = build_personal_anomalies(features)
     features["watchItems"] = build_watch_items(data=data, features=features)
     features["personalWatchlist"] = build_personal_watchlist(data=data, features=features)
@@ -1169,6 +1213,8 @@ def _user_prompt(
     features: dict[str, Any],
     review_history: list[dict[str, Any]] | None = None,
     structured_review: dict[str, Any] | None = None,
+    *,
+    previous_day: bool = False,
 ) -> str:
     history = review_history or []
     history_section = (
@@ -1178,18 +1224,25 @@ def _user_prompt(
         else "Historique des revues précédentes: aucune revue précédente disponible.\n\n"
     )
 
+    intro = (
+        "Produis un bilan matinal en français de la journée précédente, concis et actionnable. "
+        "Le bilan doit expliquer ce qui ressort d'hier et proposer des conseils prudents pour la journée qui démarre.\n"
+        if previous_day
+        else "Produis une revue santé quotidienne en français, concise et actionnable.\n"
+    )
+
     return (
-        "Produis une revue santé quotidienne en français, concise et actionnable.\n"
+        intro +
         "Compare explicitement les nouvelles données avec l'historique lorsque c'est possible. "
         "Indique si une tendance se confirme, s'améliore, s'inverse ou reste incertaine.\n"
         "Priorise la watchlist personnalisée, les anomalies personnelles et les corrélations prudentes. "
         "Pour les corrélations, parle toujours d'hypothèses ou de coïncidences possibles, jamais de causalité.\n"
         "Structure attendue:\n"
-        "1. Résumé du jour\n"
+        f"1. {'Bilan de la journée précédente' if previous_day else 'Résumé du jour'}\n"
         "2. Tendances notables\n"
         "3. Watchlist et anomalies personnelles\n"
         "4. Hypothèses prudentes / corrélations possibles\n"
-        "5. Objectifs légers pour les prochaines 24-48h\n"
+        "5. Conseils et objectifs légers pour les prochaines 24-48h\n"
         "6. Questions utiles à poser à l'utilisateur\n\n"
         "Synthèse structurée déterministe à utiliser comme garde-fou:\n"
         f"{json.dumps(structured_review or {}, ensure_ascii=False, indent=2)}\n\n"
@@ -1239,15 +1292,27 @@ async def generate_daily_health_review(
     *,
     store: bool = True,
     history_limit: int = 7,
+    target_date: date | None = None,
+    previous_day: bool = False,
+    respect_schedule_toggle: bool = False,
 ) -> dict[str, Any]:
     settings = get_settings()
     services = get_services()
     services.state_store.init_db()
 
+    if respect_schedule_toggle and not services.state_store.are_scheduled_health_reviews_enabled():
+        skipped_date = target_date or (date.today() - timedelta(days=1) if previous_day else date.today())
+        return {
+            "skipped": True,
+            "reason": "scheduled_health_reviews_disabled",
+            "reviewDate": skipped_date.isoformat(),
+        }
+
     days = max(1, min(days, 90))
+    period_end = target_date or (date.today() - timedelta(days=1) if previous_day else date.today())
     model = settings.health_coach_model or settings.default_chat_model
     review_id = f"health-review-{uuid.uuid4().hex}"
-    features = build_daily_health_features(days=days)
+    features = build_daily_health_features(days=days, end_date=period_end)
     review_history = build_review_history_context(
         services.state_store.list_health_review_context(limit=max(0, min(history_limit, 14)))
     )
@@ -1259,7 +1324,7 @@ async def generate_daily_health_review(
     if store:
         services.state_store.create_health_review(
             review_id=review_id,
-            review_date=date.today().isoformat(),
+            review_date=period_end.isoformat(),
             period_days=days,
             model=model,
             features=features,
@@ -1269,7 +1334,12 @@ async def generate_daily_health_review(
         review_text = await services.ollama.plain_invoke(
             model_name=model,
             system_prompt=_system_prompt(),
-            user_prompt=_user_prompt(features, review_history, structured_review),
+            user_prompt=_user_prompt(
+                features,
+                review_history,
+                structured_review,
+                previous_day=previous_day,
+            ),
         )
     except Exception as exc:
         if store:
@@ -1290,7 +1360,7 @@ async def generate_daily_health_review(
 
     result = {
         "reviewId": review_id,
-        "reviewDate": date.today().isoformat(),
+        "reviewDate": period_end.isoformat(),
         "periodDays": days,
         "model": model,
         "features": features,
@@ -1308,10 +1378,18 @@ async def generate_weekly_health_review(
     *,
     store: bool = True,
     history_limit: int = 7,
+    respect_schedule_toggle: bool = False,
 ) -> dict[str, Any]:
     settings = get_settings()
     services = get_services()
     services.state_store.init_db()
+
+    if respect_schedule_toggle and not services.state_store.are_scheduled_health_reviews_enabled():
+        return {
+            "skipped": True,
+            "reason": "scheduled_health_reviews_disabled",
+            "reviewDate": date.today().isoformat(),
+        }
 
     days = max(7, min(days, 90))
     model = settings.health_coach_model or settings.default_chat_model
@@ -1378,6 +1456,8 @@ async def _async_main() -> None:
     parser.add_argument("--history-limit", type=int, default=7)
     parser.add_argument("--no-store", action="store_true")
     parser.add_argument("--weekly", action="store_true")
+    parser.add_argument("--previous-day", action="store_true")
+    parser.add_argument("--respect-schedule-toggle", action="store_true")
     args = parser.parse_args()
 
     if args.weekly:
@@ -1385,12 +1465,15 @@ async def _async_main() -> None:
             days=args.days,
             store=not args.no_store,
             history_limit=args.history_limit,
+            respect_schedule_toggle=args.respect_schedule_toggle,
         )
     else:
         result = await generate_daily_health_review(
             days=args.days,
             store=not args.no_store,
             history_limit=args.history_limit,
+            previous_day=args.previous_day,
+            respect_schedule_toggle=args.respect_schedule_toggle,
         )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

@@ -41,11 +41,19 @@ async def coach_dashboard(days: int = 30, review_limit: int = 10) -> dict:
 
 
 @router.post("/daily-review", dependencies=[Depends(require_api_key)])
-async def run_daily_review(days: int = 30, store: bool = True, history_limit: int = 7) -> dict:
+async def run_daily_review(
+    days: int = 30,
+    store: bool = True,
+    history_limit: int = 7,
+    previous_day: bool = False,
+    respect_schedule_toggle: bool = False,
+) -> dict:
     return await generate_daily_health_review(
         days=days,
         store=store,
         history_limit=history_limit,
+        previous_day=previous_day,
+        respect_schedule_toggle=respect_schedule_toggle,
     )
 
 
@@ -155,6 +163,22 @@ async def get_preferences(user_id: str) -> dict:
 async def update_preferences(user_id: str, patch: dict[str, Any] = Body(...)) -> dict:
     services = get_services()
     return services.state_store.update_user_preferences(user_id, patch)
+
+
+@router.get("/scheduled-reviews", dependencies=[Depends(require_api_key)])
+async def get_scheduled_reviews() -> dict:
+    services = get_services()
+    services.state_store.init_db()
+    return {"enabled": services.state_store.are_scheduled_health_reviews_enabled()}
+
+
+@router.post("/scheduled-reviews", dependencies=[Depends(require_api_key)])
+async def set_scheduled_reviews(payload: dict[str, Any] = Body(...)) -> dict:
+    services = get_services()
+    services.state_store.init_db()
+    enabled = bool(payload.get("enabled"))
+    prefs = services.state_store.set_scheduled_health_reviews_enabled(enabled)
+    return {"enabled": bool(prefs.get("scheduledHealthReviewsEnabled", True))}
 
 
 @router.post("/feedback", dependencies=[Depends(require_api_key)])

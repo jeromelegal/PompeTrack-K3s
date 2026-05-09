@@ -74,9 +74,28 @@ class BackendClient:
             },
         )
 
-    def run_daily_review(self, *, days: int = 30, history_limit: int = 7) -> dict[str, Any]:
-        query = urllib.parse.urlencode({"days": days, "store": "true", "history_limit": history_limit})
+    def run_daily_review(
+        self,
+        *,
+        days: int = 30,
+        history_limit: int = 7,
+        previous_day: bool = False,
+    ) -> dict[str, Any]:
+        query = urllib.parse.urlencode(
+            {
+                "days": days,
+                "store": "true",
+                "history_limit": history_limit,
+                "previous_day": str(previous_day).lower(),
+            }
+        )
         return self._request("POST", f"/api/v1/health-coach/daily-review?{query}")
+
+    def scheduled_reviews_status(self) -> dict[str, Any]:
+        return self._request("GET", "/api/v1/health-coach/scheduled-reviews")
+
+    def set_scheduled_reviews_enabled(self, enabled: bool) -> dict[str, Any]:
+        return self._request("POST", "/api/v1/health-coach/scheduled-reviews", payload={"enabled": enabled})
 
     def run_weekly_review(self, *, days: int = 90, history_limit: int = 7) -> dict[str, Any]:
         query = urllib.parse.urlencode({"days": days, "store": "true", "history_limit": history_limit})
