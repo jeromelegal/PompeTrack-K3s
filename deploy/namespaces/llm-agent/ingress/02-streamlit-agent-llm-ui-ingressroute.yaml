@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: Host(`streamlit-agent-llm.lan`) || Host(`192.168.2.88.nip.io`)
+    - match: Host(`streamlit-agent-llm.lan`) || Host(`llm-agent.192.168.2.88.nip.io`)
       kind: Rule
       middlewares:
         - name: lan-only

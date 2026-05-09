@@ -52,6 +52,61 @@ kubectl get all -n pompetrack-core
 ```bash
 helm upgrade monitoring prometheus-community/kube-prometheus-stack   -n monitoring   -f deploy/charts/monitoring/values.yaml
 ```
+---
+## Redeploy sans perdre les PVC :
+
+#### Namespace Medplum :
+```bash
+source deploy/versions.sh
+./deploy/sync-medplum-version.sh
+
+kubectl apply -f deploy/namespaces/medplum/00-namespace.yaml
+kubectl apply -f deploy/namespaces/medplum/services/
+kubectl apply -f deploy/namespaces/medplum/netpol/
+kubectl apply -f deploy/namespaces/medplum/istio/
+kubectl apply -f deploy/namespaces/medplum/ingress/
+
+./deploy/secrets/medplum/init-secrets.sh
+./deploy/secrets/registry/init-secrets.sh
+
+helm dependency update deploy/charts/medplum || true
+
+helm upgrade --install medplum deploy/charts/medplum \
+  -f deploy/charts/medplum/values-medplum.yaml \
+  --set global.medplumVersion="${MEDPLUM_VERSION}" \
+  --set global.medplumProviderVersion="${MEDPLUM_PROVIDER_VERSION}" \
+  --set global.medplumProviderImageTag="${MEDPLUM_PROVIDER_IMAGE_TAG}" \
+  --set medplum.deployment.image.tag="${MEDPLUM_VERSION}" \
+  -n medplum \
+  --post-renderer ./deploy/post-renderer/medplum/kustomize.sh
+
+```
+
+#### Namespace Pompetrack-core :
+
+```bash
+kubectl apply -f deploy/namespaces/pompetrack-core/00-namespace.yaml
+kubectl apply -f deploy/namespaces/pompetrack-core/netpol/
+kubectl apply -f deploy/namespaces/pompetrack-core/istio/
+kubectl apply -f deploy/namespaces/pompetrack-core/ingress/
+
+./deploy/secrets/pompetrack-core/init-secrets.sh
+
+kubectl -n pompetrack-core create configmap medplum-ids \
+  --from-env-file=deploy/outputs/pompetrack-core/medplum-ids.env \
+  -o yaml --dry-run=client \
+| kubectl apply -f -
+
+helm dependency update deploy/charts/pompetrack-core || true
+
+helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
+  -f deploy/charts/pompetrack-core/values-minio.yaml \
+  -n pompetrack-core \
+  --post-renderer ./deploy/post-renderer/pompetrack-core/kustomize.sh
+
+```
+
+
 
 ---
 # DAGS Airflow :

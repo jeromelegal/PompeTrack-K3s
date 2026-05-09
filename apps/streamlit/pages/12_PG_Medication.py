@@ -583,7 +583,7 @@ with tab_view:
             )
             view_df = view_df[mask]
 
-        st.dataframe(view_df, use_container_width=True, hide_index=True)
+        st.dataframe(view_df, width="stretch", hide_index=True)
 
         csv_bytes = view_df.to_csv(index=False).encode("utf-8")
         st.download_button(

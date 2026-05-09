@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: Host(`open-webui.lan`) || Host(`192.168.2.88.nip.io`)
+    - match: Host(`open-webui.lan`) || Host(`open-webui.192.168.2.88.nip.io)
       kind: Rule
       middlewares:
         - name: lan-only

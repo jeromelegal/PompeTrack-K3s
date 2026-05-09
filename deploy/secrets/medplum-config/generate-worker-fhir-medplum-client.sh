@@ -113,6 +113,14 @@ echo "==> Using MEDPLUM_BASE=${MEDPLUM_BASE}"
 FHIR_BASE="${MEDPLUM_BASE}/fhir/R4"
 
 echo "==> Read superadmin credentials from Kubernetes"
+MEDPLUM_TOKEN_AUDIENCE="$(kubectl -n "$MEDPLUM_NS" get deploy -l app.kubernetes.io/instance=medplum -o json \
+  | jq -r '.. | objects | select(.name?=="MEDPLUM_BASE_URL") | .value' | head -n 1)"
+
+if [[ -z "${MEDPLUM_TOKEN_AUDIENCE:-}" || "${MEDPLUM_TOKEN_AUDIENCE}" == "null" ]]; then
+  echo "ERROR: could not read MEDPLUM_BASE_URL from deployment env." >&2
+  exit 1
+fi
+
 SUPERADMIN_EMAIL="$(kubectl -n "$MEDPLUM_NS" get deploy -l app.kubernetes.io/instance=medplum -o json \
   | jq -r '.. | objects | select(.name?=="MEDPLUM_DEFAULT_SUPER_ADMIN_EMAIL") | .value' | head -n 1)"
 
@@ -313,7 +321,8 @@ mkdir -p "$(dirname "$CLIENT_IDS_OUT_FILE")"
   for name in "${!CLIENT_IDS[@]}"; do
     key="$(to_env_key "$name")"
     client_id="${CLIENT_IDS[$name]}"
-    echo "TOKEN_AUDIENCE_${key}=${client_id}"
+    echo "MEDPLUM_CLIENT_ID_${key}=${client_id}"
+    echo "TOKEN_AUDIENCE_${key}=${MEDPLUM_TOKEN_AUDIENCE}"
   done | LC_ALL=C sort
 } > "$CLIENT_IDS_OUT_FILE"
 chmod 600 "$CLIENT_IDS_OUT_FILE"

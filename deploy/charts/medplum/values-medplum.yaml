@@ -34,7 +34,7 @@ medplum:
       - name: MEDPLUM_APP_BASE_URL
         value: "https://medplum.phylcero.fr"
       - name: MEDPLUM_ALLOWED_ORIGINS
-        value: "https://medplum.phylcero.fr"
+        value: "https://medplum.phylcero.fr,https://provider.phylcero.fr"
       - name: MEDPLUM_DATABASE_HOST
         value: "medplum-postgresql"
       - name: MEDPLUM_DATABASE_PORT

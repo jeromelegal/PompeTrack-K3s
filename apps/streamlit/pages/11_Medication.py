@@ -124,7 +124,7 @@ results = st.session_state.rxnorm_results
 if results is not None:
     st.subheader("Résultats")
     st.caption(f"{len(results)} résultat(s)")
-    st.dataframe(results, use_container_width=True, hide_index=True)
+    st.dataframe(results, width="stretch", hide_index=True)
 
     if not results.empty:
         results_display = results.copy()
