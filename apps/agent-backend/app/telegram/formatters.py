@@ -250,6 +250,29 @@ def format_feedback_result(result: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def format_reminder(reminder: dict[str, Any]) -> str:
+    status = "actif" if reminder.get("active") else "supprimé"
+    return (
+        f"Rappel {reminder.get('reminder_id')} ({status})\n"
+        f"- Tous les jours à {reminder.get('time_of_day')} ({reminder.get('timezone')})\n"
+        f"- {reminder.get('text')}"
+    )
+
+
+def format_reminders(reminders: list[dict[str, Any]]) -> str:
+    if not reminders:
+        return "Aucun rappel actif."
+    lines = ["Rappels actifs"]
+    for reminder in reminders:
+        lines.append(
+            f"- {reminder.get('reminder_id')} | {reminder.get('time_of_day')} "
+            f"({reminder.get('timezone')}) | {reminder.get('text')}"
+        )
+    lines.append("")
+    lines.append("Supprimer: /delreminder <id>")
+    return "\n".join(lines)
+
+
 def format_guided_actions(features: dict[str, Any], prefs: dict[str, Any]) -> str:
     counts = features.get("counts") or {}
     watch_items = features.get("watchItems") or []

@@ -1,0 +1,63 @@
+{{- if .Values.reminders.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: telegram-reminder-runner
+  labels:
+    app: telegram-reminder-runner
+    allow-telegram-egress: "true"
+spec:
+  schedule: {{ .Values.reminders.schedule | quote }}
+  suspend: {{ .Values.reminders.suspend | default false }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.reminders.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.reminders.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: telegram-reminder-runner
+            allow-telegram-egress: "true"
+        spec:
+          serviceAccountName: agent-backend
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: gitlab-regcred
+          containers:
+            - name: reminder-runner
+              image: registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+              imagePullPolicy: Always
+              command:
+                - python
+                - -m
+                - app.telegram.reminder_runner
+              env:
+                - name: REMINDER_TIMEZONE
+                  value: {{ .Values.reminders.timeZone | quote }}
+                - name: TELEGRAM_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.tokenSecretName | quote }}
+                      key: {{ .Values.telegramBot.tokenSecretKey | quote }}
+                - name: TELEGRAM_ALLOWED_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.allowedChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.allowedChatIdsSecretKey | quote }}
+                      optional: true
+                - name: TELEGRAM_NOTIFY_CHAT_IDS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.telegramBot.notifyChatIdsSecretName | quote }}
+                      key: {{ .Values.telegramBot.notifyChatIdsSecretKey | quote }}
+                      optional: true
+              volumeMounts:
+                - name: agent-data
+                  mountPath: /data
+          volumes:
+            - name: agent-data
+              persistentVolumeClaim:
+                claimName: agent-backend-data
+{{- end }}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import signal
 import time
 from typing import Any
@@ -18,6 +19,8 @@ from app.telegram.formatters import (
     format_latest_review,
     format_medication,
     format_preferences,
+    format_reminder,
+    format_reminders,
     format_review_brief,
     format_review_result_brief,
     format_reviews_list,
@@ -51,6 +54,9 @@ HELP_TEXT = """Commandes disponibles:
 /alerts - évalue les alertes configurables
 /weekly-review - lance un bilan hebdomadaire maintenant
 /bilans on|off|status - active ou désactive les bilans automatiques
+/remind daily HH:MM texte - crée un rappel quotidien
+/reminders - liste les rappels actifs
+/delreminder <id> - supprime un rappel
 /prefs - affiche la mémoire utilisateur
 /setpref <clé> <valeur> - modifie une préférence
 /addsymptom <nom> - ajoute un symptôme prioritaire
@@ -230,6 +236,18 @@ class TelegramHealthBot:
         if command == "/bilans":
             self._scheduled_reviews(chat_id=chat_id, rest=rest)
             return
+        if command == "/remind":
+            self._create_reminder(chat_id=chat_id, rest=rest)
+            return
+        if command == "/reminders":
+            self.telegram.send_message(
+                chat_id,
+                format_reminders(self.backend.list_reminders(user_id=_pref_user_id(chat_id))),
+            )
+            return
+        if command == "/delreminder":
+            self._delete_reminder(chat_id=chat_id, rest=rest)
+            return
         if command == "/ask":
             prompt = rest.strip()
             if not prompt:
@@ -276,6 +294,14 @@ class TelegramHealthBot:
         if text.startswith("/"):
             self.telegram.send_message(chat_id, "Commande inconnue.\n\n" + HELP_TEXT)
             return
+
+        if _looks_like_delete_reminder_request(text):
+            if self._delete_reminder_from_text(chat_id=chat_id, text=text):
+                return
+
+        if _looks_like_reminder_request(text):
+            if self._create_reminder_from_text(chat_id=chat_id, text=text):
+                return
 
         if _looks_clinical_question(text):
             self._ask_clinical(chat_id=chat_id, user_id=user_id, prompt=text)
@@ -356,6 +382,69 @@ class TelegramHealthBot:
         status = "activés" if enabled else "désactivés"
         self.telegram.send_message(chat_id, f"Bilans automatiques: {status}.")
 
+    def _create_reminder(self, *, chat_id: int, rest: str) -> None:
+        raw = rest.strip()
+        if raw.lower().startswith("daily "):
+            raw = raw[6:].strip()
+        time_of_day, _, text = raw.partition(" ")
+        if not time_of_day or not text.strip():
+            self.telegram.send_message(chat_id, "Utilisation: /remind daily 19:00 faire les exercices")
+            return
+        result = self.backend.create_reminder(
+            user_id=_pref_user_id(chat_id),
+            chat_id=chat_id,
+            time_of_day=time_of_day,
+            text=text.strip(),
+        )
+        self.telegram.send_message(chat_id, "Rappel créé.\n\n" + format_reminder(result.get("item") or result))
+
+    def _create_reminder_from_text(self, *, chat_id: int, text: str) -> bool:
+        parsed = _parse_reminder_sentence(text)
+        if parsed is None:
+            self.telegram.send_message(
+                chat_id,
+                "Je peux créer ce rappel avec: /remind daily 19:00 faire les exercices",
+            )
+            return True
+        result = self.backend.create_reminder(
+            user_id=_pref_user_id(chat_id),
+            chat_id=chat_id,
+            time_of_day=parsed["time_of_day"],
+            text=parsed["text"],
+        )
+        self.telegram.send_message(chat_id, "Rappel créé.\n\n" + format_reminder(result.get("item") or result))
+        return True
+
+    def _delete_reminder(self, *, chat_id: int, rest: str) -> None:
+        reminder_id = rest.strip()
+        if not reminder_id:
+            self.telegram.send_message(chat_id, "Utilisation: /delreminder <id>")
+            return
+        result = self.backend.delete_reminder(reminder_id=reminder_id, user_id=_pref_user_id(chat_id))
+        self.telegram.send_message(chat_id, "Rappel supprimé.\n\n" + format_reminder(result.get("item") or result))
+
+    def _delete_reminder_from_text(self, *, chat_id: int, text: str) -> bool:
+        id_match = re.search(r"\brem-[a-f0-9]{10}\b", text)
+        if id_match is not None:
+            self._delete_reminder(chat_id=chat_id, rest=id_match.group(0))
+            return True
+
+        query = _delete_reminder_query(text)
+        reminders = self.backend.list_reminders(user_id=_pref_user_id(chat_id))
+        matches = [
+            reminder
+            for reminder in reminders
+            if query and query.lower() in str(reminder.get("text") or "").lower()
+        ]
+        if len(matches) == 1:
+            self._delete_reminder(chat_id=chat_id, rest=str(matches[0].get("reminder_id") or ""))
+            return True
+        if len(matches) > 1:
+            self.telegram.send_message(chat_id, "J'ai trouvé plusieurs rappels possibles.\n\n" + format_reminders(matches))
+            return True
+        self.telegram.send_message(chat_id, "Je n'ai pas trouvé ce rappel. Liste: /reminders")
+        return True
+
     def _edit_priority_symptom(self, *, chat_id: int, symptom: str, add: bool) -> None:
         item = symptom.strip().lower()
         if not item:
@@ -415,6 +504,39 @@ def _pref_user_id(chat_id: int) -> str:
 
 def _split_list(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _looks_like_reminder_request(text: str) -> bool:
+    normalized = text.lower()
+    return any(marker in normalized for marker in ["rappelle-moi", "rappelle moi", "rappel"]) and any(
+        marker in normalized for marker in ["tous les jours", "quotidien", "chaque jour"]
+    )
+
+
+def _looks_like_delete_reminder_request(text: str) -> bool:
+    normalized = text.lower()
+    return any(marker in normalized for marker in ["supprime", "annule", "efface", "désactive"]) and "rappel" in normalized
+
+
+def _delete_reminder_query(text: str) -> str:
+    clean = re.sub(r"(?i)\b(supprime|annule|efface|désactive|desactive)\b", " ", text)
+    clean = re.sub(r"(?i)\b(le|la|un|une|mon|ma|rappel|reminder|quotidien)\b", " ", clean)
+    return re.sub(r"\s+", " ", clean).strip(" .,:;-")
+
+
+def _parse_reminder_sentence(text: str) -> dict[str, str] | None:
+    time_match = re.search(r"\b([01]?\d|2[0-3])[:h]([0-5]\d)\b", text)
+    if time_match is None:
+        return None
+    time_of_day = f"{int(time_match.group(1)):02d}:{int(time_match.group(2)):02d}"
+    clean = text.strip()
+    clean = re.sub(r"(?i)rappelle[- ]moi de\s+", "", clean)
+    clean = re.sub(r"(?i)rappel(?:le)?\s*", "", clean)
+    clean = re.sub(r"(?i)tous les jours|chaque jour|quotidien(?:nement)?", "", clean)
+    clean = re.sub(r"\b([01]?\d|2[0-3])[:h]([0-5]\d)\b", "", clean)
+    clean = re.sub(r"(?i)\b(à|a|vers|de)\b", " ", clean)
+    clean = re.sub(r"\s+", " ", clean).strip(" .,:;-")
+    return {"time_of_day": time_of_day, "text": clean or "faire les exercices"}
 
 
 def _looks_clinical_question(text: str) -> bool:

@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     )
     telegram_poll_timeout_seconds: int = int(os.environ.get("TELEGRAM_POLL_TIMEOUT_SECONDS", "25"))
     telegram_command_timeout_seconds: int = int(os.environ.get("TELEGRAM_COMMAND_TIMEOUT_SECONDS", "180"))
+    reminder_timezone: str = os.environ.get("REMINDER_TIMEZONE", "Europe/Paris")
 
     max_iterations: int = 4
     max_actions_per_iteration: int = 6

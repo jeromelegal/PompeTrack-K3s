@@ -112,6 +112,37 @@ Exemples de questions attendues:
 
 Le CronJob `health-evening-questions` peut aussi envoyer ces questions automatiquement selon la configuration Helm.
 
+## Rappels quotidiens
+
+Le bot peut créer, lister et supprimer des rappels quotidiens persistants. Les rappels sont stockés côté backend dans SQLite et envoyés par le CronJob `telegram-reminder-runner`, qui tourne toutes les minutes.
+
+Créer un rappel:
+
+```text
+/remind daily 19:00 faire les exercices
+```
+
+Lister les rappels actifs:
+
+```text
+/reminders
+```
+
+Supprimer un rappel:
+
+```text
+/delreminder rem-123456abcd
+```
+
+Le bot comprend aussi quelques formulations naturelles, par exemple:
+
+```text
+rappelle-moi de faire les exercices tous les jours à 19:00
+supprime le rappel exercices
+```
+
+Les rappels utilisent la timezone configurée par `reminders.timeZone` dans le chart Helm, `Europe/Paris` par défaut.
+
 ## Alertes configurables
 
 Les alertes sont des règles déterministes, séparées du raisonnement libre du LLM.
@@ -275,6 +306,9 @@ Le bot détecte aussi automatiquement certaines questions santé envoyées sans 
 | `/evening` | `/evening` | Questions ciblées du soir. |
 | `/alerts` | `/alerts` | Évalue les alertes configurables. |
 | `/weekly-review` | `/weekly-review` | Lance un bilan hebdomadaire à la demande. |
+| `/remind` | `/remind daily 19:00 faire les exercices` | Crée un rappel quotidien Telegram. |
+| `/reminders` | `/reminders` | Liste les rappels actifs. |
+| `/delreminder` | `/delreminder rem-123456abcd` | Supprime un rappel. |
 | `/prefs` | `/prefs` | Affiche la mémoire utilisateur explicite. |
 | `/setpref` | `/setpref tone bienveillant_concis` | Modifie une préférence utilisateur. |
 | `/addsymptom` | `/addsymptom fatigue` | Ajoute un symptôme prioritaire. |

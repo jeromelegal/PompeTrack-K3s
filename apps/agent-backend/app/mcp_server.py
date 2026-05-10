@@ -26,6 +26,7 @@ from app.medplum.health_tools import (
     get_recent_symptoms,
     get_recent_workouts,
 )
+from app.reminders import create_daily_reminder, delete_reminder, list_reminders
 
 
 mcp = FastMCP("pompetrack-agent-tools")
@@ -207,6 +208,30 @@ def medical_visit_export_markdown(days: int | None = None) -> dict[str, Any]:
 def health_coach_synthetic_evaluation() -> dict[str, Any]:
     """Run deterministic synthetic evaluations for the health coach."""
     return run_synthetic_coach_evaluation()
+
+
+@mcp.tool()
+def create_daily_telegram_reminder(text: str, time_of_day: str, user_id: str | None = None) -> dict[str, Any]:
+    """Create a persistent daily Telegram reminder. time_of_day must be HH:MM."""
+    item = create_daily_reminder(
+        text=text,
+        time_of_day=time_of_day,
+        user_id=user_id or "telegram:automation",
+    )
+    return {"item": item}
+
+
+@mcp.tool()
+def telegram_reminders(user_id: str | None = None, active_only: bool = True) -> dict[str, Any]:
+    """List persistent Telegram reminders."""
+    return {"items": list_reminders(user_id=user_id, active_only=active_only, limit=50)}
+
+
+@mcp.tool()
+def delete_telegram_reminder(reminder_id: str, user_id: str | None = None) -> dict[str, Any]:
+    """Delete a persistent Telegram reminder by id."""
+    item = delete_reminder(reminder_id, user_id=user_id)
+    return {"deleted": item is not None, "item": item}
 
 
 if __name__ == "__main__":
