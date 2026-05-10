@@ -37,6 +37,8 @@ spec:
               value: {{ .Values.telegramBot.pollTimeoutSeconds | quote }}
             - name: TELEGRAM_COMMAND_TIMEOUT_SECONDS
               value: {{ .Values.telegramBot.commandTimeoutSeconds | quote }}
+            - name: REMINDER_TIMEZONE
+              value: {{ .Values.reminders.timeZone | quote }}
             - name: BACKEND_API_KEY
               valueFrom:
                 secretKeyRef:

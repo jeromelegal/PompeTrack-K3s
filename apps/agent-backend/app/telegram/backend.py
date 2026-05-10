@@ -97,6 +97,28 @@ class BackendClient:
     def set_scheduled_reviews_enabled(self, enabled: bool) -> dict[str, Any]:
         return self._request("POST", "/api/v1/health-coach/scheduled-reviews", payload={"enabled": enabled})
 
+    def create_reminder(self, *, user_id: str, chat_id: int, text: str, time_of_day: str) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            "/api/v1/reminders",
+            payload={
+                "userId": user_id,
+                "chatId": str(chat_id),
+                "text": text,
+                "timeOfDay": time_of_day,
+            },
+        )
+
+    def list_reminders(self, *, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        query = urllib.parse.urlencode({"user_id": user_id, "active_only": "true", "limit": limit})
+        data = self._request("GET", f"/api/v1/reminders?{query}")
+        items = data.get("items") if isinstance(data, dict) else None
+        return items if isinstance(items, list) else []
+
+    def delete_reminder(self, *, reminder_id: str, user_id: str) -> dict[str, Any]:
+        query = urllib.parse.urlencode({"user_id": user_id})
+        return self._request("DELETE", f"/api/v1/reminders/{urllib.parse.quote(reminder_id)}?{query}")
+
     def run_weekly_review(self, *, days: int = 90, history_limit: int = 7) -> dict[str, Any]:
         query = urllib.parse.urlencode({"days": days, "store": "true", "history_limit": history_limit})
         return self._request("POST", f"/api/v1/health-coach/weekly-review?{query}")

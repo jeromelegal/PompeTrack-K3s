@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import admin, coach, health, ingest, openai_compat
+from app.api import admin, coach, health, ingest, openai_compat, reminders
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.dependencies import get_services
@@ -31,6 +31,7 @@ app.include_router(openai_compat.router)
 app.include_router(ingest.router)
 app.include_router(admin.router)
 app.include_router(coach.router)
+app.include_router(reminders.router)
 
 
 @app.on_event("startup")

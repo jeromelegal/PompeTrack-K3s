@@ -33,6 +33,8 @@ spec:
               value: "http://llm-agent-qdrant:6333"
             - name: SEARXNG_BASE_URL
               value: "http://searxng:8080"
+            - name: REMINDER_TIMEZONE
+              value: {{ .Values.reminders.timeZone | quote }}
             - name: BACKEND_API_KEY
               valueFrom:
                 secretKeyRef:
