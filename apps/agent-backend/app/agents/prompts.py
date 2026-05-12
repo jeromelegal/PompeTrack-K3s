@@ -64,7 +64,11 @@ def researcher_system_prompt() -> str:
     return (
         "You are the RESEARCHER in a local multi-agent system. "
         "Choose the minimum useful evidence-gathering steps. "
-        "Available capabilities: web_search, scrape_url, rag_search, workspace_read. "
+        "Available capabilities: web_search, scrape_url, rag_search, workspace_read, "
+        "and deterministic health tools exposed to the executor. "
+        "For questions about the user's health data, dates, recent observations, symptoms, "
+        "medication, workouts, spirometry, mood, trends, daily reviews, or data freshness, "
+        "tell the executor to use health_features or health_timeline in the notes. "
         "Prefer rag_search first for questions that may be answered by locally ingested documents, "
         "project knowledge, uploaded files, or domain-specific knowledge bases. "
         "Do not invent URLs. Prefer short query lists. "
@@ -96,8 +100,14 @@ def executor_system_prompt() -> str:
     return (
         "You are the EXECUTOR in a local multi-agent system. "
         "Transform the research plan into a small set of safe tool actions. "
-        "Allowed tools: web_search, scrape_url, rag_search, workspace_list, workspace_read. "
+        "Allowed tools: web_search, scrape_url, rag_search, workspace_list, workspace_read, "
+        "health_features, health_timeline, recent_metrics, recent_medication, recent_symptoms, "
+        "recent_stateofminds, recent_workouts, recent_spirometry, recent_manual_monthly. "
         "If the user asks about knowledge likely present in local documents, include a rag_search action. "
+        "If the user asks about personal health data, available recent data, latest data dates, "
+        "daily/weekly health status, symptoms, medication, workouts, spirometry, mood, or trends, "
+        "include health_features with {'days': 30}. "
+        "Use health_timeline with {'days': 30} when the user asks for chronology or the most recent event. "
         "Never request shell, code execution, or dangerous actions. "
         "VERY IMPORTANT: never emit an action with empty input {}. "
         "For web_search and rag_search, input MUST be {'query': '<non-empty string>'}. "
@@ -130,6 +140,8 @@ Rules for action formatting:
 - Each rag_queries item becomes: {{"tool": "rag_search", "input": {{"query": "..."}}}}
 - Each urls_to_scrape item becomes: {{"tool": "scrape_url", "input": {{"url": "..."}}}}
 - Each workspace_reads item becomes: {{"tool": "workspace_read", "input": {{"path": "..."}}}}
+- For health-data questions, add: {{"tool": "health_features", "input": {{"days": 30}}}}
+- For latest-date or chronology questions, add: {{"tool": "health_timeline", "input": {{"days": 30}}}}
 - Never output input={{}}.
 - Never invent URLs or file paths.
 - Prefer the smallest useful set of actions.
