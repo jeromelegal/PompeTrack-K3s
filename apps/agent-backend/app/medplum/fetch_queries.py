@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import Optional
-from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
+from urllib.parse import urlencode, urlparse, parse_qsl
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -19,6 +19,7 @@ FHIR_BASE = os.getenv(
 
 DEFAULT_CONNECT_TIMEOUT = 10
 DEFAULT_READ_TIMEOUT = 120
+MEDPLUM_MAX_SEARCH_OFFSET = int(os.getenv("MEDPLUM_MAX_SEARCH_OFFSET", "10000"))
 
 # Function to get the resource base URL
 def get_resource_base_url(internal_base: str, resource_type: str) -> str:
@@ -44,6 +45,22 @@ def rewrite_next_to_internal_resource_base(
     if not parsed_next.query:
         logger.warning("URL 'next' sans query string: %s", next_url)
         return None
+
+    query_params = dict(parse_qsl(parsed_next.query, keep_blank_values=True))
+    raw_offset = query_params.get("_offset")
+    if raw_offset is not None:
+        try:
+            offset = int(raw_offset)
+        except ValueError:
+            offset = None
+        if offset is not None and offset > MEDPLUM_MAX_SEARCH_OFFSET:
+            logger.warning(
+                "Arrêt de la pagination %s: offset %s supérieur au maximum Medplum %s",
+                resource_type,
+                offset,
+                MEDPLUM_MAX_SEARCH_OFFSET,
+            )
+            return None
 
     resource_base = get_resource_base_url(internal_base, resource_type)
     rewritten = f"{resource_base}?{parsed_next.query}"
