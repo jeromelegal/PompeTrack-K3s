@@ -19,7 +19,22 @@ class ResearchPlan(BaseModel):
 
 
 class ToolAction(BaseModel):
-    tool: Literal["web_search", "scrape_url", "rag_search", "workspace_list", "workspace_read"]
+    tool: Literal[
+        "web_search",
+        "scrape_url",
+        "rag_search",
+        "workspace_list",
+        "workspace_read",
+        "health_features",
+        "health_timeline",
+        "recent_metrics",
+        "recent_medication",
+        "recent_symptoms",
+        "recent_stateofminds",
+        "recent_workouts",
+        "recent_spirometry",
+        "recent_manual_monthly",
+    ]
     input: dict[str, Any] = Field(default_factory=dict)
     reason: str = ""
 
@@ -53,6 +68,15 @@ class ToolAction(BaseModel):
         if self.tool == "workspace_list":
             path = str(data.get("path") or ".").strip() or "."
             self.input = {"path": path}
+            return self
+
+        if self.tool.startswith("health_") or self.tool.startswith("recent_"):
+            days = data.get("days", 30)
+            try:
+                days = int(days)
+            except (TypeError, ValueError):
+                days = 30
+            self.input = {"days": max(1, min(days, 90))}
             return self
 
         return self

@@ -153,6 +153,7 @@ def fetch_fhir_observation(
     code = payload.get("code")
     device = payload.get("device")
     tag = payload.get("tag")
+    sort = payload.get("sort", "-date")
 
     max_records = payload.get("max_records", 1000)
     page_count = int(payload.get("page_count", 100))
@@ -183,6 +184,7 @@ def fetch_fhir_observation(
         "patient": patient_full,
         "_count": page_count,
         "_elements": elements,
+        "_sort": sort,
     }
 
     if category:
@@ -439,6 +441,7 @@ def fetch_fhir_medicationadministration(
     end_date = payload.get("endDate")
     device = payload.get("device")
     tag = payload.get("tag")
+    sort = payload.get("sort", "-effective-time")
 
     max_records = payload.get("max_records", 1000)
     page_count = int(payload.get("page_count", 100))
@@ -464,6 +467,7 @@ def fetch_fhir_medicationadministration(
         "patient": patient_full,
         "_count": page_count,
         "_elements": elements,
+        "_sort": sort,
     }
 
     if category:
@@ -643,6 +647,7 @@ def fetch_fhir_condition(
     end_date = payload.get("endDate")
     code = payload.get("code")
     tag = payload.get("tag")
+    sort = payload.get("sort", "-recorded-date")
 
     max_records = payload.get("max_records", 1000)
     page_count = int(payload.get("page_count", 100))
@@ -671,6 +676,7 @@ def fetch_fhir_condition(
         "patient": patient_full,
         "_count": page_count,
         "_elements": elements,
+        "_sort": sort,
     }
 
     if category:

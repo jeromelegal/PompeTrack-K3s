@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 import uuid
@@ -285,8 +286,9 @@ class AgenticService:
 
         gathered: list[dict[str, Any]] = []
         trace: list[dict[str, Any]] = []
+        actions = self._prepend_health_actions_when_relevant(state, list(plan.actions))
 
-        for action in plan.actions[: self.settings.max_actions_per_iteration]:
+        for action in actions[: self.settings.max_actions_per_iteration]:
             result_items = await self._run_action(action.tool, action.input)
             for item in result_items:
                 gathered.append(item)
@@ -297,8 +299,13 @@ class AgenticService:
 
         completion = self._event(
             "executor",
-            f"{len(plan.actions[: self.settings.max_actions_per_iteration])} action(s) executed",
-            plan.model_dump(),
+            f"{len(actions[: self.settings.max_actions_per_iteration])} action(s) executed",
+            {
+                **plan.model_dump(),
+                "effective_actions": [
+                    action.model_dump() for action in actions[: self.settings.max_actions_per_iteration]
+                ],
+            },
         )
         trace.append(completion)
         self.state_store.add_event(state["run_id"], "executor", completion)
@@ -462,7 +469,181 @@ class AgenticService:
                 }
             ]
 
+        if tool_name in {
+            "health_features",
+            "health_timeline",
+            "recent_metrics",
+            "recent_medication",
+            "recent_symptoms",
+            "recent_stateofminds",
+            "recent_workouts",
+            "recent_spirometry",
+            "recent_manual_monthly",
+        }:
+            days = self._bounded_days(tool_input.get("days", 30))
+            result = self._run_health_tool(tool_name, days)
+            return [
+                {
+                    "ref": f"health-{uuid.uuid4().hex[:8]}",
+                    "tool": tool_name,
+                    "title": f"{tool_name} ({days} days)",
+                    "source": "medplum",
+                    "content": self._health_evidence_content(tool_name, result),
+                    "meta": {"days": days},
+                }
+            ]
+
         return []
+
+    def _prepend_health_actions_when_relevant(
+        self,
+        state: AgentState,
+        actions: list[Any],
+    ) -> list[Any]:
+        if not self._looks_like_health_data_question(state):
+            return actions
+
+        from app.agents.schemas import ToolAction
+
+        existing = {action.tool for action in actions}
+        injected = []
+        if "health_features" not in existing:
+            injected.append(
+                ToolAction(
+                    tool="health_features",
+                    input={"days": 30},
+                    reason="Automatic health context",
+                )
+            )
+        if self._asks_for_latest_or_timeline(state) and "health_timeline" not in existing:
+            injected.append(
+                ToolAction(
+                    tool="health_timeline",
+                    input={"days": 30},
+                    reason="Automatic recency context",
+                )
+            )
+        return injected + actions
+
+    def _run_health_tool(self, tool_name: str, days: int) -> dict[str, Any]:
+        from app.medplum.health_coach import build_daily_health_features
+        from app.medplum.health_tools import (
+            get_health_timeline,
+            get_recent_manual_monthly,
+            get_recent_medication,
+            get_recent_metrics,
+            get_recent_spirometry,
+            get_recent_stateofminds,
+            get_recent_symptoms,
+            get_recent_workouts,
+        )
+
+        if tool_name == "health_features":
+            return build_daily_health_features(days=days)
+        if tool_name == "health_timeline":
+            return get_health_timeline(days=days)
+
+        fetchers = {
+            "recent_metrics": get_recent_metrics,
+            "recent_medication": get_recent_medication,
+            "recent_symptoms": get_recent_symptoms,
+            "recent_stateofminds": get_recent_stateofminds,
+            "recent_workouts": get_recent_workouts,
+            "recent_spirometry": get_recent_spirometry,
+            "recent_manual_monthly": get_recent_manual_monthly,
+        }
+        return {"days": days, "items": fetchers[tool_name](days=days)}
+
+    @staticmethod
+    def _health_evidence_content(tool_name: str, result: dict[str, Any]) -> str:
+        if tool_name == "health_features":
+            compact = {
+                "dataQuality": result.get("dataQuality"),
+                "period": result.get("period"),
+                "counts": result.get("counts"),
+                "recentEvents": result.get("recentEvents"),
+                "topSymptoms": result.get("topSymptoms"),
+                "recentMedication": result.get("recentMedication"),
+                "anomalies": result.get("anomalies"),
+                "watchItems": result.get("watchItems"),
+                "metricTrends": result.get("metricTrends"),
+                "stateOfMindTrends": result.get("stateOfMindTrends"),
+                "spirometryTrends": result.get("spirometryTrends"),
+            }
+            return json.dumps(compact, ensure_ascii=False, indent=2, default=str)
+
+        if tool_name == "health_timeline":
+            compact = {
+                "period": result.get("period"),
+                "counts": result.get("counts"),
+                "events": (result.get("events") or [])[:30],
+            }
+            return json.dumps(compact, ensure_ascii=False, indent=2, default=str)
+
+        return json.dumps(result, ensure_ascii=False, indent=2, default=str)
+
+    @staticmethod
+    def _bounded_days(value: Any) -> int:
+        try:
+            days = int(value)
+        except (TypeError, ValueError):
+            days = 30
+        return max(1, min(days, 90))
+
+    @staticmethod
+    def _looks_like_health_data_question(state: AgentState) -> bool:
+        message_text = " ".join(
+            str(message.get("content", ""))
+            for message in state.get("messages", [])
+            if isinstance(message, dict)
+        )
+        text = f"{state.get('goal', '')} {message_text}".lower()
+        keywords = {
+            "donnée",
+            "donnee",
+            "data",
+            "date",
+            "récent",
+            "recent",
+            "dernière",
+            "derniere",
+            "latest",
+            "santé",
+            "sante",
+            "bilan",
+            "coach",
+            "sympt",
+            "médic",
+            "medic",
+            "traitement",
+            "spirom",
+            "workout",
+            "entraînement",
+            "entrainement",
+            "humeur",
+            "mood",
+            "fatigue",
+            "douleur",
+            "tendance",
+            "trend",
+        }
+        return any(keyword in text for keyword in keywords)
+
+    @staticmethod
+    def _asks_for_latest_or_timeline(state: AgentState) -> bool:
+        text = str(state.get("goal", "")).lower()
+        keywords = {
+            "date",
+            "dernière",
+            "derniere",
+            "plus récente",
+            "plus recente",
+            "latest",
+            "most recent",
+            "chronologie",
+            "timeline",
+        }
+        return any(keyword in text for keyword in keywords)
 
     @staticmethod
     def _extract_goal(messages: list[dict[str, Any]]) -> str:
