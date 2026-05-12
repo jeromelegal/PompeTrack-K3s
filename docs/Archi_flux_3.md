@@ -1,89 +1,154 @@
-# Page 3 — Sécurité mesh (Istio mTLS + AuthorizationPolicy)
+# Architecture Flux 3 - Istio mTLS Et AuthorizationPolicy
 
-## Légende (commune)
+Ce fichier montre la couche mesh: injection sidecar, mTLS, exceptions `PERMISSIVE`, `DestinationRule` et `AuthorizationPolicy`.
 
-* **U** : client (navigateur)
-* **Y** : Yunohost/nginx (TLS termination + SSO)
-* **T** : Traefik (K3s, entryPoint `web`, NodePort `31725`)
-* **IR_*** : IngressRoute Traefik
-* **MW_*** : Middleware Traefik
-* **SVC_*** : Service Kubernetes
-* **POD_*** : Pod (souvent avec sidecar Istio)
+Les NetworkPolicies restent la couche L3/L4; Istio ajoute une couche identite/service-account et politique applicative.
 
-## mTLS (PeerAuthentication) — ce que tu as réellement
-
-* `medplum`: **namespace-wide mTLS STRICT** + exceptions **PERMISSIVE** :
-
-  * `app=medplum-app` : **PERMISSIVE** (portLevelMtls `3000: PERMISSIVE`)
-  * `app.kubernetes.io/name=medplum` : **PERMISSIVE** (portLevelMtls `8103: PERMISSIVE`)
-* `pompetrack-core`: **namespace-wide mTLS STRICT**
-
-  * `app=minio` : mTLS **STRICT**, avec **port 9001 PERMISSIVE** (console)
-
-Le sens de **PERMISSIVE** : le service accepte **plaintext + mTLS** (utile si un client “hors mesh” doit parler au pod). ([Istio][2])
-
-## AuthorizationPolicy — ce que tu as réellement
-
-* Tu as **une seule AuthorizationPolicy** : sur `pompetrack-core`, `app=minio`
-
-  * **Port 9000** : autorisé **uniquement** depuis ces principals :
-
-    * `cluster.local/ns/pompetrack-core/sa/ingestion`
-    * `cluster.local/ns/pompetrack-core/sa/minio-sa`
-    * `cluster.local/ns/pompetrack-core/sa/minio-init`
-  * **Port 9001** : règle **sans “from”** ⇒ autorise **toutes** les sources (authenticated + unauthenticated) côté Istio. ([Istio][2])
-  * MAIS côté exposition réelle, 9001 reste de fait borné par : NetPol (`traefik → 9001`) + middleware Traefik `ipAllowList`.
-
-Aussi important : Istio n’applique un “deny-by-default” **que si** un workload a au moins une policy `ALLOW` (sinon, pas de whitelist). ([Istio][2])
-
-## Diagramme D — Mesh (mTLS + AuthZ)
+## Vue Mesh
 
 ```mermaid
 flowchart TB
-  %% -----------------------
-  %% medplum: PeerAuth only
-  %% -----------------------
-  subgraph MED["Namespace: medplum<br/>(PeerAuth STRICT + exceptions PERMISSIVE)"]
-    direction TB
-    POD_APP["POD_APP<br/>medplum-app<br/>mTLS: PERMISSIVE (3000)"]
-    POD_API["POD_API<br/>medplum server<br/>mTLS: PERMISSIVE (8103)"]
-    POD_APP -->|"8103<br/>(plaintext accepté côté serveur<br/>ou mTLS)"| POD_API
+  istiod["istiod\nistio-system"]
+  traefik["Traefik\nhors mesh applicatif"]
+
+  subgraph medplum["medplum"]
+    med_strict["PeerAuthentication namespace\nSTRICT"]
+    med_app["medplum-app\nport 3000 PERMISSIVE"]
+    med_api["medplum API\nport 8103 PERMISSIVE"]
+    med_provider["medplum-provider\nPERMISSIVE"]
+    med_pg["PostgreSQL\nmTLS via DR"]
+    med_redis["Redis\nmTLS via DR"]
   end
 
-  %% -----------------------------
-  %% pompetrack-core: MinIO AuthZ
-  %% -----------------------------
-  subgraph CORE["Namespace: pompetrack-core<br/>(PeerAuth STRICT)"]
-    direction LR
-    SA_ING["SA: ingestion"]
-    SA_MINIOSA["SA: minio-sa"]
-    SA_INIT["SA: minio-init"]
-    POD_MINIO["POD_MINIO\nminio<br/>mTLS: STRICT<br/>port 9001: PERMISSIVE"]
-
-    SA_ING -->|"AuthZ ALLOW<br/>9000"| POD_MINIO
-    SA_MINIOSA -->|"AuthZ ALLOW<br/>9000"| POD_MINIO
-    SA_INIT -->|"AuthZ ALLOW<br/>9000"| POD_MINIO
+  subgraph core["pompetrack-core"]
+    core_strict["PeerAuthentication namespace\nSTRICT"]
+    ingestion["ingestion\nPERMISSIVE pour route Traefik"]
+    streamlit["streamlit\nPERMISSIVE UI"]
+    minio["MinIO\n9000 STRICT + AuthZ\n9001 PERMISSIVE console"]
+    workers["workers\nworker-fhir / worker-sqlite / worker-stream"]
   end
 
-  %% 9001 rule (from vide) — keep outside namespaces to avoid long crossing edges
-  ANY["ANY source<br/>(AuthZ rule for 9001:<br/>from vide)"] -->|"AuthZ ALLOW<br/>9001"| POD_MINIO
+  subgraph airflow["airflow"]
+    airflow_strict["PeerAuthentication namespace\nSTRICT"]
+    airflow_ui["Airflow UI/API\nPERMISSIVE pour Traefik"]
+    airflow_internal["scheduler / dag-processor / postgres"]
+  end
 
+  subgraph monitoring["monitoring"]
+    monitoring_mtls["PeerAuth monitoring\nPERMISSIVE/ajustements admission"]
+    prometheus["Prometheus"]
+    grafana["Grafana"]
+    alertmanager["Alertmanager"]
+  end
+
+  subgraph llm["llm-agent"]
+    llm_policy["PeerAuth llm-agent"]
+    openwebui["open-webui"]
+    backend["agent-backend"]
+    mcpo["agent-backend-mcpo"]
+    telegram["telegram bot / reminder runner"]
+  end
+
+  istiod -. "xDS config" .-> medplum
+  istiod -. "xDS config" .-> core
+  istiod -. "xDS config" .-> airflow
+  istiod -. "xDS config" .-> monitoring
+  istiod -. "xDS config" .-> llm
+
+  traefik -->|"plaintext HTTP accepte\npar exceptions PERMISSIVE"| med_app
+  traefik --> med_api
+  traefik --> med_provider
+  traefik --> streamlit
+  traefik --> ingestion
+  traefik --> minio
+  traefik --> airflow_ui
+  traefik --> grafana
+  traefik --> prometheus
+  traefik --> openwebui
+  traefik --> backend
+  traefik --> mcpo
+
+  med_app -->|"mTLS si sidecars"| med_api
+  med_api --> med_pg
+  med_api --> med_redis
+  med_provider --> med_api
+
+  ingestion -->|"S3 API 9000\nprincipal ingestion autorise"| minio
+  workers --> med_api
+  workers --> minio
+  streamlit --> workers
+  backend --> med_api
+  openwebui --> backend
+  openwebui --> mcpo
+  telegram --> backend
 ```
 
-## Tableau — Principals autorisés (Istio)
+## MinIO AuthZ
 
-### Workload `pompetrack-core/app=minio`
+```mermaid
+flowchart LR
+  subgraph principals["Principals autorises sur MinIO 9000"]
+    ingestion_sa["cluster.local/ns/pompetrack-core/sa/ingestion"]
+    minio_sa["cluster.local/ns/pompetrack-core/sa/minio-sa"]
+    init_sa["cluster.local/ns/pompetrack-core/sa/minio-init"]
+    airflow_sa["Airflow si policy allow-airflow active"]
+  end
 
-| Port | mTLS (PeerAuth)        | AuthorizationPolicy            | Principals autorisés                                                                              |
-| ---: | ---------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------- |
-| 9000 | STRICT (namespace)     | **ALLOW restreint**            | `cluster.local/ns/pompetrack-core/sa/ingestion`, `.../sa/minio-sa`, `.../sa/minio-init`           |
-| 9001 | PERMISSIVE (portLevel) | **ALLOW “public”** (from vide) | *toutes sources* côté Istio (mais **réellement** limité par NetPol + Traefik MW LAN) ([Istio][2]) |
+  minio9000["MinIO API :9000\nmTLS STRICT\nAuthorizationPolicy ALLOW"]
+  minio9001["MinIO Console :9001\nPERMISSIVE\nlimite par Traefik lan-only + NetPol"]
+  traefik["Traefik"]
+  lan["Client LAN"]
 
-### Namespace `medplum`
+  ingestion_sa --> minio9000
+  minio_sa --> minio9000
+  init_sa --> minio9000
+  airflow_sa --> minio9000
 
-| Workload                         | Port | mTLS (PeerAuth) | AuthorizationPolicy présente ? | Conclusion AuthZ                           |
-| -------------------------------- | ---: | --------------- | ------------------------------ | ------------------------------------------ |
-| `app=medplum-app`                | 3000 | PERMISSIVE      | non                            | pas de whitelist Istio (dans tes fichiers) |
-| `app.kubernetes.io/name=medplum` | 8103 | PERMISSIVE      | non                            | pas de whitelist Istio (dans tes fichiers) |
+  lan --> traefik --> minio9001
+```
 
----
+## Medplum AuthZ
+
+```mermaid
+flowchart TB
+  api["medplum API"]
+  app["medplum-app"]
+  provider["medplum-provider"]
+  worker_fhir["pompetrack-core/worker-fhir"]
+  worker_stream["pompetrack-core/worker-stream"]
+  worker_sqlite["pompetrack-core/worker-sqlite"]
+  ingestion["pompetrack-core/ingestion"]
+  airflow["airflow workloads"]
+  agent["llm-agent/agent-backend"]
+
+  app -->|"allow app to medplum"| api
+  provider -->|"allow provider to medplum"| api
+  worker_fhir -->|"allow worker-fhir"| api
+  worker_stream -->|"allow worker-stream"| api
+  worker_sqlite -->|"allow worker-sqlite"| api
+  ingestion -->|"allow ingestion"| api
+  airflow -->|"allow airflow"| api
+  agent -->|"allow agent"| api
+```
+
+## Lecture D'Un Blocage Istio
+
+```mermaid
+flowchart LR
+  symptom["403 / RBAC denied\nou reset mTLS"]
+  peer["PeerAuthentication\nSTRICT vs PERMISSIVE"]
+  dr["DestinationRule\nISTIO_MUTUAL ou disable"]
+  authz["AuthorizationPolicy\nsource principal\nnamespace\nport"]
+  sa["ServiceAccount du pod source"]
+  fix["Ajouter exception ciblee\nou corriger SA/labels"]
+
+  symptom --> peer --> dr --> authz --> sa --> fix
+```
+
+## Principes De Maintenance
+
+1. Un service appele par Traefik doit accepter le trafic provenant de Traefik, souvent via `PERMISSIVE` sur le port HTTP cible.
+2. Un flux mesh-to-mesh devrait rester en mTLS strict quand c'est possible.
+3. Une `AuthorizationPolicy` `ALLOW` rend le workload restrictif: tout flux non matche est refuse.
+4. Les policies doivent viser des identites stables, donc des ServiceAccounts dedies.
+5. Toute exception Istio doit etre verifiee avec les NetworkPolicies correspondantes.

@@ -1,76 +1,106 @@
-## Uninstall K3s :
-```bash
-sudo /usr/local/bin/k3s-uninstall.sh
-sudo reboot
-```
----
+# Debug tips PompeTrack K3s
 
-## Install K3s :
-```bash
- curl -sfL https://get.k3s.io | sh -s - server   --flannel-backend=none   --disable-network-policy
- sudo nano /etc/rancher/k3s/config.yaml
-```
+Ce fichier est un runbook de debug. Il privilegie les commandes utiles pendant un incident, les checks apres redeploiement, et les points de panne frequents.
 
- sudo systemctl restart k3s
- mkdir -p ~/.kube
- sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
- sudo chown "$USER":"$USER" ~/.kube/config
- chmod 600 ~/.kube/config
+## Vue rapide
 
----
-## Supprimer TOUT sur K3s et partir vraiment de 0:
+Etat global:
 
 ```bash
-sudo systemctl stop k3s
-sudo rm -rf /var/lib/rancher/k3s/agent/containerd
-sudo systemctl start k3s
+kubectl get nodes -o wide
+kubectl get ns
+kubectl get pods -A | egrep 'medplum|pompetrack-core|airflow|monitoring|llm-agent|pg-backups'
+kubectl get events -A --sort-by=.lastTimestamp | tail -80
 ```
 
-
----
-## Repartir à 0 :
+Etat par namespace:
 
 ```bash
-helm -n pompetrack-core uninstall pompetrack-core || true
-helm -n medplum uninstall medplum || true
-helm -n airflow uninstall airflow || true
-helm -n monitoring uninstall monitoring || true
-kubectl delete namespace pompetrack-core
-kubectl delete namespace medplum
-kubectl delete namespace airflow
-kubectl delete namespace monitoring
-kubectl delete namespace pg-backups
-
-./deploy/apply.sh
-
-./deploy/apply_airflow.sh
-kub 
-kubectl get all -n medplum
-kubectl get all -n pompetrack-core
+for ns in medplum pompetrack-core airflow monitoring llm-agent pg-backups; do
+  echo "### $ns"
+  kubectl -n "$ns" get deploy,sts,svc,ingressroute,cronjob,pod
+done
 ```
+
+Rollouts principaux:
 
 ```bash
-helm upgrade monitoring prometheus-community/kube-prometheus-stack   -n monitoring   -f deploy/charts/monitoring/values.yaml
+kubectl -n medplum rollout status deploy/medplum-app --timeout=120s
+kubectl -n medplum rollout status deploy/medplum-provider --timeout=120s
+kubectl -n pompetrack-core rollout status deploy/streamlit --timeout=120s
+kubectl -n airflow rollout status deploy/airflow-webserver --timeout=120s
+kubectl -n llm-agent rollout status deploy/agent-backend --timeout=120s
+kubectl -n llm-agent rollout status deploy/agent-backend-mcpo --timeout=120s
+kubectl -n llm-agent rollout status deploy/open-webui --timeout=120s
+kubectl -n llm-agent rollout status deploy/telegram-health-bot --timeout=120s
 ```
----
-## Redeploy sans perdre les PVC :
 
-#### Namespace Medplum :
+## Helm
+
+Lister les releases:
+
+```bash
+helm list -A
+helm -n medplum status medplum
+helm -n pompetrack-core status pompetrack-core
+helm -n airflow status airflow
+helm -n monitoring status monitoring
+helm -n llm-agent status llm-agent
+```
+
+Rendre un chart sans appliquer:
+
+```bash
+helm template llm-agent deploy/charts/llm-agent \
+  -f deploy/charts/llm-agent/values.yaml \
+  -n llm-agent >/tmp/llm-agent-rendered.yaml
+
+helm template medplum deploy/charts/medplum \
+  -f deploy/charts/medplum/values-medplum.yaml \
+  -n medplum \
+  --post-renderer ./deploy/post-renderer/medplum/kustomize.sh >/tmp/medplum-rendered.yaml
+```
+
+Verifier si un objet attendu est dans la release installee:
+
+```bash
+helm -n llm-agent get manifest llm-agent | rg 'telegram-reminder-runner|agent-backend-mcpo|open-webui'
+helm -n medplum get manifest medplum | rg 'medplum-provider|medplum-app|postgresql'
+```
+
+Valeurs par defaut d'un chart externe:
+
+```bash
+helm show values apache-airflow/airflow > /tmp/airflow-default-values.yaml
+helm show values prometheus-community/kube-prometheus-stack > /tmp/kps-default-values.yaml
+```
+
+## Redeploiement cible
+
+Scripts utiles sans supprimer les PVC:
+
+```bash
+./deploy/apply_pompetrack-core.sh
+./deploy/apply_llm-agent.sh
+./deploy/apply_monitoring.sh
+./deploy/apply_pg-backups.sh
+```
+
+Upgrade manuel llm-agent apres rebuild/push d'image:
+
+```bash
+helm upgrade --install llm-agent deploy/charts/llm-agent \
+  -f deploy/charts/llm-agent/values.yaml \
+  -n llm-agent
+```
+
+Upgrade manuel Medplum avec versions synchronisees:
+
 ```bash
 source deploy/versions.sh
 ./deploy/sync-medplum-version.sh
 
-kubectl apply -f deploy/namespaces/medplum/00-namespace.yaml
-kubectl apply -f deploy/namespaces/medplum/services/
-kubectl apply -f deploy/namespaces/medplum/netpol/
-kubectl apply -f deploy/namespaces/medplum/istio/
-kubectl apply -f deploy/namespaces/medplum/ingress/
-
-./deploy/secrets/medplum/init-secrets.sh
-./deploy/secrets/registry/init-secrets.sh
-
 helm dependency update deploy/charts/medplum || true
-
 helm upgrade --install medplum deploy/charts/medplum \
   -f deploy/charts/medplum/values-medplum.yaml \
   --set global.medplumVersion="${MEDPLUM_VERSION}" \
@@ -79,408 +109,379 @@ helm upgrade --install medplum deploy/charts/medplum \
   --set medplum.deployment.image.tag="${MEDPLUM_VERSION}" \
   -n medplum \
   --post-renderer ./deploy/post-renderer/medplum/kustomize.sh
-
 ```
 
-#### Namespace Pompetrack-core :
+## Logs utiles
+
+Applications:
 
 ```bash
-kubectl apply -f deploy/namespaces/pompetrack-core/00-namespace.yaml
-kubectl apply -f deploy/namespaces/pompetrack-core/netpol/
-kubectl apply -f deploy/namespaces/pompetrack-core/istio/
-kubectl apply -f deploy/namespaces/pompetrack-core/ingress/
-
-./deploy/secrets/pompetrack-core/init-secrets.sh
-
-kubectl -n pompetrack-core create configmap medplum-ids \
-  --from-env-file=deploy/outputs/pompetrack-core/medplum-ids.env \
-  -o yaml --dry-run=client \
-| kubectl apply -f -
-
-helm dependency update deploy/charts/pompetrack-core || true
-
-helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
-  -f deploy/charts/pompetrack-core/values-minio.yaml \
-  -n pompetrack-core \
-  --post-renderer ./deploy/post-renderer/pompetrack-core/kustomize.sh
-
+kubectl -n medplum logs deploy/medplum-app --tail=120
+kubectl -n medplum logs deploy/medplum-provider --tail=120
+kubectl -n pompetrack-core logs deploy/ingestion --tail=120
+kubectl -n pompetrack-core logs deploy/worker-fhir --tail=120
+kubectl -n airflow logs deploy/airflow-webserver --tail=120
+kubectl -n llm-agent logs deploy/agent-backend --tail=120
+kubectl -n llm-agent logs deploy/agent-backend-mcpo --tail=120
+kubectl -n llm-agent logs deploy/telegram-health-bot --tail=120
 ```
 
-
-
----
-# DAGS Airflow :
-
-1. éditer les dags dans `apps/dags/`
-
-2. copie des fichiers dans le PVC par le dag-processor :
-```bash
-POD=$(kubectl -n airflow get pod -l component=dag-processor -o jsonpath='{.items[0].metadata.name}')
-kubectl -n airflow cp apps/dags/. $POD:/opt/airflow/dags/
-```
-
-3. restart le dag-processor :
-```bash
-kubectl -n airflow rollout restart deployment airflow-dag-processor
-```
-
----
-# Commande **magique** pour trouver les configs par défaut des charts helm :
-
-Exemple pour Airflow
-```bash
-helm show values apache-airflow/airflow > default-values.yaml
-```
-
-## Open WebUI tools via mcpo
-
-L'agent backend expose aussi ses outils internes en serveur MCP stdio:
+Jobs/CronJobs:
 
 ```bash
-python -m app.mcp_server
+kubectl -n llm-agent get jobs,pods -l app=telegram-reminder-runner -o wide
+JOB=$(kubectl -n llm-agent get job -l app=telegram-reminder-runner --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+kubectl -n llm-agent logs job/"$JOB" --tail=80
+
+kubectl -n pg-backups get cronjob,job,pod
+kubectl -n pg-backups logs job/<job-name> --tail=120
 ```
 
-Le chart `llm-agent` lance `agent-backend-mcpo`, qui enveloppe ce serveur avec `mcpo` et publie un serveur OpenAPI compatible avec l'onglet Tools d'Open WebUI:
+## Ingress Traefik
+
+Lister les routes:
+
+```bash
+for ns in medplum pompetrack-core airflow monitoring llm-agent; do
+  echo "### $ns"
+  kubectl -n "$ns" get ingressroute
+done
+```
+
+Tester une route en forcant le Host header:
+
+```bash
+curl -sS -o /tmp/open-webui.out -w '%{http_code} %{content_type}\n' \
+  -H 'Host: open-webui.lan' http://192.168.2.88/
+
+curl -sS -o /tmp/agent-backend.out -w '%{http_code} %{content_type}\n' \
+  -H 'Host: agent-backend.lan' http://192.168.2.88/health
+```
+
+Si Traefik renvoie `404`, verifier d'abord:
+
+```bash
+kubectl -n <namespace> get ingressroute <name> -o yaml
+kubectl -n <namespace> get svc,endpoints <service-name> -o wide
+kubectl -n kube-system logs deploy/traefik --tail=120
+```
+
+Erreur classique: une regle `Host(...)` mal quotee fait rejeter toute la route.
+
+## llm-agent, Open WebUI et MCPO
+
+Checks de base:
+
+```bash
+kubectl -n llm-agent get deploy,svc,cronjob,pod -o wide
+kubectl -n llm-agent get endpoints agent-backend agent-backend-mcpo open-webui searxng
+curl -sS http://agent-backend.192.168.2.88.nip.io/health
+```
+
+Provider OpenAI-compatible:
+
+```bash
+KEY=$(kubectl -n llm-agent get secret backend-api-key -o jsonpath='{.data.secret_key}' | base64 -d)
+curl -sS http://agent-backend.192.168.2.88.nip.io/v1/models \
+  -H "Authorization: Bearer ${KEY}"
+```
+
+MCPO / Tools Open WebUI:
+
+```bash
+curl -sS http://agent-tools.192.168.2.88.nip.io/openapi.json \
+  | rg 'web_search|rag_search|create_daily_telegram_reminder|telegram_reminders|delete_telegram_reminder'
+
+curl -sS -X POST http://agent-tools.192.168.2.88.nip.io/telegram_reminders \
+  -H "Authorization: Bearer ${KEY}" \
+  -H 'Content-Type: application/json' \
+  -d '{"user_id":"telegram:automation","active_only":true}'
+```
+
+URLs a utiliser:
 
 ```text
-http://agent-backend-mcpo:8000
+OpenAI provider interne: http://agent-backend:8000/v1
+OpenAI provider navigateur: http://agent-backend.192.168.2.88.nip.io/v1
+Tools OpenAPI interne: http://agent-backend-mcpo:8000
+Tools OpenAPI navigateur: http://agent-tools.192.168.2.88.nip.io
+Modele agentique: agent-medgemma:27b
 ```
 
-Pour un tool server global, ajoute-le dans Open WebUI depuis Admin Settings -> Tools:
+## pompetrack-core
 
-1. Ajouter un serveur de type OpenAPI.
-2. Utiliser l'URL interne `http://agent-backend-mcpo:8000`.
-3. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
-4. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
-
-Pour un tool server utilisateur ajoute depuis Settings -> Tools, les requetes partent du navigateur. Il faut donc utiliser l'URL exposee par Traefik, pas le DNS Kubernetes:
-
-```text
-http://agent-tools.192.168.2.88.nip.io
-```
-
-Dans ce mode:
-
-1. Ajouter un serveur de type OpenAPI.
-2. Utiliser `http://agent-tools.192.168.2.88.nip.io`.
-3. Configurer l'authentification avec la meme valeur que le secret Kubernetes `backend-api-key`.
-4. Dans un chat, ouvrir + -> Integrations -> Tools et activer les outils de l'agent.
-
-Les outils exposes sont `web_search`, `scrape_url`, `rag_search`, `workspace_list` et `workspace_read`.
-
-Attention: les Tools Open WebUI sont optionnels. Le modele peut les ignorer, et certains modeles gerent mal le tool calling. Pour utiliser le backend agentique complet, configure aussi l'agent comme provider OpenAI-compatible avec l'URL interne:
-
-```text
-http://agent-backend:8000/v1
-```
-
-Si l'URL est saisie depuis un ecran utilisateur qui appelle depuis le navigateur, utiliser plutot l'URL Traefik:
-
-```text
-http://agent-backend.192.168.2.88.nip.io/v1
-```
-
-Les modeles exposes par ce provider sont prefixes par `agent-` pour les distinguer des modeles Ollama directs, par exemple `agent-medgemma:27b`. Choisir ce modele force le passage par le graphe agentique planner/researcher/executor/critic, qui peut appeler Qdrant via `rag_search`.
-
----
-
-## Telegram bot pour le coach santé et le LLM
-
-Créer le bot Telegram:
-
-1. Ouvrir Telegram et parler à `@BotFather`.
-2. Envoyer `/newbot`.
-3. Choisir un nom, puis un username qui finit par `bot`.
-4. Garder le token donné par BotFather.
-5. Dans Telegram, ouvrir une conversation avec le bot et envoyer `/start`.
-
-Pour trouver le `chat_id`, deux options:
+Checks de base:
 
 ```bash
-curl "https://api.telegram.org/bot<TOKEN_DU_BOT>/getUpdates"
+kubectl -n pompetrack-core get deploy,svc,endpoints,pod -o wide
+kubectl -n pompetrack-core logs deploy/ingestion --tail=120
+kubectl -n pompetrack-core logs deploy/worker-fhir --tail=120
+kubectl -n pompetrack-core logs deploy/streamlit --tail=120
 ```
 
-Ou déployer temporairement le bot sans `allowed_chat_ids`, puis envoyer `/id`.
-
-Créer le secret Kubernetes initial:
+Tester les routes LAN:
 
 ```bash
-kubectl -n llm-agent create secret generic telegram-bot \
-  --from-literal=bot_token='<TOKEN_DU_BOT>'
+curl -sS -o /tmp/streamlit.out -w '%{http_code} %{content_type}\n' \
+  -H 'Host: streamlit.lan' http://192.168.2.88/
+
+curl -sS -o /tmp/minio.out -w '%{http_code} %{content_type}\n' \
+  -H 'Host: minio.lan' http://192.168.2.88/
 ```
 
-Après récupération du `chat_id`, verrouiller le bot:
+Verifier PostgreSQL et MinIO cote services:
 
 ```bash
-kubectl -n llm-agent create secret generic telegram-bot \
-  --dry-run=client -o yaml \
-  --from-literal=bot_token='<TOKEN_DU_BOT>' \
-  --from-literal=allowed_chat_ids='<CHAT_ID_AUTORISE>' \
-  --from-literal=notify_chat_ids='<CHAT_ID_NOTIFICATION>' \
-  | kubectl apply -f -
+kubectl -n pompetrack-core get pvc
+kubectl -n pompetrack-core get svc,endpoints pompetrack-core-postgresql pompetrack-core-minio pompetrack-core-minio-console
+kubectl -n pompetrack-core describe pod -l app=worker-fhir
 ```
 
-Activer le bot dans `deploy/charts/llm-agent/values.yaml`:
+## Telegram et reminders
 
-```yaml
-telegramBot:
-  enabled: true
-
-healthCoach:
-  telegramDailyReviewEnabled: true
-  schedule: "0 8 * * *" # bilan matinal de la veille
-```
-
-Puis redéployer:
+Verifier bot et secrets:
 
 ```bash
-helm upgrade llm-agent deploy/charts/llm-agent -n llm-agent
-kubectl -n llm-agent apply -f deploy/namespaces/llm-agent/netpol/14-allow-telegram-egress.yaml
+kubectl -n llm-agent get secret telegram-bot -o jsonpath='{.data.allowed_chat_ids}' | base64 -d; echo
+kubectl -n llm-agent logs deploy/telegram-health-bot --tail=120
 ```
 
-Commandes du bot:
+Commandes Telegram principales:
 
 ```text
 /id
 /latest
 /features
 /coach
+/weekly-review
 /bilans on|off|status
+/remind daily 19:00 faire les exercices
+/reminders
+/delreminder rem-xxxxxxxxxx
 /ask <question>
 ```
 
-Une question envoyée sans commande est traitée comme une requête LLM via `agent-backend`.
-
----
-
-## Verifs istio :
+Tester l'API reminders sans envoyer de notification:
 
 ```bash
-# 1) Vérif simple : est-ce qu'il y a des sidecars istio-proxy ?
-kubectl -n medplum get pods -o jsonpath='{range .items[*]}{.metadata.name}{" => "}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | sort
-kubectl -n pompetrack-core get pods -o jsonpath='{range .items[*]}{.metadata.name}{" => "}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | sort
+KEY=$(kubectl -n llm-agent get secret backend-api-key -o jsonpath='{.data.secret_key}' | base64 -d)
 
-# 2) Vérif Istio "source de vérité" : quels proxies Istio voit ?
+curl -sS -X POST http://agent-backend.192.168.2.88.nip.io/api/v1/reminders \
+  -H "Authorization: Bearer ${KEY}" \
+  -H 'Content-Type: application/json' \
+  -d '{"userId":"telegram:test-e2e","chatId":"0","text":"test reminders","timeOfDay":"23:59"}'
+
+curl -sS 'http://agent-backend.192.168.2.88.nip.io/api/v1/reminders?user_id=telegram%3Atest-e2e&active_only=true' \
+  -H "Authorization: Bearer ${KEY}"
+```
+
+Supprimer le rappel de test:
+
+```bash
+RID=<reminder_id>
+curl -sS -X DELETE "http://agent-backend.192.168.2.88.nip.io/api/v1/reminders/${RID}?user_id=telegram%3Atest-e2e" \
+  -H "Authorization: Bearer ${KEY}"
+```
+
+Verifier le CronJob runner:
+
+```bash
+kubectl -n llm-agent get cronjob telegram-reminder-runner -o wide
+kubectl -n llm-agent get jobs,pods -l app=telegram-reminder-runner -o wide
+JOB=$(kubectl -n llm-agent get job -l app=telegram-reminder-runner --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+kubectl -n llm-agent logs job/"$JOB" --tail=80
+```
+
+## Airflow DAGs
+
+Copier les DAGs dans le PVC:
+
+```bash
+POD=$(kubectl -n airflow get pod -l component=dag-processor -o jsonpath='{.items[0].metadata.name}')
+kubectl -n airflow cp apps/dags/. "$POD":/opt/airflow/dags/
+kubectl -n airflow rollout restart deployment airflow-dag-processor
+kubectl -n airflow rollout status deployment airflow-dag-processor --timeout=120s
+```
+
+Debug DAGs:
+
+```bash
+kubectl -n airflow logs deploy/airflow-scheduler --tail=160
+kubectl -n airflow logs deploy/airflow-dag-processor --tail=160
+kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags list
+```
+
+## Monitoring
+
+Grafana et Prometheus:
+
+```bash
+kubectl -n monitoring get pods,svc,ingressroute
+kubectl -n monitoring logs deploy/monitoring-grafana --tail=120
+kubectl -n monitoring get prometheus,servicemonitor,prometheusrule
+```
+
+Tester les routes:
+
+```bash
+curl -sS -o /tmp/grafana.out -w '%{http_code} %{content_type}\n' \
+  -H 'Host: grafana.lan' http://192.168.2.88/
+
+curl -sS -o /tmp/prometheus.out -w '%{http_code} %{content_type}\n' \
+  -H 'Host: prometheus.lan' http://192.168.2.88/
+```
+
+Alertmanager Telegram:
+
+```bash
+kubectl -n monitoring get secret alertmanager-telegram-bot
+kubectl -n monitoring logs statefulset/alertmanager-prometheus-alertmanager --tail=120
+```
+
+
+## Medplum et PostgreSQL
+
+Medplum:
+
+```bash
+kubectl -n medplum get pods,svc,endpoints
+kubectl -n medplum logs deploy/medplum-app --tail=160
+kubectl -n medplum logs deploy/medplum-provider --tail=160
+curl -sS -o /tmp/medplum.out -w '%{http_code} %{content_type}\n' https://medplum.phylcero.fr/
+```
+
+PostgreSQL Medplum:
+
+```bash
+POD=$(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}')
+kubectl -n medplum exec -it "$POD" -c postgresql -- psql -U medplum -d medplum -c '\conninfo'
+kubectl -n medplum exec -it "$POD" -c postgresql -- psql -U medplum -d medplum -c '\du'
+```
+
+PostgreSQL pompetrack-core:
+
+```bash
+POD=$(kubectl -n pompetrack-core get pod -l app=pompetrack-core-postgresql -o jsonpath='{.items[0].metadata.name}')
+kubectl -n pompetrack-core exec -it "$POD" -- psql -U pompetrack -d pompetrack -c '\conninfo'
+```
+
+## pg-backups
+
+```bash
+kubectl -n pg-backups get cronjob,job,pod
+kubectl -n pg-backups describe cronjob backup-db1
+kubectl -n pg-backups logs job/<job-name> --tail=160
+kubectl -n pg-backups get configmap backup-script -o yaml
+kubectl -n pg-backups get secret backup-credentials -o yaml
+```
+
+## Istio
+
+Sidecars injectes:
+
+```bash
+for ns in medplum pompetrack-core airflow monitoring llm-agent pg-backups; do
+  echo "### $ns"
+  kubectl -n "$ns" get pods -o jsonpath='{range .items[*]}{.metadata.name}{" => "}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}' | sort
+done
+```
+
+Etat des proxies:
+
+```bash
 istioctl proxy-status 2>/dev/null || true
-
-# 3) Vérif des labels d'injection sur namespaces (tu l'as déjà partiellement, on revalide complet)
-kubectl get ns --show-labels | egrep '^(NAME|medplum|pompetrack-core|istio-system)'
-
-# 4) Bonus très utile : est-ce que l’API server a bien les webhooks d’injection ?
+kubectl get ns --show-labels | egrep '^(NAME|medplum|pompetrack-core|airflow|monitoring|llm-agent|pg-backups|istio-system)'
 kubectl get mutatingwebhookconfiguration | egrep -i 'istio|sidecar|inject' || true
-
-```
----
-## Prouver si istio est dans un pod :
-
-```bash
-POD=medplum-app-7cd789c666-wjkhc
-NS=medplum
-
-# 1) Liste brute des containers (devrait inclure istio-proxy si sidecar)
-kubectl -n $NS get pod $POD -o jsonpath='{.spec.containers[*].name}{"\n"}'
-
-# 2) Même chose mais en "yaml grep"
-kubectl -n $NS get pod $POD -o yaml | egrep -n 'name: istio-proxy|istio\.io|sidecar\.istio|proxyMetadata' || true
-
-# 3) Describe (souvent le plus parlant)
-kubectl -n $NS describe pod $POD | egrep -n 'istio|envoy|proxy|sidecar' || true
-
-# 4) Vérifier aussi les initContainers (au cas où)
-kubectl -n $NS get pod $POD -o jsonpath='{.spec.initContainers[*].name}{"\n"}'
-
 ```
 
----
-
-# 1) Plan générique : ajouter un nouveau pod “qui vit dans le cluster”
-
-## Étape A — Où il vit (namespace + injection Istio)
-
-1. Choisir le namespace :
-
-* Si c’est un composant PompeTrack “core” : `pompetrack-core`
-* Si c’est lié Medplum : `medplum`
-* Sinon, crée un namespace dédié (recommandé si tu veux garder des policies nettes).
-
-2. Activer l’injection Istio :
-
-* Tu es en mode révision : label `istio.io/rev=default` sur le namespace.
-* Donc pour un nouveau namespace : `kubectl label ns <ns> istio.io/rev=default`
-
-3. Déployer le workload avec un `Deployment` + `Service` (ClusterIP).
-
-* **Sans Service**, tu peux communiquer par IP de pod, mais tu vas perdre l’intérêt du routage stable et d’Istio (SNI, policies, observabilité).
-
-## Étape B — NetworkPolicies minimales (sinon ton pod est “en prison”)
-
-Avec tes `deny-all`, un pod nouvellement ajouté doit au minimum avoir :
-
-* **Egress DNS** (sinon pas de résolution `*.svc.cluster.local`)
-* **Egress vers istiod** (sinon le proxy Istio ne reçoit pas la config)
-* Puis **egress/ingress applicatifs** selon les flux.
-
-👉 Dans ton cluster, tu as déjà des policies “namespace-wide” (`podSelector: {}`) pour DNS et istiod dans `medplum` et `pompetrack-core`.
-Donc si tu ajoutes le pod **dans un de ces namespaces**, il héritera déjà de :
-
-* `allow-dns-egress`
-* `allow-egress-to-istiod`
-  …mais restera bloqué pour le reste tant que tu n’ajoutes pas les règles applicatives.
-
-## Étape C — Exposition (facultatif)
-
-* Si ton pod n’a pas besoin d’être accessible depuis l’extérieur : **pas de Traefik**, pas de Yunohost, rien.
-* Si tu veux l’exposer :
-
-  * Ajouter une **IngressRoute** Traefik (Host/Path) + éventuellement Middleware (auth/IP allowlist/stripPrefix).
-  * Et ajouter une **NetworkPolicy ingress** “Traefik → ton pod”.
-
----
-
-# 2) Plan générique : faire communiquer un pod avec un autre (HTTP GET/POST)
-
-Dans ton modèle, ça se fait en 4 briques :
-
-## A — Service DNS
-
-* Le pod client parle à `http://<service>.<namespace>.svc.cluster.local:<port>/...`
-* Donc le pod serveur doit avoir un `Service` stable.
-
-## B — NetworkPolicies (Calico) : autoriser le flux L3/L4
-
-Tu as un deny-all, donc il faut :
-
-1. **Egress** sur le pod client (vers le pod serveur, sur le port TCP du service)
-2. **Ingress** sur le pod serveur (depuis le pod client, sur le même port)
-
-La forme typique (conceptuellement) :
-
-* `client-egress-to-server` : `podSelector: clientLabels` + `to: podSelector serverLabels` + `ports: <port>`
-* `server-ingress-from-client` : `podSelector: serverLabels` + `from: podSelector clientLabels` + `ports: <port>`
-
-⚠️ Pour du **cross-namespace**, tu ajoutes en plus un `namespaceSelector` dans `from`/`to`.
-
-## C — Istio mTLS + AuthZ (L7)
-
-Chez toi, Istio est actif et mTLS est en place. Donc selon tes `AuthorizationPolicy`, un flux peut être bloqué même si NetPol autorise.
-
-Règle de base :
-
-* Si tu as une policy Istio “ALLOW only …”, il faut ajouter le **nouveau service account** ou les **principals** (identité SPIFFE) autorisés.
-* Si tu n’as pas d’AuthorizationPolicy restrictive sur la cible, Istio ne bloquera pas (mais mTLS chiffrera).
-
-## D — ServiceAccount (identité stable)
-
-Pour faire des règles Istio propres, donne à ton nouveau pod un **ServiceAccount dédié**.
-Ensuite tu peux autoriser :
-
-* `source.principal` = `cluster.local/ns/<ns>/sa/<sa-name>`
-
----
-
-# 3) Plan spécifique : ajouter un pod qui appelle les endpoints de `ingestion`
-
-### Ce qu’on sait factuellement sur `ingestion`
-
-Dans `pompetrack-core` tu as :
-
-* pod `ingestion` avec label `app=ingestion`
-* service `ingestion` sur **port 80/TCP**
-* namespace `pompetrack-core` a `deny-all` + allow DNS/istiod + règles MinIO + Traefik console.
-  ➡️ **Je ne vois aucune NetworkPolicy qui autorise l’accès à `ingestion:80`** dans ce que tu as collé.
-
-Donc si aujourd’hui quelque chose arrive à joindre `ingestion`, c’est soit :
-
-* parce que le client est dans le même pod (non),
-* soit parce qu’il n’y a pas de policy “ingress” qui sélectionne `ingestion` (et donc `deny-all` sélectionne tout, donc *ça devrait bloquer*),
-* soit parce que le trafic passe d’une manière non couverte (peu probable),
-* soit parce que tu ne l’utilises pas encore en intra-cluster.
-
-Bref : pour ton besoin, il faudra **ajouter** les règles.
-
----
-
-## 3.1. Je veux ajouter un nouveau pod “caller” dans `pompetrack-core` qui appelle `http://ingestion/...`
-
-### A — Déploiement minimal côté “caller”
-
-* Un Deployment
-* Un ServiceAccount dédié (ex: `caller-sa`)
-* Labels clairs (ex: `app=caller`)
-
-### B — NetworkPolicies à ajouter (dans `pompetrack-core`)
-
-1. **Egress** : autoriser `caller` → `ingestion` sur TCP/80
-2. **Ingress** : autoriser `ingestion` à recevoir depuis `caller` sur TCP/80
-
-Concrètement (logique selectors de ton cluster) :
-
-* Cible `ingestion` : label `app=ingestion`
-* Source `caller` : label `app=caller`
-
-Donc deux netpols du style :
-
-* `allow-egress-caller-to-ingestion` (podSelector app=caller, to podSelector app=ingestion, port 80)
-* `allow-ingestion-ingress-from-caller` (podSelector app=ingestion, from podSelector app=caller, port 80)
-
-### C — Istio AuthorizationPolicy (si tu veux un contrôle “propre”)
-
-Tu n’as pas montré de policy Istio sur `ingestion`. Si tu veux un modèle “zéro confiance” (recommandé), tu ajoutes :
-
-* Une `AuthorizationPolicy` **sur ingestion** qui n’autorise que :
-
-  * le service account du caller (`source.principal`)
-  * et éventuellement Traefik si ingestion est exposé (pas forcément)
-
-### D — Est-ce qu’il faut Traefik / IngressRoute ?
-
-Non, **pas du tout** pour un flux interne cluster.
-Traefik sert à l’entrée depuis l’extérieur (Yunohost → Traefik → service).
-Pour “pod → ingestion”, tu passes par le **Service K8s** directement.
-
----
-
-## 3.2. Variante : le caller est dans un autre namespace
-
-Si ton nouveau pod est dans `medplum` (ou un ns dédié), alors tes netpols doivent inclure :
-
-* un `namespaceSelector` (matchLabels `kubernetes.io/metadata.name: <ns-source>`)
-* en plus du `podSelector` source.
-
----
-
-# Résumé ultra concret (en 3 checklists)
-
-## Checklist 1 — Ajouter un pod
-
-* [ ] Namespace choisi + label `istio.io/rev=default`
-* [ ] Deployment + ServiceAccount dédié + labels
-* [ ] Service (ClusterIP) si d’autres doivent l’appeler
-* [ ] NetworkPolicies : DNS + istiod déjà OK si dans `medplum` / `pompetrack-core`
-* [ ] Ajouter les policies applicatives (ingress/egress) nécessaires
-
-## Checklist 2 — Pod A appelle Pod B (HTTP)
-
-* [ ] Pod B a un Service
-* [ ] NetPol : egress A→B (port) + ingress B←A (port)
-* [ ] Istio : AuthorizationPolicy sur B (optionnel mais conseillé) basée sur `source.principal` (SA)
-
-## Checklist 3 — Pod “caller” appelle `ingestion`
-
-* [ ] Labels caller + SA caller
-* [ ] NetPol egress caller → ingestion:80
-* [ ] NetPol ingress ingestion ← caller:80
-* [ ] (Optionnel recommandé) AuthorizationPolicy sur ingestion autorisant le SA caller
-
----
-
-# Postgres :
+Prouver si Istio est dans un pod:
 
 ```bash
-# Info
-kubectl -n medplum exec -it $(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}') -- psql -U medplum -d medplum -c "\conninfo"
+NS=llm-agent
+POD=$(kubectl -n "$NS" get pod -l app=agent-backend -o jsonpath='{.items[0].metadata.name}')
 
+kubectl -n "$NS" get pod "$POD" -o jsonpath='{.spec.containers[*].name}{"\n"}'
+kubectl -n "$NS" get pod "$POD" -o yaml | egrep -n 'name: istio-proxy|istio\.io|sidecar\.istio|proxyMetadata' || true
+kubectl -n "$NS" describe pod "$POD" | egrep -n 'istio|envoy|proxy|sidecar' || true
+```
 
-# Liste des roles
-kubectl -n medplum exec -it $(kubectl -n medplum get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}') -- psql -U medplum -c "\du"
+## NetworkPolicies
+
+Lister les policies:
+
+```bash
+for ns in medplum pompetrack-core airflow monitoring llm-agent pg-backups; do
+  echo "### $ns"
+  kubectl -n "$ns" get netpol
+done
+```
+
+Debug d'un flux refuse:
+
+```bash
+kubectl -n <client-ns> get pod <client-pod> --show-labels
+kubectl -n <server-ns> get pod <server-pod> --show-labels
+kubectl -n <server-ns> get svc,endpoints <service-name> -o wide
+kubectl -n <client-ns> exec -it <client-pod> -c <app-container> -- curl -v http://<service>.<server-ns>.svc.cluster.local:<port>/health
+```
+
+Modele mental:
+
+```text
+deny-all actif => il faut souvent deux regles:
+1. egress du client vers le serveur
+2. ingress du serveur depuis le client
+
+cross-namespace => ajouter namespaceSelector + podSelector
+Istio AuthorizationPolicy restrictive => autoriser aussi le serviceAccount source
+```
+
+## Images Docker
+
+Build/push manuel:
+
+```bash
+docker build -t registry.phylcero.fr/garth/pompetrack/agent-backend:latest apps/agent-backend
+docker push registry.phylcero.fr/garth/pompetrack/agent-backend:latest
+
+docker build -t registry.phylcero.fr/garth/pompetrack/worker-fhir:latest apps/worker-fhir
+docker push registry.phylcero.fr/garth/pompetrack/worker-fhir:latest
+```
+
+Verifier l'image tiree par un pod:
+
+```bash
+kubectl -n llm-agent get pod -l app=agent-backend -o jsonpath='{.items[0].status.containerStatuses[0].imageID}{"\n"}'
+kubectl -n llm-agent rollout restart deploy/agent-backend deploy/agent-backend-mcpo deploy/telegram-health-bot
+```
+
+## Reset destructif
+
+Ces commandes suppriment des donnees ou l'etat local du cluster. A utiliser seulement si c'est volontaire.
+
+Desinstaller K3s:
+
+```bash
+sudo /usr/local/bin/k3s-uninstall.sh
+sudo reboot
+```
+
+Vider le containerd local K3s:
+
+```bash
+sudo systemctl stop k3s
+sudo rm -rf /var/lib/rancher/k3s/agent/containerd
+sudo systemctl start k3s
+```
+
+Supprimer les releases applicatives:
+
+```bash
+helm -n pompetrack-core uninstall pompetrack-core || true
+helm -n medplum uninstall medplum || true
+helm -n airflow uninstall airflow || true
+helm -n monitoring uninstall monitoring || true
+helm -n llm-agent uninstall llm-agent || true
+
+kubectl delete namespace pompetrack-core medplum airflow monitoring llm-agent pg-backups
 ```
