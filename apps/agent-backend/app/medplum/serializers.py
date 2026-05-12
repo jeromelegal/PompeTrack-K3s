@@ -7,6 +7,8 @@ from app.medplum.fetch_queries import (
 import os
 
 MEDPLUM_PATIENT_ID = os.getenv("MEDPLUM_PATIENT_ID")
+DATE_BOUNDED_PAGE_COUNT = 200
+DATE_BOUNDED_MAX_PAGES = 200
 
 
 def _first_coding_value(codeable_concept: dict, key: str) -> str | None:
@@ -148,9 +150,9 @@ def get_recent_metrics(days: int = 30) -> list[dict]:
             "tag": "metrics",
             "startDate": start_date.isoformat(),
             "endDate": end_date.isoformat(),
-            "max_records": 500,
-            "page_count": 100,
-            "max_pages": 20,
+            "max_records": None,
+            "page_count": DATE_BOUNDED_PAGE_COUNT,
+            "max_pages": DATE_BOUNDED_MAX_PAGES,
         },
     )
 
@@ -167,9 +169,9 @@ def get_recent_observations_by_tag(tag: str, days: int = 30) -> list[dict]:
             "tag": tag,
             "startDate": start_date.isoformat(),
             "endDate": end_date.isoformat(),
-            "max_records": 500,
-            "page_count": 100,
-            "max_pages": 20,
+            "max_records": None,
+            "page_count": DATE_BOUNDED_PAGE_COUNT,
+            "max_pages": DATE_BOUNDED_MAX_PAGES,
         },
     )
 
@@ -214,9 +216,9 @@ def get_recent_symptoms(days: int = 30) -> list[dict]:
             payload={
                 "startDate": start_date.isoformat(),
                 "endDate": end_date.isoformat(),
-                "max_records": 500,
-                "page_count": 100,
-                "max_pages": 20,
+                "max_records": None,
+                "page_count": DATE_BOUNDED_PAGE_COUNT,
+                "max_pages": DATE_BOUNDED_MAX_PAGES,
             },
         )
     ]
@@ -227,9 +229,9 @@ def get_recent_symptoms(days: int = 30) -> list[dict]:
             "tag": "manual_weekly",
             "startDate": start_date.isoformat(),
             "endDate": end_date.isoformat(),
-            "max_records": 500,
-            "page_count": 100,
-            "max_pages": 20,
+            "max_records": None,
+            "page_count": DATE_BOUNDED_PAGE_COUNT,
+            "max_pages": DATE_BOUNDED_MAX_PAGES,
         },
     )
 
@@ -280,9 +282,9 @@ def get_medication_intake_history(days: int = 30) -> list[dict]:
         payload={
             "startDate": start_date.isoformat(),
             "endDate": end_date.isoformat(),
-            "max_records": 500,
-            "page_count": 100,
-            "max_pages": 20,
+            "max_records": None,
+            "page_count": DATE_BOUNDED_PAGE_COUNT,
+            "max_pages": DATE_BOUNDED_MAX_PAGES,
         },
     )
 
