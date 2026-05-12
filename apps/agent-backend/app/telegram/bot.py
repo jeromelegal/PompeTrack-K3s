@@ -71,6 +71,32 @@ HELP_TEXT = """Commandes disponibles:
 
 Tu peux aussi envoyer directement une question sans commande."""
 
+BOT_COMMANDS = [
+    {"command": "coach", "description": "Lancer le bilan de la journée précédente"},
+    {"command": "latest", "description": "Afficher la dernière revue santé"},
+    {"command": "details", "description": "Afficher la dernière revue complète"},
+    {"command": "today", "description": "Synthèse déterministe des dernières 24h"},
+    {"command": "week", "description": "Synthèse déterministe des 7 derniers jours"},
+    {"command": "trends", "description": "Voir les tendances récentes"},
+    {"command": "watchlist", "description": "Voir le suivi personnalisé"},
+    {"command": "meds", "description": "Voir les médicaments récents"},
+    {"command": "symptoms", "description": "Voir les symptômes récents"},
+    {"command": "spirometry", "description": "Voir la spirométrie récente"},
+    {"command": "workouts", "description": "Voir les entraînements récents"},
+    {"command": "evening", "description": "Questions ciblées du soir"},
+    {"command": "alerts", "description": "Évaluer les alertes configurables"},
+    {"command": "weekly_review", "description": "Lancer un bilan hebdomadaire"},
+    {"command": "bilans", "description": "Activer ou désactiver les bilans automatiques"},
+    {"command": "remind", "description": "Créer un rappel quotidien"},
+    {"command": "reminders", "description": "Lister les rappels actifs"},
+    {"command": "prefs", "description": "Afficher la mémoire utilisateur"},
+    {"command": "actions", "description": "Proposer des actions guidées"},
+    {"command": "features", "description": "Afficher les données récentes"},
+    {"command": "why", "description": "Poser une question clinique prudente"},
+    {"command": "ask", "description": "Poser une question libre au LLM"},
+    {"command": "help", "description": "Afficher l'aide"},
+]
+
 
 class TelegramHealthBot:
     def __init__(self) -> None:
@@ -94,6 +120,7 @@ class TelegramHealthBot:
 
     def run(self) -> None:
         offset: int | None = None
+        self._publish_command_menu()
         logger.info("telegram bot polling started")
 
         while self.running:
@@ -110,6 +137,13 @@ class TelegramHealthBot:
                 time.sleep(5)
 
         logger.info("telegram bot stopped")
+
+    def _publish_command_menu(self) -> None:
+        try:
+            self.telegram.set_my_commands(BOT_COMMANDS)
+            logger.info("telegram command menu published", extra={"count": len(BOT_COMMANDS)})
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("telegram command menu publication failed", extra={"error": str(exc)})
 
     def stop(self, *_args: Any) -> None:
         self.running = False
@@ -227,7 +261,7 @@ class TelegramHealthBot:
             result = self.backend.run_daily_review(days=30, history_limit=7, previous_day=True)
             self.telegram.send_message(chat_id, format_review_result_brief(result))
             return
-        if command == "/weekly-review":
+        if command in {"/weekly-review", "/weekly_review"}:
             self.telegram.send_message(chat_id, "Je lance un bilan hebdomadaire. Cela peut prendre un peu de temps.")
             self.telegram.send_chat_action(chat_id)
             result = self.backend.run_weekly_review(days=90, history_limit=7)
