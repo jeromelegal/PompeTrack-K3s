@@ -43,6 +43,9 @@ class TelegramClient:
     def send_chat_action(self, chat_id: int | str, action: str = "typing") -> None:
         self._request("sendChatAction", payload={"chat_id": chat_id, "action": action})
 
+    def set_my_commands(self, commands: list[dict[str, str]]) -> None:
+        self._request("setMyCommands", payload={"commands": commands})
+
     def _request(
         self,
         method: str,
