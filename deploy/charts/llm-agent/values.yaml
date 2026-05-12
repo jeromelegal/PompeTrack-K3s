@@ -176,7 +176,7 @@ eveningQuestions:
 
 reminders:
   enabled: true
-  schedule: "* * * * *"
+  schedule: "0 * * * *"
   suspend: false
   timeZone: "Europe/Paris"
   successfulJobsHistoryLimit: 3
