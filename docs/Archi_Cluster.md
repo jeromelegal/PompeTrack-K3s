@@ -1,167 +1,261 @@
+# Architecture Cluster PompeTrack K3s
+
+Ce document donne une vue globale Mermaid du cluster. Les details par couche sont separes dans:
+
+- `docs/Archi_flux_1.md` pour les routes HTTP entrantes;
+- `docs/Archi_flux_2.md` pour les NetworkPolicies;
+- `docs/Archi_flux_3.md` pour Istio;
+- `docs/routage.md` pour le routage detaille;
+- `docs/tips.md` pour les commandes de debug.
+
+## Vue Globale
+
+```mermaid
+flowchart TB
+  user["Utilisateur navigateur"]
+  phone["iPhone / Apple Health"]
+  integrations["Integrations externes"]
+  telegram_user["Utilisateur Telegram"]
+  ollama["Ollama LAN / externe"]
+  internet["Internet APIs"]
+  yunohost["Yunohost / nginx\nTLS + reverse proxy"]
+
+  subgraph cluster["K3s - 192.168.2.88"]
+    direction TB
+
+    subgraph edge["kube-system"]
+      traefik["Traefik\nLoadBalancer\nweb:80 / websecure:443"]
+      coredns["kube-dns"]
+    end
+
+    subgraph mesh["istio-system"]
+      istiod["istiod\nsidecar injection + xDS"]
+    end
+
+    subgraph storage["nfs-provisioner"]
+      nfs["Dynamic PV provisioning"]
+    end
+
+    subgraph core["pompetrack-core"]
+      ingestion["ingestion\nAPI imports"]
+      streamlit["streamlit\nhealth dashboard"]
+      worker_fhir["worker-fhir\nFHIR transformation"]
+      worker_sqlite["worker-sqlite\nspirometer DB processing"]
+      worker_stream["worker-stream\nFHIR query bridge"]
+      minio["MinIO\nraw + processed buckets"]
+      core_pg["PostgreSQL\npompetrack"]
+    end
+
+    subgraph med["medplum"]
+      med_app["medplum-app\nweb UI"]
+      med_api["medplum API"]
+      med_provider["medplum-provider"]
+      med_pg["PostgreSQL\nMedplum"]
+      med_redis["Redis"]
+      med_exporters["Postgres / Redis exporters"]
+    end
+
+    subgraph airflow["airflow"]
+      airflow_api["airflow-api-server"]
+      airflow_sched["scheduler"]
+      airflow_dag["dag-processor"]
+      airflow_pg["PostgreSQL\nAirflow"]
+    end
+
+    subgraph llm["llm-agent"]
+      openwebui["Open WebUI"]
+      agent_backend["agent-backend\nOpenAI-compatible API"]
+      mcpo["agent-backend-mcpo\nOpenAPI tools"]
+      searxng["SearxNG"]
+      qdrant["Qdrant"]
+      telegram_bot["telegram-health-bot"]
+      reminder_runner["telegram-reminder-runner\nCronJob"]
+      coach_jobs["health coach CronJobs"]
+      agent_ui["streamlit-agent-llm"]
+    end
+
+    subgraph monitoring["monitoring"]
+      prometheus["Prometheus"]
+      grafana["Grafana"]
+      alertmanager["Alertmanager"]
+      kube_state["kube-state-metrics"]
+      prom_operator["Prometheus Operator"]
+    end
+
+    subgraph backups["pg-backups"]
+      backup_jobs["backup-db1/db2/db3\nCronJobs"]
+    end
+  end
+
+  user -->|"HTTPS public"| yunohost --> traefik
+  user -->|"HTTP LAN .lan / nip.io"| traefik
+  phone -->|"imports"| traefik
+  integrations -->|"ingestion APIs"| traefik
+  telegram_user -->|"Telegram Bot API"| internet
+
+  traefik --> med_app
+  traefik --> med_api
+  traefik --> med_provider
+  traefik --> streamlit
+  traefik --> ingestion
+  traefik --> minio
+  traefik --> airflow_api
+  traefik --> grafana
+  traefik --> prometheus
+  traefik --> openwebui
+  traefik --> agent_backend
+  traefik --> mcpo
+  traefik --> agent_ui
+
+  ingestion --> minio
+  ingestion --> med_api
+  streamlit --> worker_stream
+  streamlit --> med_api
+  worker_stream --> med_api
+  worker_fhir --> minio
+  worker_fhir --> med_api
+  worker_sqlite --> minio
+  worker_sqlite --> med_api
+  core_pg --- streamlit
+
+  med_app --> med_api
+  med_provider --> med_api
+  med_api --> med_pg
+  med_api --> med_redis
+
+  airflow_sched --> ingestion
+  airflow_sched --> minio
+  airflow_sched --> med_api
+  airflow_api --> airflow_pg
+  airflow_sched --> airflow_pg
+  airflow_dag --> airflow_pg
+
+  openwebui --> agent_backend
+  openwebui --> mcpo
+  agent_backend --> med_api
+  agent_backend --> qdrant
+  agent_backend --> searxng
+  agent_backend --> ollama
+  mcpo --> agent_backend
+  telegram_bot --> agent_backend
+  reminder_runner --> agent_backend
+  coach_jobs --> agent_backend
+  telegram_bot --> internet
+  reminder_runner --> internet
+  searxng --> internet
+
+  prometheus --> med_exporters
+  prometheus --> core_pg
+  prometheus --> airflow_pg
+  prometheus --> kube_state
+  prometheus --> alertmanager
+  grafana --> prometheus
+  alertmanager --> internet
+  prom_operator --> prometheus
+
+  backup_jobs --> med_pg
+  backup_jobs --> core_pg
+  backup_jobs --> airflow_pg
+  backup_jobs --> minio
+
+  med_pg --- nfs
+  core_pg --- nfs
+  airflow_pg --- nfs
+  minio --- nfs
+  qdrant --- nfs
+  openwebui --- nfs
+
+  istiod -. "sidecar config" .-> core
+  istiod -. "sidecar config" .-> med
+  istiod -. "sidecar config" .-> airflow
+  istiod -. "sidecar config" .-> llm
+  istiod -. "sidecar config" .-> monitoring
+
+  core -. "DNS" .-> coredns
+  med -. "DNS" .-> coredns
+  airflow -. "DNS" .-> coredns
+  llm -. "DNS" .-> coredns
+  monitoring -. "DNS" .-> coredns
+  backups -. "DNS" .-> coredns
+```
+
+## Pipeline Donnees Sante
+
 ```mermaid
 flowchart LR
-  %% =========================
-  %% EXTERNE / CLIENTS
-  %% =========================
-  subgraph External["Externe"]
-    iphone["iPhone / Apple Health"]
-    user["Utilisateur navigateur"]
-    spirom["Spirometer (sqlite DB file)"]
-  end
+  phone["iPhone / Apple Health"]
+  manual["Saisie manuelle Streamlit"]
+  sqlite["Spirometer SQLite"]
+  ingestion["ingestion API"]
+  minio_raw["MinIO raw buckets"]
+  worker_sqlite["worker-sqlite"]
+  worker_fhir["worker-fhir"]
+  minio_processed["MinIO processed-fhir"]
+  medplum["Medplum FHIR API"]
+  dashboard["Streamlit dashboard"]
+  worker_stream["worker-stream"]
 
-  %% =========================
-  %% EDGE (DNS/TLS/Ingress)
-  %% =========================
-  subgraph Edge["Edge / Entrée cluster"]
-    yunohost["Yunohost (TLS)"]
-    traefik["Traefik IngressController"]
-  end
+  phone --> ingestion
+  manual --> dashboard --> ingestion
+  sqlite --> ingestion
+  ingestion --> minio_raw
+  minio_raw --> worker_sqlite --> minio_raw
+  minio_raw --> worker_fhir --> minio_processed
+  worker_fhir --> medplum
+  dashboard --> worker_stream --> medplum
+  dashboard --> medplum
+```
 
-  %% =========================
-  %% NAMESPACE: pomptrack-core
-  %% =========================
-  subgraph NSCore["Namespace: pompetrack-core"]
-    st_deploy["Deployment: streamlit"]
-    st_svc["Service: streamlit\n(streamlit.pompetrack-core.svc)"]
+## Pipeline LLM Coach
 
-    ing_deploy["Deployment: ingestion-api\n(FastAPI/Gunicorn)"]
-    ing_svc["Service: ingestion\n(ingestion.pompetrack-core.svc)"]
+```mermaid
+flowchart LR
+  openwebui["Open WebUI"]
+  telegram["Telegram bot"]
+  cron["Coach / reminder CronJobs"]
+  backend["agent-backend"]
+  mcpo["MCPO tools server"]
+  medplum["Medplum API"]
+  qdrant["Qdrant RAG"]
+  searxng["SearxNG search"]
+  ollama["Ollama model"]
+  telegram_api["Telegram API"]
 
-    minio_sts["StatefulSet: minio"]
-    minio_svc["Service: minio\n(minio.pompetrack-core.svc)"]
-    minio_job["Job/CronJob: minio-init\n(create buckets)"]
+  openwebui --> backend
+  openwebui --> mcpo --> backend
+  telegram --> backend
+  cron --> backend
+  backend --> medplum
+  backend --> qdrant
+  backend --> searxng
+  backend --> ollama
+  telegram --> telegram_api
+  cron --> telegram_api
+```
 
-    b1["Bucket: raw-iphone (json)"]
-    b2["Bucket: raw-manual (json)"]
-    b3["Bucket: raw-db-spirometer (sqlite)"]
-    b4["Bucket: raw-spirometer (json)"]
-    b5["Bucket: processed-fhir (json)"]
-    b6["Bucket: reports (...)"]
-  end
+## Observabilite Et Sauvegardes
 
-  %% =========================
-  %% NAMESPACE: orchestration
-  %% =========================
-  subgraph NSOrch["Namespace: orchestration"]
-    af_deploy["Deployment(s): Airflow\n(web/scheduler/worker)"]
-    af_svc["Service: airflow (web UI)\n(airflow.orchestration.svc)"]
-  end
+```mermaid
+flowchart TB
+  prometheus["Prometheus"]
+  grafana["Grafana"]
+  alertmanager["Alertmanager"]
+  telegram["Telegram alerts"]
+  exporters["Postgres / Redis / app exporters"]
+  kube_state["kube-state-metrics"]
+  backups["pg-backups CronJobs"]
+  minio["MinIO backup target"]
+  med_pg["Medplum PostgreSQL"]
+  core_pg["pompetrack-core PostgreSQL"]
+  airflow_pg["Airflow PostgreSQL"]
 
-  %% =========================
-  %% NAMESPACE: pompetrack-workers
-  %% =========================
-  subgraph NSW["Namespace: pompetrack-workers"]
-    ws_deploy["Deployment: worker-sqlite"]
-    wf_deploy["Deployment/Job: worker-fhir"]
-    wst_deploy["Deployment: worker-stream"]
+  exporters --> prometheus
+  kube_state --> prometheus
+  prometheus --> grafana
+  prometheus --> alertmanager --> telegram
 
-    ws_svc["Service: worker-sqlite\n(worker-sqlite.pompetrack-workers.svc)"]
-    wf_svc["Service: worker-fhir\n(worker-fhir.pompetrack-workers.svc)"]
-    wst_svc["Service: worker-stream\n(worker-stream.pompetrack-workers.svc)"]
-  end
-
-  %% =========================
-  %% NAMESPACE: medplum
-  %% =========================
-  subgraph NSMed["Namespace: medplum"]
-    mp_server_deploy["Deployment: medplum-server"]
-    mp_server_svc["Service: medplum-server\n(medplum-server.medplum.svc)"]
-
-    mp_app_deploy["Deployment: medplum-app"]
-    mp_app_svc["Service: medplum-app\n(medplum-app.medplum.svc)"]
-
-    mp_chart_deploy["Deployment: medplum-chart (option)"]
-    mp_chart_svc["Service: medplum-chart (option)"]
-
-    pg_sts["StatefulSet: postgres"]
-    pg_svc["Service: postgres\n(postgres.medplum.svc)"]
-  end
-
-  %% =========================
-  %% NAMESPACE: observability
-  %% =========================
-  subgraph NSObs["Namespace: observability"]
-    prom["Deployment/StatefulSet: prometheus"]
-    graf["Deployment: grafana"]
-    prom_svc["Service: prometheus"]
-    graf_svc["Service: grafana"]
-  end
-
-  %% =========================
-  %% (Option) NAMESPACE: security
-  %% =========================
-  subgraph NSSec["Namespace: security (option)"]
-    redis_deploy["Deployment/StatefulSet: redis"]
-    redis_svc["Service: redis"]
-    seed_job["Job: seed-redis"]
-  end
-
-  %% =========================
-  %% Flux NORTH-SOUTH (public)
-  %% =========================
-  user --> yunohost --> traefik
-  traefik --> mp_app_svc
-  traefik --> mp_server_svc
-  traefik --> st_svc
-  %% (si tu exposes ingestion publiquement plus tard)
-  %% traefik --> ing_svc
-
-  %% =========================
-  %% Flux DATA IN (upload vers ingestion)
-  %% =========================
-  iphone -->|"upload/json"| traefik --> ing_svc
-  spirom -->|"upload/sqlite"| traefik --> ing_svc
-  st_svc -->|"upload mesures / fichiers"| ing_svc
-
-  %% =========================
-  %% Ingestion -> MinIO
-  %% =========================
-  ing_deploy -->|"PUT/GET via S3 API"| minio_svc
-  minio_sts --- b1
-  minio_sts --- b2
-  minio_sts --- b3
-  minio_sts --- b4
-  minio_sts --- b5
-  minio_sts --- b6
-  minio_job --> minio_sts
-
-  %% =========================
-  %% Orchestration -> workers
-  %% =========================
-  af_deploy -->|"trigger"| ws_svc
-  af_deploy -->|"trigger"| wf_svc
-
-  %% =========================
-  %% Workers <-> MinIO
-  %% =========================
-  ws_deploy -->|"GET raw-db-spirometer"| minio_svc
-  ws_deploy -->|"PUT raw-spirometer"| minio_svc
-  wf_deploy -->|"GET raw-iphone/raw-manual/raw-spirometer"| minio_svc
-  wf_deploy -->|"PUT processed-fhir"| minio_svc
-
-  %% =========================
-  %% worker-fhir -> Medplum
-  %% =========================
-  wf_deploy -->|"FHIR batch"| mp_server_svc
-
-  %% =========================
-  %% worker-stream -> Medplum -> Streamlit
-  %% =========================
-  st_svc -->|"query"| wst_svc
-  wst_deploy -->|"FHIR API"| mp_server_svc
-  wst_svc -->|"results"| st_svc
-
-  %% =========================
-  %% Medplum -> Postgres
-  %% =========================
-  mp_server_deploy --> pg_svc
-
-  %% =========================
-  %% Observability
-  %% =========================
-  prom --> graf
-
-  %% =========================
-  %% Security (option)
-  %% =========================
-  seed_job --> redis_svc
+  backups --> med_pg
+  backups --> core_pg
+  backups --> airflow_pg
+  backups --> minio
+```
