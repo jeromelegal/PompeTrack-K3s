@@ -17,7 +17,7 @@ spec:
   failedJobsHistoryLimit: {{ .Values.healthCoach.failedJobsHistoryLimit }}
   jobTemplate:
     spec:
-      backoffLimit: 1
+      backoffLimit: {{ .Values.healthCoach.backoffLimit }}
       template:
         metadata:
           labels:
