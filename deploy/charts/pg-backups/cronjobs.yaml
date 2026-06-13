@@ -12,7 +12,7 @@ spec:
   schedule: "0 */24 * * *"        # toutes les 24h
   concurrencyPolicy: Forbid       # pas de job concurrent
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 0
   jobTemplate:
     spec:
       backoffLimit: 2             # 2 tentatives en cas d'échec
@@ -94,10 +94,10 @@ metadata:
   name: backup-db2
   namespace: pg-backups
 spec:
-  schedule: "20 */4 * * *"       # décalé de 20min pour éviter la surcharge
+  schedule: "20 */24 * * *"       # décalé de 20min pour éviter la surcharge
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 0
   jobTemplate:
     spec:
       backoffLimit: 2
@@ -179,10 +179,10 @@ metadata:
   name: backup-db3
   namespace: pg-backups
 spec:
-  schedule: "40 */4 * * *"       # décalé de 40min
+  schedule: "40 */24 * * *"       # décalé de 40min
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 0
   jobTemplate:
     spec:
       backoffLimit: 2
