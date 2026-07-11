@@ -32,6 +32,10 @@ TOKEN_ENDPOINT = os.getenv(
 # Default scope for the token
 DEFAULT_SCOPE = os.getenv("MEDPLUM_SCOPE", "")
 
+TOKEN_RETRY_ATTEMPTS = int(os.getenv("MEDPLUM_TOKEN_RETRY_ATTEMPTS", "4"))
+TOKEN_RETRY_BACKOFF_SECONDS = float(os.getenv("MEDPLUM_TOKEN_RETRY_BACKOFF_SECONDS", "3"))
+TRANSIENT_TOKEN_STATUS_CODES = {502, 503, 504}
+
 # Cache for storing access tokens
 _token_cache: Dict[str, Tuple[str, float]] = {}
 _cache_lock = threading.RLock()
@@ -142,19 +146,54 @@ def _fetch_token_from_server(scope_key: str) -> dict:
     if scope_key:
         data["scope"] = scope_key
 
-    try:
-        resp = requests.post(
-            TOKEN_ENDPOINT,
-            headers=headers,
-            data=data,
-            auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
-            timeout=10,
-        )
-    except requests.RequestException as e:
-        raise TokenError(f"Network error while requesting token: {e}") from e
+    attempts = max(1, TOKEN_RETRY_ATTEMPTS)
+    last_network_error: Optional[requests.RequestException] = None
+    resp: Optional[requests.Response] = None
 
-    if resp.status_code != 200:
-        raise TokenError(f"Token endpoint returned {resp.status_code}: {resp.text}")
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = requests.post(
+                TOKEN_ENDPOINT,
+                headers=headers,
+                data=data,
+                auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
+                timeout=10,
+            )
+        except requests.RequestException as e:
+            last_network_error = e
+            if attempt == attempts:
+                raise TokenError(f"Network error while requesting token: {e}") from e
+
+            logger.warning(
+                "Network error while requesting Medplum token (attempt %s/%s): %s",
+                attempt,
+                attempts,
+                e,
+            )
+            time.sleep(TOKEN_RETRY_BACKOFF_SECONDS * attempt)
+            continue
+
+        if resp.status_code == 200:
+            break
+
+        if resp.status_code not in TRANSIENT_TOKEN_STATUS_CODES or attempt == attempts:
+            raise TokenError(f"Token endpoint returned {resp.status_code}: {resp.text}")
+
+        logger.warning(
+            "Medplum token endpoint returned transient status %s (attempt %s/%s): %s",
+            resp.status_code,
+            attempt,
+            attempts,
+            resp.text,
+        )
+        time.sleep(TOKEN_RETRY_BACKOFF_SECONDS * attempt)
+    else:
+        if last_network_error is not None:
+            raise TokenError(f"Network error while requesting token: {last_network_error}") from last_network_error
+        raise TokenError("Token endpoint did not return a response")
+
+    if resp is None:
+        raise TokenError("Token endpoint did not return a response")
 
     try:
         token_json = resp.json()

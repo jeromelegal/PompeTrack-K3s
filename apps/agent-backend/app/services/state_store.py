@@ -8,6 +8,8 @@ from typing import Any
 
 from app.core.config import Settings
 
+AUTOMATION_USER_ID = "telegram:automation"
+
 
 class StateStore:
     def __init__(self, settings: Settings) -> None:
@@ -97,6 +99,29 @@ class StateStore:
                     comment TEXT,
                     created_at TEXT NOT NULL
                 )
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS reminders (
+                    reminder_id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    chat_id TEXT,
+                    text TEXT NOT NULL,
+                    frequency TEXT NOT NULL,
+                    time_of_day TEXT NOT NULL,
+                    timezone TEXT NOT NULL,
+                    active INTEGER NOT NULL DEFAULT 1,
+                    last_sent_date TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_reminders_active_time
+                ON reminders(active, time_of_day)
                 """
             )
 
@@ -315,8 +340,9 @@ class StateStore:
             "tone": "bienveillant_concis",
             "answerStyle": "concise",
             "alertSensitivity": "normal",
+            "scheduledHealthReviewsEnabled": True,
             "notificationTimes": {
-                "daily": "06:30",
+                "daily": "08:00",
                 "evening": "19:30",
                 "weekly": "08:00 Sunday",
             },
@@ -365,6 +391,16 @@ class StateStore:
             )
         return prefs
 
+    def are_scheduled_health_reviews_enabled(self) -> bool:
+        prefs = self.get_user_preferences(AUTOMATION_USER_ID)
+        return bool(prefs.get("scheduledHealthReviewsEnabled", True))
+
+    def set_scheduled_health_reviews_enabled(self, enabled: bool) -> dict[str, Any]:
+        return self.update_user_preferences(
+            AUTOMATION_USER_ID,
+            {"scheduledHealthReviewsEnabled": bool(enabled)},
+        )
+
     def add_review_feedback(
         self,
         *,
@@ -400,3 +436,128 @@ class StateStore:
             "createdAt": now,
             "preferences": prefs,
         }
+
+    def create_reminder(
+        self,
+        *,
+        reminder_id: str,
+        user_id: str,
+        text: str,
+        time_of_day: str,
+        timezone_name: str,
+        chat_id: str | None = None,
+        frequency: str = "daily",
+    ) -> dict[str, Any]:
+        self.init_db()
+        now = datetime.now(timezone.utc).isoformat()
+        with closing(self._connect()) as conn, conn:
+            conn.execute(
+                """
+                INSERT INTO reminders(
+                    reminder_id,
+                    user_id,
+                    chat_id,
+                    text,
+                    frequency,
+                    time_of_day,
+                    timezone,
+                    active,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (
+                    reminder_id,
+                    user_id,
+                    chat_id,
+                    text,
+                    frequency,
+                    time_of_day,
+                    timezone_name,
+                    now,
+                    now,
+                ),
+            )
+        item = self.get_reminder(reminder_id)
+        if item is None:
+            raise RuntimeError("reminder was not created")
+        return item
+
+    def get_reminder(self, reminder_id: str) -> dict[str, Any] | None:
+        self.init_db()
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT * FROM reminders WHERE reminder_id = ?",
+                (reminder_id,),
+            ).fetchone()
+        return _reminder_row_to_dict(row) if row is not None else None
+
+    def list_reminders(
+        self,
+        *,
+        user_id: str | None = None,
+        active_only: bool = True,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        self.init_db()
+        clauses = []
+        params: list[Any] = []
+        if user_id:
+            clauses.append("user_id = ?")
+            params.append(user_id)
+        if active_only:
+            clauses.append("active = 1")
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        params.append(max(1, min(limit, 100)))
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                f"""
+                SELECT * FROM reminders
+                {where}
+                ORDER BY active DESC, time_of_day ASC, created_at DESC
+                LIMIT ?
+                """,
+                params,
+            ).fetchall()
+        return [_reminder_row_to_dict(row) for row in rows]
+
+    def deactivate_reminder(self, reminder_id: str, *, user_id: str | None = None) -> dict[str, Any] | None:
+        self.init_db()
+        now = datetime.now(timezone.utc).isoformat()
+        clauses = ["reminder_id = ?", "active = 1"]
+        params: list[Any] = [reminder_id]
+        if user_id:
+            clauses.append("user_id = ?")
+            params.append(user_id)
+        with closing(self._connect()) as conn, conn:
+            cursor = conn.execute(
+                f"""
+                UPDATE reminders
+                SET active = 0, updated_at = ?
+                WHERE {" AND ".join(clauses)}
+                """,
+                [now, *params],
+            )
+        if cursor.rowcount == 0:
+            return None
+        return self.get_reminder(reminder_id)
+
+    def mark_reminder_sent(self, reminder_id: str, sent_date: str) -> None:
+        self.init_db()
+        now = datetime.now(timezone.utc).isoformat()
+        with closing(self._connect()) as conn, conn:
+            conn.execute(
+                """
+                UPDATE reminders
+                SET last_sent_date = ?, updated_at = ?
+                WHERE reminder_id = ?
+                """,
+                (sent_date, now, reminder_id),
+            )
+
+
+def _reminder_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    item = dict(row)
+    item["active"] = bool(item.get("active"))
+    return item

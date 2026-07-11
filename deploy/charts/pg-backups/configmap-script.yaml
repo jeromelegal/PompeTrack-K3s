@@ -23,8 +23,19 @@ data:
     TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
     BACKUP_FILE="/tmp/${DB_LABEL}_${DB_NAME}_${TIMESTAMP}.sql.gz"
 
+    # ── Configuration mc (MinIO Client) ─────────────────────────────────────
+    echo "[1/5] Configuration MinIO Client..."
+    mc alias set minio "${MINIO_ENDPOINT}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" --insecure
+
+    # ── Nettoyage préventif avant upload ────────────────────────────────────
+    # Si le bucket est plein, attendre l'upload pour nettoyer empêche la
+    # rétention de s'exécuter. On libère donc d'abord les anciens backups.
+    echo "[2/5] Nettoyage pré-upload des backups > 3 jours..."
+    mc rm --recursive --force --versions --older-than 72h minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ --insecure
+    echo "[2/5] Nettoyage pré-upload terminé"
+
     # ── pg_dump ──────────────────────────────────────────────────────────────
-    echo "[1/4] Dump PostgreSQL en cours..."
+    echo "[3/5] Dump PostgreSQL en cours..."
     export PGPASSWORD="${DB_PASSWORD}"
     pg_dump \
       -h "${DB_HOST}" \
@@ -43,34 +54,25 @@ data:
     fi
 
     BACKUP_SIZE=$(du -sh "${BACKUP_FILE}" | cut -f1)
-    echo "[1/4] Dump terminé - Taille : ${BACKUP_SIZE}"
-
-    # ── Configuration mc (MinIO Client) ─────────────────────────────────────
-    echo "[2/4] Configuration MinIO Client..."
-    mc alias set minio "${MINIO_ENDPOINT}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}" --insecure
+    echo "[3/5] Dump terminé - Taille : ${BACKUP_SIZE}"
 
     # ── Création du bucket si inexistant ────────────────────────────────────
     # mc mb --ignore-existing minio/"${MINIO_BUCKET}" --insecure
 
     # ── Upload vers MinIO ────────────────────────────────────────────────────
-    echo "[3/4] Upload vers MinIO : ${MINIO_BUCKET}/${DB_LABEL}/"
+    echo "[4/5] Upload vers MinIO : ${MINIO_BUCKET}/${DB_LABEL}/"
     mc cp "${BACKUP_FILE}" minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ --insecure
 
     if [ $? -ne 0 ]; then
       echo "[ERREUR] Upload MinIO a échoué !"
       exit 1
     fi
-    echo "[3/4] Upload terminé avec succès"
+    echo "[4/5] Upload terminé avec succès"
 
     # ── Nettoyage des anciens backups (rétention 3 jours) ───────────────────
-    echo "[4/4] Nettoyage des backups > 3 jours..."
-    mc find minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ \
-      --older-than 72h \
-      --insecure | while read -r old_file; do
-        echo "  Suppression : ${old_file}"
-        mc rm "${old_file}" --insecure
-    done
-    echo "[4/4] Nettoyage terminé"
+    echo "[5/5] Nettoyage post-upload des backups > 3 jours..."
+    mc rm --recursive --force --versions --older-than 72h minio/"${MINIO_BUCKET}"/"${DB_LABEL}"/ --insecure
+    echo "[5/5] Nettoyage post-upload terminé"
 
     # ── Nettoyage local ──────────────────────────────────────────────────────
     rm -f "${BACKUP_FILE}"

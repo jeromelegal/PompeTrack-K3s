@@ -41,6 +41,7 @@ spec:
                 - app.medplum.health_coach
               args:
                 - --weekly
+                - --respect-schedule-toggle
                 - --days
                 - {{ .Values.weeklyReview.days | quote }}
                 - --history-limit

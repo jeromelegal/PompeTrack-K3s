@@ -229,7 +229,7 @@ with col1:
         labels={"week": "Semaine", "sessions": "Séances", "parameter": "Type"},
     )
     fig_weekly.update_layout(legend_title_text="Type")
-    st.plotly_chart(fig_weekly, use_container_width=True)
+    st.plotly_chart(fig_weekly, width="stretch")
 
 with col2:
     st.subheader("Répartition par type")
@@ -240,7 +240,7 @@ with col2:
         hole=0.45,
         title="Part des séances par type",
     )
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.plotly_chart(fig_pie, width="stretch")
 
 col3, col4 = st.columns(2)
 
@@ -254,7 +254,7 @@ with col3:
         title="Durée des séances par type",
         labels={"parameter": "Type", "duration_min": "Durée (min)"},
     )
-    st.plotly_chart(fig_box, use_container_width=True)
+    st.plotly_chart(fig_box, width="stretch")
 
 with col4:
     if filtered["energy_kcal"].notna().any():
@@ -269,7 +269,7 @@ with col4:
             title="Relation durée / calories",
             labels={"duration_min": "Durée (min)", "energy_kcal": "Calories (kcal)"},
         )
-        st.plotly_chart(fig_scatter, use_container_width=True)
+        st.plotly_chart(fig_scatter, width="stretch")
     else:
         st.subheader("Répartition par jour de semaine")
         fig_weekday = px.bar(
@@ -279,7 +279,7 @@ with col4:
             title="Séances par jour de semaine",
             labels={"weekday": "Jour", "sessions": "Séances"},
         )
-        st.plotly_chart(fig_weekday, use_container_width=True)
+        st.plotly_chart(fig_weekday, width="stretch")
 
 col5, col6 = st.columns([1.5, 1.5])
 
@@ -293,7 +293,7 @@ with col5:
         title="Minutes par mois",
         labels={"month": "Mois", "minutes": "Minutes", "parameter": "Type"},
     )
-    st.plotly_chart(fig_monthly, use_container_width=True)
+    st.plotly_chart(fig_monthly, width="stretch")
 
 with col6:
     st.subheader("Résumé par type")
@@ -318,7 +318,7 @@ with col6:
             "Durée moy. (min)": "{:.1f}",
             "Calories totales": "{:.0f}",
         }),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -347,7 +347,7 @@ st.dataframe(
         "Durée (min)": "{:.1f}",
         "Calories (kcal)": "{:.0f}",
     }),
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 

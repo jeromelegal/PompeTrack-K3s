@@ -215,6 +215,8 @@ istio-*/
 .env
 archives/
 *.tgz
+!deploy/charts/medplum/charts/*.tgz
 apps/streamlit/credentials.json
 deploy/secrets/pg-backups/*
 *.RRF
+*.conf

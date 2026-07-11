@@ -137,12 +137,13 @@ serviceAccount:
 
 healthCoach:
   enabled: true
-  schedule: "30 6 * * *"
+  schedule: "0 8 * * *"
   suspend: false
   days: 30
   historyLimit: 7
   model: "medgemma:27b"
   telegramDailyReviewEnabled: true
+  backoffLimit: 5
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
 
@@ -171,6 +172,14 @@ eveningQuestions:
   enabled: true
   schedule: "30 19 * * *"
   suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+reminders:
+  enabled: true
+  schedule: "0 * * * *"
+  suspend: false
+  timeZone: "Europe/Paris"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
 

@@ -210,6 +210,8 @@ def format_preferences(prefs: dict[str, Any]) -> str:
         f"Ton: {prefs.get('tone')}",
         f"Style de réponse: {prefs.get('answerStyle')}",
         f"Sensibilité alertes: {prefs.get('alertSensitivity')}",
+        "Bilans automatiques: "
+        + ("activés" if prefs.get("scheduledHealthReviewsEnabled", True) else "désactivés"),
         "",
         "Horaires:",
     ]
@@ -245,6 +247,29 @@ def format_feedback_result(result: dict[str, Any]) -> str:
     if prefs:
         lines.append("")
         lines.append(f"Style actuel: {prefs.get('answerStyle')} | sensibilité: {prefs.get('alertSensitivity')}")
+    return "\n".join(lines)
+
+
+def format_reminder(reminder: dict[str, Any]) -> str:
+    status = "actif" if reminder.get("active") else "supprimé"
+    return (
+        f"Rappel {reminder.get('reminder_id')} ({status})\n"
+        f"- Tous les jours à {reminder.get('time_of_day')} ({reminder.get('timezone')})\n"
+        f"- {reminder.get('text')}"
+    )
+
+
+def format_reminders(reminders: list[dict[str, Any]]) -> str:
+    if not reminders:
+        return "Aucun rappel actif."
+    lines = ["Rappels actifs"]
+    for reminder in reminders:
+        lines.append(
+            f"- {reminder.get('reminder_id')} | {reminder.get('time_of_day')} "
+            f"({reminder.get('timezone')}) | {reminder.get('text')}"
+        )
+    lines.append("")
+    lines.append("Supprimer: /delreminder <id>")
     return "\n".join(lines)
 
 

@@ -1,3 +1,8 @@
+global:
+  medplumVersion: "5.1.11"
+  medplumProviderVersion: "5.1.11"
+  medplumProviderImageTag: "latest"
+
 medplum:
   global:
     cloudProvider: ""
@@ -8,7 +13,7 @@ medplum:
     replicaCount: 1
     image:
       repository: medplum/medplum-server
-      tag: "5.1.1"
+      tag: "5.1.11"
 
     resources:
       requests:
@@ -29,7 +34,7 @@ medplum:
       - name: MEDPLUM_APP_BASE_URL
         value: "https://medplum.phylcero.fr"
       - name: MEDPLUM_ALLOWED_ORIGINS
-        value: "https://medplum.phylcero.fr"
+        value: "https://medplum.phylcero.fr,https://provider.phylcero.fr"
       - name: MEDPLUM_DATABASE_HOST
         value: "medplum-postgresql"
       - name: MEDPLUM_DATABASE_PORT

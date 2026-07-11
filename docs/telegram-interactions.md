@@ -90,6 +90,10 @@ Le bot peut déclencher une revue LLM sans attendre les CronJobs.
 
 `/weekly-review` lance un bilan plus large, prévu pour les tendances lentes: humeur, activité, douleur récurrente, spirométrie, adhérence médicament, objectifs légers.
 
+`/coach` lance maintenant un bilan de la journée précédente, pensé pour le matin avec des conseils pour la journée qui démarre.
+
+`/bilans off` désactive les bilans automatiques planifiés. `/bilans on` les réactive. `/bilans status` affiche l'état courant.
+
 Ces commandes peuvent prendre un peu de temps car elles appellent le backend agentique et le modèle.
 
 ## Questions du soir
@@ -107,6 +111,37 @@ Exemples de questions attendues:
 - pas de symptôme renseigné récemment, rien à signaler ou suivi incomplet ?
 
 Le CronJob `health-evening-questions` peut aussi envoyer ces questions automatiquement selon la configuration Helm.
+
+## Rappels quotidiens
+
+Le bot peut créer, lister et supprimer des rappels quotidiens persistants. Les rappels sont stockés côté backend dans SQLite et envoyés par le CronJob `telegram-reminder-runner`, qui tourne toutes les minutes.
+
+Créer un rappel:
+
+```text
+/remind daily 19:00 faire les exercices
+```
+
+Lister les rappels actifs:
+
+```text
+/reminders
+```
+
+Supprimer un rappel:
+
+```text
+/delreminder rem-123456abcd
+```
+
+Le bot comprend aussi quelques formulations naturelles, par exemple:
+
+```text
+rappelle-moi de faire les exercices tous les jours à 19:00
+supprime le rappel exercices
+```
+
+Les rappels utilisent la timezone configurée par `reminders.timeZone` dans le chart Helm, `Europe/Paris` par défaut.
 
 ## Alertes configurables
 
@@ -271,6 +306,9 @@ Le bot détecte aussi automatiquement certaines questions santé envoyées sans 
 | `/evening` | `/evening` | Questions ciblées du soir. |
 | `/alerts` | `/alerts` | Évalue les alertes configurables. |
 | `/weekly-review` | `/weekly-review` | Lance un bilan hebdomadaire à la demande. |
+| `/remind` | `/remind daily 19:00 faire les exercices` | Crée un rappel quotidien Telegram. |
+| `/reminders` | `/reminders` | Liste les rappels actifs. |
+| `/delreminder` | `/delreminder rem-123456abcd` | Supprime un rappel. |
 | `/prefs` | `/prefs` | Affiche la mémoire utilisateur explicite. |
 | `/setpref` | `/setpref tone bienveillant_concis` | Modifie une préférence utilisateur. |
 | `/addsymptom` | `/addsymptom fatigue` | Ajoute un symptôme prioritaire. |
