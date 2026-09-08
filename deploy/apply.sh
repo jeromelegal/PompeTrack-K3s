@@ -27,6 +27,25 @@ apply_file_if_exists() {
   fi
 }
 
+helm_post_renderer_arg() {
+  local plugin_name="$1"
+  local renderer_path="$2"
+  local plugin_dir="$3"
+  local helm_major
+
+  helm_major="$(helm version 2>/dev/null | sed -n 's/.*Version:"v\([0-9][0-9]*\).*/\1/p; s/^v\([0-9][0-9]*\).*/\1/p' | head -n1)"
+
+  if [ "${helm_major:-0}" = 3 ]; then
+    printf '%s\n' "$renderer_path"
+  else
+    if ! helm plugin list 2>/dev/null | awk -v name="$plugin_name" '$1 == name { found = 1 } END { exit found ? 0 : 1 }'; then
+      echo "==> Helm 4 post-renderer plugin install: $plugin_name" >&2
+      helm plugin install "$plugin_dir" >&2
+    fi
+    printf '%s\n' "$plugin_name"
+  fi
+}
+
 # Namespaces create
 echo "==> Namespaces (must come first for Istio injection)"
 apply_file_if_exists deploy/namespaces/medplum/00-namespace.yaml
@@ -85,6 +104,10 @@ helm dependency update deploy/charts/medplum || true
 
 ### Helm umbrella Medplum namespace
 echo "==> Helm install/upgrade medplum ${MEDPLUM_VERSION} (with post-renderer patches)"
+MEDPLUM_POST_RENDERER="$(helm_post_renderer_arg \
+  medplum-post-renderer \
+  ./deploy/post-renderer/medplum/kustomize.sh \
+  ./deploy/post-renderer/medplum)"
 helm upgrade --install medplum deploy/charts/medplum \
   -f deploy/charts/medplum/values-medplum.yaml \
   --set global.medplumVersion="${MEDPLUM_VERSION}" \
@@ -92,7 +115,7 @@ helm upgrade --install medplum deploy/charts/medplum \
   --set global.medplumProviderImageTag="${MEDPLUM_PROVIDER_IMAGE_TAG}" \
   --set medplum.deployment.image.tag="${MEDPLUM_VERSION}" \
   -n medplum \
-  --post-renderer ./deploy/post-renderer/medplum/kustomize.sh
+  --post-renderer "$MEDPLUM_POST_RENDERER"
 
 # Ids medplum create
 echo "==> Medplum bootstrap (project + worker-fhir client)"
@@ -125,10 +148,14 @@ helm dependency update deploy/charts/pompetrack-core || true
 
 ### Helm umbrella Pompetrack-core namespace
 echo "==> Helm install/upgrade pompetrack-core (with post-renderer patches)"
+POMPETRACK_CORE_POST_RENDERER="$(helm_post_renderer_arg \
+  pompetrack-core-post-renderer \
+  ./deploy/post-renderer/pompetrack-core/kustomize.sh \
+  ./deploy/post-renderer/pompetrack-core)"
 helm upgrade --install pompetrack-core deploy/charts/pompetrack-core \
   -f deploy/charts/pompetrack-core/values-minio.yaml \
   -n pompetrack-core \
-  --post-renderer ./deploy/post-renderer/pompetrack-core/kustomize.sh
+  --post-renderer "$POMPETRACK_CORE_POST_RENDERER"
 
 # Secrets scripts
 echo "==> Airflow secrets"

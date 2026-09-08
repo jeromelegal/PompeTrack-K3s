@@ -151,4 +151,8 @@ spec:
   endpoints:
     - port: http
       interval: 30s
-      path: /metrics
+      path: /metrics/
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: __address__
+          replacement: worker-fhir.pompetrack-core.svc.cluster.local
