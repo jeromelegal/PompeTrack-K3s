@@ -144,6 +144,7 @@ healthCoach:
   model: "medgemma:27b"
   telegramDailyReviewEnabled: true
   backoffLimit: 5
+  activeDeadlineSeconds: 3600
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
 
