@@ -9,7 +9,7 @@ minio:
 
   persistence:
     enabled: true
-    size: 20Gi
+    size: 30Gi
     storageClass: nfs-client
 
   resources:
