@@ -141,7 +141,7 @@ healthCoach:
   suspend: false
   days: 30
   historyLimit: 7
-  model: "medgemma:27b"
+  model: "medgemma1.5:4b"
   telegramDailyReviewEnabled: true
   backoffLimit: 5
   activeDeadlineSeconds: 3600
