@@ -16,6 +16,9 @@ COPY requirements.txt /app/requirements.txt
 RUN python -m pip install --upgrade pip && \
     pip install -r /app/requirements.txt
 
+# Fail the build if the MCP SDK and proxy APIs are incompatible.
+RUN python -c "from mcpo.main import run; from mcp.server.fastmcp import FastMCP"
+
 COPY app /app/app
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
