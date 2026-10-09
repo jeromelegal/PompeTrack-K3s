@@ -16,5 +16,6 @@ trafilatura
 beautifulsoup4
 pypdf
 streamlit
-mcp
-mcpo
+# MCPO 0.0.20 imports streamablehttp_client, removed in MCP 2.x.
+mcp==1.30.0
+mcpo==0.0.20
