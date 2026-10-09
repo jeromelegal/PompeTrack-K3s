@@ -101,6 +101,7 @@ echo "==> Medplum secrets"
 # Helm update
 echo "==> Helm deps"
 helm dependency update deploy/charts/medplum || true
+./deploy/patch-medplum-chart.sh
 
 ### Helm umbrella Medplum namespace
 echo "==> Helm install/upgrade medplum ${MEDPLUM_VERSION} (with post-renderer patches)"
@@ -109,7 +110,7 @@ MEDPLUM_POST_RENDERER="$(helm_post_renderer_arg \
   ./deploy/post-renderer/medplum/kustomize.sh \
   ./deploy/post-renderer/medplum)"
 helm upgrade --install medplum deploy/charts/medplum \
-  -f deploy/charts/medplum/values-medplum.yaml \
+  -f deploy/charts/medplum/values.yaml \
   --set global.medplumVersion="${MEDPLUM_VERSION}" \
   --set global.medplumProviderVersion="${MEDPLUM_PROVIDER_VERSION}" \
   --set global.medplumProviderImageTag="${MEDPLUM_PROVIDER_IMAGE_TAG}" \

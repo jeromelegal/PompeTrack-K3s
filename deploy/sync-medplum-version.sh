@@ -29,7 +29,7 @@ chart_text = re.sub(
 )
 chart_path.write_text(chart_text)
 
-values_path = Path("deploy/charts/medplum/values-medplum.yaml")
+values_path = Path("deploy/charts/medplum/values.yaml")
 values_text = values_path.read_text()
 values_text = re.sub(r'medplumVersion: "[^"]+"', f'medplumVersion: "{medplum_version}"', values_text)
 values_text = re.sub(
